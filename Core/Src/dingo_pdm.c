@@ -102,6 +102,7 @@ ads1x15Settings_t stAdcPfBank1, stAdcPfBank2;
 //========================================================================
 // PCAL9554B User Digital Inputs
 //========================================================================
+uint8_t nUserDigInputRaw;
 uint8_t nUserDigInput[8];
 
 //========================================================================
@@ -608,7 +609,22 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
   MCP9808_Write16(hi2c, MCP9808_ADDRESS, MCP9808_REG_CONFIG, (MCP9808_REG_CONFIG_ALERTCTRL | MCP9808_REG_CONFIG_WINLOCKED | MCP9808_REG_CONFIG_CRITLOCKED | MCP9808_REG_CONFIG_HYST_1_5));
 
   //=====================================================================================================
-  // PCA9555 Profet GPIO Configuration
+  // PCAL9554B User Input Configuration
+  //=====================================================================================================
+  //Set configuration registers (all to input = 1)
+  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_CFG, 0xFF);
+  //Set latch register (no latch = 0)
+  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_IN_LATCH, 0x00);
+  //Set pullup/pulldown enable register (all enable = 1)
+  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_PU_PD_ENABLE, 0xFF);
+  //Set pullup/pulldown selection register (all to pullup = 1)
+  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_PU_PD_SELECT, 0xFF);
+  //Set interrupt mask (all to disable interrupt = 1)
+  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_INT_MASK, 0xFF);
+
+
+  //=====================================================================================================
+  // PCA9539 Profet GPIO Configuration
   //=====================================================================================================
   //Set configuration registers (all to output)
   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_CONFIG_PORT0, 0x0000);
@@ -625,6 +641,19 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
   for(;;)
   {
    //=====================================================================================================
+   // PCAL9554B User Input
+   //=====================================================================================================
+   PCAL9554B_ReadReg8(hi2c, PCAL9554B_CMD_IN_PORT, nUserDigInputRaw);
+   nUserDigInput[0] = nUserDigInputRaw & 0x01;
+   nUserDigInput[1] = (nUserDigInputRaw & 0x02) >> 1;
+   nUserDigInput[2] = (nUserDigInputRaw & 0x04) >> 2;
+   nUserDigInput[3] = (nUserDigInputRaw & 0x08) >> 3;
+   nUserDigInput[4] = (nUserDigInputRaw & 0x10) >> 4;
+   nUserDigInput[5] = (nUserDigInputRaw & 0x20) >> 5;
+   nUserDigInput[6] = (nUserDigInputRaw & 0x40) >> 6;
+   nUserDigInput[7] = (nUserDigInputRaw & 0x80) >> 7;
+
+   //=====================================================================================================
    // Set Profet
    // DSEL to channel 1
    // Enable all DEN
@@ -635,7 +664,7 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
    //=====================================================================================================
-   // ADS1115 Analog Input
+   // ADS1x15 Analog Input
    //=====================================================================================================
    for(int i = 0; i < 4; i++){
      //Send channel register
@@ -685,7 +714,6 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
    // Profet I2C GPIO
    // PCA9555
    // PF1-6 Bank 1
-   // PF7-12 Bank 2
    //=====================================================================================================
    InputLogic();
    OutputLogic();

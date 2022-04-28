@@ -22,6 +22,7 @@
 "./Drivers/Components/Src/pca9539.o"
 "./Drivers/Components/Src/pca9555.o"
 "./Drivers/Components/Src/pca9635.o"
+"./Drivers/Components/Src/pcal9554b.o"
 "./Drivers/Components/Src/profet.o"
 "./Drivers/Components/Src/pushbutton.o"
 "./Drivers/Components/Src/wipers.o"
