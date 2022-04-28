@@ -20,12 +20,11 @@
 //========================================================================
 #define PCA9635_ADDRESS 0x30
 #define MCP9808_ADDRESS 0x18
-#define PCA9555_ADDRESS_BANK1 0x20
-#define PCA9555_ADDRESS_BANK2 0x21
-#define ADS1115_ADDRESS_AI_BANK1 0x48
-#define ADS1115_ADDRESS_AI_BANK2 0x48
-#define ADS1115_ADDRESS_PF_BANK1 0x49
-#define ADS1115_ADDRESS_PF_BANK2 0x49
+#define PCA9539_ADDRESS_BANK1 0x74
+#define PCA9539_ADDRESS_BANK2 0x74
+#define ADS1x15_ADDRESS_PF_BANK1 0x48
+#define ADS1x15_ADDRESS_PF_BANK2 0x48
+#define PCAL9554B_ADDRESS 0x20
 #define MB85RC_ADDRESS 0x50
 
 //========================================================================
@@ -75,6 +74,20 @@
 //==============================================================================================================================================
 
 PdmConfig_t stPdmConfig;
+
+//========================================================================
+// Message Queues
+//========================================================================
+osMessageQueueId_t qMsgQueueRx;
+osMessageQueueId_t qMsgQueueUsbTx;
+osMessageQueueId_t qMsgQueueCanTx;
+
+//========================================================================
+// Mode/State Enums
+//========================================================================
+DeviceMode_t eDevMode;
+DeviceState_t eDevState;
+
 //========================================================================
 // Profets
 // I2C GPIO Outputs
@@ -113,14 +126,6 @@ volatile uint16_t nBattSense;
 volatile uint16_t nStmTemp;
 const uint16_t* const STM32_TEMP_3V3_30C =  (uint16_t*)(0x1FFFF7B8);
 const uint16_t* const STM32_TEMP_3V3_110C =  (uint16_t*)(0x1FFFF7C2);
-
-//========================================================================
-// ADS1x15 Analog User Inputs
-//========================================================================
-ads1x15Settings_t stAdcAiBank1, stAdcAiBank2;
-uint16_t nAiBank1Raw[4], nAiBank2Raw[4];
-float fAiBank1Voltage[4], fAiBank2Voltage[4];
-const float fAiVoltageConv= 3.3 / 26515.0;
 
 //========================================================================
 // Status LEDs
@@ -606,27 +611,17 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   PCA9555_WriteReg16(hi2c2, PCA9555_ADDRESS_BANK2, PCA9555_CMD_CONFIG_PORT0, 0x0000);
 
   //=====================================================================================================
-  // ADS1115 Analog In Configuration
+  // ADS1x15 Analog In Configuration
   //=====================================================================================================
-  stAdcAiBank1.deviceType = ADS1115;
-  stAdcAiBank1.bitShift = 0;
-  stAdcAiBank1.gain = GAIN_ONE;
-  stAdcAiBank1.dataRate = DATARATE_860SPS;
-
-  stAdcPfBank1.deviceType = ADS1115;
+  stAdcPfBank1.deviceType = ADS1015;
   stAdcPfBank1.bitShift = 0;
   stAdcPfBank1.gain = GAIN_ONE;
-  stAdcPfBank1.dataRate = DATARATE_860SPS;
+  stAdcPfBank1.dataRate = ADS1015_DATARATE_3300SPS;
 
-  stAdcAiBank2.deviceType = ADS1115;
-  stAdcAiBank2.bitShift = 0;
-  stAdcAiBank2.gain = GAIN_ONE;
-  stAdcAiBank2.dataRate = DATARATE_860SPS;
-
-  stAdcPfBank2.deviceType = ADS1115;
+  stAdcPfBank2.deviceType = ADS1015;
   stAdcPfBank2.bitShift = 0;
   stAdcPfBank2.gain = GAIN_ONE;
-  stAdcPfBank2.dataRate = DATARATE_860SPS;
+  stAdcPfBank2.dataRate = ADS1015_DATARATE_3300SPS;
 
   //=====================================================================================================
   // PCA9635 LED Configuration
@@ -689,24 +684,14 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
       //Sets ADC multiplexer - must delay after for conversion
       ADS1x15_SendRegs(hi2c1, ADS1115_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
       ADS1x15_SendRegs(hi2c2, ADS1115_ADDRESS_PF_BANK2, &stAdcPfBank2, i);
-      ADS1x15_SendRegs(hi2c1, ADS1115_ADDRESS_AI_BANK1, &stAdcAiBank1, i);
-      if(i<2) //Don't convert channels 3 and 4 - not used (saves 2ms each channel)
-        ADS1x15_SendRegs(hi2c2, ADS1115_ADDRESS_AI_BANK2, &stAdcAiBank2, i);
 
       //Delay for conversion
       //860 SPS = 1.16ms per conversion - delay 2ms
-      osDelay(ADS1115_CONVERSIONDELAY);
+      osDelay(ADS1015_CONVERSIONDELAY);
 
       //Read channel value
       nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c1, ADS1115_ADDRESS_PF_BANK1, &stAdcPfBank1);
       nPfISBank2Raw[i] = ADS1x15_ReadADC(hi2c2, ADS1115_ADDRESS_PF_BANK2, &stAdcPfBank2);
-      nAiBank1Raw[i] = ADS1x15_ReadADC(hi2c1, ADS1115_ADDRESS_AI_BANK1, &stAdcAiBank1);
-      if(i<2) //Don't convert channels 3 and 4 - not used (saves 2ms each channel)
-        nAiBank2Raw[i] = ADS1x15_ReadADC(hi2c2, ADS1115_ADDRESS_AI_BANK2, &stAdcAiBank2);
-
-      fAiBank1Voltage[i] = (float)nAiBank1Raw[i] * fAiVoltageConv;
-      if(i<2)
-        fAiBank2Voltage[i] = (float)nAiBank2Raw[i] * fAiVoltageConv;
     }
 
     Profet_UpdateIS(&pf[0], nPfISBank1Raw[3]);
@@ -770,8 +755,8 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
     fBoardTempC = MCP9808_ReadTempC(hi2c1, MCP9808_ADDRESS);
     fBoardTempF = MCP9808_ConvertToF(fBoardTempC);
 
-    if(MCP9808_Overtemp) printf("*******MCP9808 Overtemp Detected*******\n");
-    if(MCP9808_CriticalTemp) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
+    if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
+    if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
 
     //=====================================================================================================
     // Status LEDs
@@ -1122,14 +1107,14 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 0;
       stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = nAiBank1Raw[0] >> 8;
-      nCanTxData[1] = nAiBank1Raw[0];
-      nCanTxData[2] = nAiBank1Raw[1] >> 8;
-      nCanTxData[3] = nAiBank1Raw[1];
-      nCanTxData[4] = nAiBank1Raw[2] >> 8;
-      nCanTxData[5] = nAiBank1Raw[2];
-      nCanTxData[6] = nAiBank1Raw[3] >> 8;
-      nCanTxData[7] = nAiBank1Raw[3];
+      //nCanTxData[0] = nAiBank1Raw[0] >> 8;
+      //nCanTxData[1] = nAiBank1Raw[0];
+      //nCanTxData[2] = nAiBank1Raw[1] >> 8;
+      //nCanTxData[3] = nAiBank1Raw[1];
+      //nCanTxData[4] = nAiBank1Raw[2] >> 8;
+      //nCanTxData[5] = nAiBank1Raw[2];
+      //nCanTxData[6] = nAiBank1Raw[3] >> 8;
+      //nCanTxData[7] = nAiBank1Raw[3];
 
       //=======================================================
       //Send CAN msg
@@ -1145,14 +1130,14 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 1;
       stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = nAiBank2Raw[0] >> 8;
-      nCanTxData[1] = nAiBank2Raw[0];
-      nCanTxData[2] = nAiBank2Raw[1] >> 8;
-      nCanTxData[3] = nAiBank2Raw[1];
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
+      //nCanTxData[0] = nAiBank2Raw[0] >> 8;
+      //nCanTxData[1] = nAiBank2Raw[0];
+      //nCanTxData[2] = nAiBank2Raw[1] >> 8;
+      //nCanTxData[3] = nAiBank2Raw[1];
+      //nCanTxData[4] = 0;
+      //nCanTxData[5] = 0;
+      //nCanTxData[6] = 0;
+      //nCanTxData[7] = 0;
 
       //=======================================================
       //Send CAN msg
@@ -1520,12 +1505,12 @@ uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
   }
 
   //Map input values to config structure
-  stPdmConfig.stInput[0].pInput = &nAiBank1Raw[0];
-  stPdmConfig.stInput[1].pInput = &nAiBank1Raw[1];
-  stPdmConfig.stInput[2].pInput = &nAiBank1Raw[2];
-  stPdmConfig.stInput[3].pInput = &nAiBank1Raw[3];
-  stPdmConfig.stInput[4].pInput = &nAiBank2Raw[0];
-  stPdmConfig.stInput[5].pInput = &nAiBank2Raw[1];
+  //stPdmConfig.stInput[0].pInput = &nAiBank1Raw[0];
+  //stPdmConfig.stInput[1].pInput = &nAiBank1Raw[1];
+  //stPdmConfig.stInput[2].pInput = &nAiBank1Raw[2];
+  //stPdmConfig.stInput[3].pInput = &nAiBank1Raw[3];
+  //stPdmConfig.stInput[4].pInput = &nAiBank2Raw[0];
+  //stPdmConfig.stInput[5].pInput = &nAiBank2Raw[1];
 
   for(int i=0; i<20; i++)
   {

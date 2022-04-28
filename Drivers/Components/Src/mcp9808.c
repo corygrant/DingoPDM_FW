@@ -1,5 +1,7 @@
 #include "mcp9808.h"
 
+uint8_t MCP9808_Overtemp, MCP9808_Undertemp, MCP9808_CriticalTemp;
+
 uint8_t MCP9808_Init(I2C_HandleTypeDef* hi2c, uint16_t addr)
 {
   if(MCP9808_Read16(hi2c, addr, MCP9808_REG_MANUF_ID) != 0x0054)
@@ -173,4 +175,19 @@ uint8_t MCP9808_Read8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
   val = readVals[0];
 
   return val;
+}
+
+uint8_t MCP9808_GetCriticalTemp()
+{
+  return MCP9808_CriticalTemp;
+}
+
+uint8_t MCP9808_GetOvertemp()
+{
+  return MCP9808_Overtemp;
+}
+
+uint8_t MCP9808_GetUndertemp()
+{
+  return MCP9808_Undertemp;
 }

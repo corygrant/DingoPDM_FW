@@ -21,7 +21,8 @@
 #include "profet.h"
 #include "ads1x15.h"
 #include "mcp9808.h"
-#include "pca9555.h"
+#include "pca9539.h"
+#include "pcal9554b.h"
 #include "pca9635.h"
 #include "mb85rc.h"
 #include "logger.h"
@@ -48,7 +49,7 @@ typedef enum
   DEVICE_AUTO,
   DEVICE_MANUAL
 } DeviceMode_t;
-DeviceMode_t eDevMode;
+
 
 typedef enum
 {
@@ -57,7 +58,7 @@ typedef enum
   DEVICE_CONFIG,
   DEVICE_ERROR
 } DeviceState_t;
-DeviceState_t eDevState;
+
 
 typedef enum{
   FORCE_STEADY,
@@ -77,9 +78,9 @@ typedef enum{
     CAN_BITRATE_INVALID
 } CAN_BitRate_t;
 
-osMessageQueueId_t qMsgQueueRx;
-osMessageQueueId_t qMsgQueueUsbTx;
-osMessageQueueId_t qMsgQueueCanTx;
+extern osMessageQueueId_t qMsgQueueRx;
+extern osMessageQueueId_t qMsgQueueUsbTx;
+extern osMessageQueueId_t qMsgQueueCanTx;
 
 extern USBD_CDC_ItfTypeDef USBD_Interface_PDM;
 uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len);

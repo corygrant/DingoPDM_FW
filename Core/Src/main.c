@@ -67,29 +67,29 @@ SPI_HandleTypeDef hspi1;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
-  .stack_size = 256 * 4
 };
 /* Definitions for i2cTask */
 osThreadId_t i2cTaskHandle;
 const osThreadAttr_t i2cTask_attributes = {
   .name = "i2cTask",
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
-  .stack_size = 128 * 4
 };
 /* Definitions for profetSMTask */
 osThreadId_t profetSMTaskHandle;
 const osThreadAttr_t profetSMTask_attributes = {
   .name = "profetSMTask",
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityHigh,
-  .stack_size = 256 * 4
 };
 /* Definitions for canTxTask */
 osThreadId_t canTxTaskHandle;
 const osThreadAttr_t canTxTask_attributes = {
   .name = "canTxTask",
+  .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityNormal1,
-  .stack_size = 128 * 4
 };
 /* Definitions for KickIWDG */
 osTimerId_t KickIWDGHandle;
@@ -279,6 +279,7 @@ void SystemClock_Config(void)
   */
   HAL_PWR_EnableBkUpAccess();
   __HAL_RCC_LSEDRIVE_CONFIG(RCC_LSEDRIVE_LOW);
+
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
@@ -296,6 +297,7 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+
   /** Initializes the CPU, AHB and APB buses clocks
   */
   RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
@@ -340,6 +342,7 @@ static void MX_ADC1_Init(void)
   /* USER CODE BEGIN ADC1_Init 1 */
 
   /* USER CODE END ADC1_Init 1 */
+
   /** Common config
   */
   hadc1.Instance = ADC1;
@@ -360,6 +363,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
   /** Configure the ADC multi-mode
   */
   multimode.Mode = ADC_MODE_INDEPENDENT;
@@ -367,6 +371,7 @@ static void MX_ADC1_Init(void)
   {
     Error_Handler();
   }
+
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_TEMPSENSOR;
@@ -402,6 +407,7 @@ static void MX_ADC4_Init(void)
   /* USER CODE BEGIN ADC4_Init 1 */
 
   /* USER CODE END ADC4_Init 1 */
+
   /** Common config
   */
   hadc4.Instance = ADC4;
@@ -422,6 +428,7 @@ static void MX_ADC4_Init(void)
   {
     Error_Handler();
   }
+
   /** Configure Regular Channel
   */
   sConfig.Channel = ADC_CHANNEL_3;
@@ -536,12 +543,14 @@ static void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
+
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c1, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     Error_Handler();
   }
+
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c1, 0) != HAL_OK)
@@ -582,12 +591,14 @@ static void MX_I2C2_Init(void)
   {
     Error_Handler();
   }
+
   /** Configure Analogue filter
   */
   if (HAL_I2CEx_ConfigAnalogFilter(&hi2c2, I2C_ANALOGFILTER_ENABLE) != HAL_OK)
   {
     Error_Handler();
   }
+
   /** Configure Digital filter
   */
   if (HAL_I2CEx_ConfigDigitalFilter(&hi2c2, 0) != HAL_OK)
@@ -641,9 +652,12 @@ static void MX_RTC_Init(void)
 
   /* USER CODE END RTC_Init 0 */
 
+
+
   /* USER CODE BEGIN RTC_Init 1 */
 
   /* USER CODE END RTC_Init 1 */
+
   /** Initialize RTC Only
   */
   hrtc.Instance = RTC;
@@ -661,7 +675,6 @@ static void MX_RTC_Init(void)
   /* USER CODE BEGIN Check_RTC_BKUP */
 
   /* USER CODE END Check_RTC_BKUP */
-
   /* USER CODE BEGIN RTC_Init 2 */
 
   /* USER CODE END RTC_Init 2 */
@@ -856,7 +869,7 @@ void KickIWDGCallback(void *argument)
   /* USER CODE END KickIWDGCallback */
 }
 
- /**
+/**
   * @brief  Period elapsed callback in non blocking mode
   * @note   This function is called  when TIM6 interrupt took place, inside
   * HAL_TIM_IRQHandler(). It makes a direct call to HAL_IncTick() to increment
@@ -905,5 +918,3 @@ void assert_failed(uint8_t *file, uint32_t line)
   /* USER CODE END 6 */
 }
 #endif /* USE_FULL_ASSERT */
-
-/************************ (C) COPYRIGHT STMicroelectronics *****END OF FILE****/

@@ -47,8 +47,6 @@
 #define MCP9808_RESOLUTION_0_125DEG 0x2
 #define MCP9808_RESOLUTION_0_0625DEG 0x3
 
-uint8_t MCP9808_Overtemp, MCP9808_Undertemp, MCP9808_CriticalTemp;
-
 uint8_t MCP9808_Init(I2C_HandleTypeDef* hi2c, uint16_t addr);
 float MCP9808_ReadTempC(I2C_HandleTypeDef* hi2c, uint16_t addr);
 float MCP9808_ReadTempF(I2C_HandleTypeDef* hi2c, uint16_t addr);
@@ -64,5 +62,7 @@ void MCP9808_Write16(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg, uint16
 uint16_t MCP9808_Read16(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg);
 void MCP9808_Write8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg, uint16_t val);
 uint8_t MCP9808_Read8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg);
-
+uint8_t MCP9808_GetCriticalTemp();
+uint8_t MCP9808_GetOvertemp();
+uint8_t MCP9808_GetUndertemp();
 #endif /* INC_MCP9808_H_ */
