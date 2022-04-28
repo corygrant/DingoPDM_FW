@@ -19,6 +19,7 @@
 "./Drivers/Components/Src/canboard.o"
 "./Drivers/Components/Src/mb85rc.o"
 "./Drivers/Components/Src/mcp9808.o"
+"./Drivers/Components/Src/pca9539.o"
 "./Drivers/Components/Src/pca9555.o"
 "./Drivers/Components/Src/pca9635.o"
 "./Drivers/Components/Src/profet.o"

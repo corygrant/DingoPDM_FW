@@ -22,8 +22,8 @@
 #define MCP9808_ADDRESS 0x18
 #define PCA9539_ADDRESS_BANK1 0x74
 #define PCA9539_ADDRESS_BANK2 0x74
-#define ADS1x15_ADDRESS_PF_BANK1 0x48
-#define ADS1x15_ADDRESS_PF_BANK2 0x48
+#define ADS1015_ADDRESS_PF_BANK1 0x48
+#define ADS1015_ADDRESS_PF_BANK2 0x48
 #define PCAL9554B_ADDRESS 0x20
 #define MB85RC_ADDRESS 0x50
 
@@ -98,6 +98,11 @@ volatile uint16_t nILTotal;
 uint16_t pfGpioBank1, pfGpioBank2;
 uint16_t nPfISBank1Raw[4], nPfISBank2Raw[4];
 ads1x15Settings_t stAdcPfBank1, stAdcPfBank2;
+
+//========================================================================
+// PCAL9554B User Digital Inputs
+//========================================================================
+uint8_t nUserDigInput[8];
 
 //========================================================================
 // Output Logic
@@ -579,21 +584,20 @@ void OutputLogic(){
   }
 }
 
-void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTypeDef* hi2c2){
-
+void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
   //=====================================================================================================
   // MCP9808 Temperature Sensor Configuration
   //=====================================================================================================
-  if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
+  if(MCP9808_Init(hi2c, MCP9808_ADDRESS) != MCP9808_OK)
     printf("MCP9808 Init FAIL\n");
 
-  MCP9808_SetResolution(hi2c1, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
+  MCP9808_SetResolution(hi2c, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
 
-  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
+  if(MCP9808_SetLimit(hi2c, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
     printf("MCP9808 Set Upper Limit Failed\n");
-  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
+  if(MCP9808_SetLimit(hi2c, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
     printf("MCP9808 Set Lower Limit Failed\n");
-  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
+  if(MCP9808_SetLimit(hi2c, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
     printf("MCP9808 Set Critical Limit Failed\n");
 
   //Setup configuration
@@ -601,14 +605,13 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   //Lock Tupper/Tlower window settings
   //Lock Tcrit settings
   //Set Tupper/Tlower hysteresis to +1.5 deg C
-  MCP9808_Write16(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CONFIG, (MCP9808_REG_CONFIG_ALERTCTRL | MCP9808_REG_CONFIG_WINLOCKED | MCP9808_REG_CONFIG_CRITLOCKED | MCP9808_REG_CONFIG_HYST_1_5));
+  MCP9808_Write16(hi2c, MCP9808_ADDRESS, MCP9808_REG_CONFIG, (MCP9808_REG_CONFIG_ALERTCTRL | MCP9808_REG_CONFIG_WINLOCKED | MCP9808_REG_CONFIG_CRITLOCKED | MCP9808_REG_CONFIG_HYST_1_5));
 
   //=====================================================================================================
   // PCA9555 Profet GPIO Configuration
   //=====================================================================================================
   //Set configuration registers (all to output)
-  PCA9555_WriteReg16(hi2c1, PCA9555_ADDRESS_BANK1, PCA9555_CMD_CONFIG_PORT0, 0x0000);
-  PCA9555_WriteReg16(hi2c2, PCA9555_ADDRESS_BANK2, PCA9555_CMD_CONFIG_PORT0, 0x0000);
+  PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_CONFIG_PORT0, 0x0000);
 
   //=====================================================================================================
   // ADS1x15 Analog In Configuration
@@ -618,6 +621,106 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   stAdcPfBank1.gain = GAIN_ONE;
   stAdcPfBank1.dataRate = ADS1015_DATARATE_3300SPS;
 
+  /* Infinite loop */
+  for(;;)
+  {
+   //=====================================================================================================
+   // Set Profet
+   // DSEL to channel 1
+   // Enable all DEN
+   //=====================================================================================================
+   pfGpioBank1 &= ~PF_BANK1_DSEL;
+   pfGpioBank1 |= PF_BANK1_DEN;
+
+   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
+
+   //=====================================================================================================
+   // ADS1115 Analog Input
+   //=====================================================================================================
+   for(int i = 0; i < 4; i++){
+     //Send channel register
+     //Sets ADC multiplexer - must delay after for conversion
+     ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
+
+     //Delay for conversion
+     //860 SPS = 1.16ms per conversion - delay 2ms
+     osDelay(ADS1015_CONVERSIONDELAY);
+
+     //Read channel value
+     nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1);
+   }
+
+   Profet_UpdateIS(&pf[0], nPfISBank1Raw[3]);
+   Profet_UpdateIS(&pf[1], nPfISBank1Raw[2]);
+   Profet_UpdateIS(&pf[2], nPfISBank1Raw[1]);
+   Profet_UpdateIS(&pf[4], nPfISBank1Raw[0]);
+
+   //=====================================================================================================
+   //Flip Profet DSEL to channel 2
+   //=====================================================================================================
+   pfGpioBank1 |= PF_BANK1_DSEL;
+
+   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
+
+   for(int i = 0; i < 2; i++){
+     //Send channel register
+     //Sets ADC multiplexer - must delay after for conversion
+     ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
+
+     //Delay for conversion
+     //860 SPS = 1.16ms per conversion - delay 2ms
+     osDelay(ADS1015_CONVERSIONDELAY);
+
+     //Read channel value
+     nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1);
+   }
+
+   //=====================================================================================================
+   // Scale to IS Values
+   //=====================================================================================================
+   Profet_UpdateIS(&pf[3], nPfISBank1Raw[1]);
+   Profet_UpdateIS(&pf[5], nPfISBank1Raw[0]);
+
+   //=====================================================================================================
+   // Profet I2C GPIO
+   // PCA9555
+   // PF1-6 Bank 1
+   // PF7-12 Bank 2
+   //=====================================================================================================
+   InputLogic();
+   OutputLogic();
+   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
+
+   //=====================================================================================================
+   // MCP9808 temperature sensor
+   //=====================================================================================================
+   fBoardTempC = MCP9808_ReadTempC(hi2c, MCP9808_ADDRESS);
+   fBoardTempF = MCP9808_ConvertToF(fBoardTempC);
+
+   if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
+   if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
+
+   //Debug GPIO
+   EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
+
+#ifdef MEAS_HEAP_USE
+   __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
+#endif
+
+   //osDelay(I2C_TASK_DELAY);
+ }
+}
+
+void I2C2Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
+  //=====================================================================================================
+  // PCA9555 Profet GPIO Configuration
+  //=====================================================================================================
+  //Set configuration registers (all to output)
+  PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_CONFIG_PORT0, 0x0000);
+
+  //=====================================================================================================
+  // ADS1x15 Analog In Configuration
+  //=====================================================================================================
   stAdcPfBank2.deviceType = ADS1015;
   stAdcPfBank2.bitShift = 0;
   stAdcPfBank2.gain = GAIN_ONE;
@@ -627,38 +730,22 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   // PCA9635 LED Configuration
   //=====================================================================================================
   //Send configuration, set to blink/flasher
-  PCA9635_Init(hi2c2, PCA9635_ADDRESS, PCA9635_BLINK);
+  PCA9635_Init(hi2c, PCA9635_ADDRESS, PCA9635_BLINK);
 
   //Set flashing frequency
-  PCA9635_SetGroupFreq(hi2c2, PCA9635_ADDRESS, PCA9635_FLASH_FREQ);
+  PCA9635_SetGroupFreq(hi2c, PCA9635_ADDRESS, PCA9635_FLASH_FREQ);
 
   //Set PWM duty cycle for each channel (overriden by group PWM)
   for(int i=0; i<16; i++){
-    PCA9635_SetPWM(hi2c2, PCA9635_ADDRESS, i, 255);
+    PCA9635_SetPWM(hi2c, PCA9635_ADDRESS, i, 255);
   }
 
   //Set flashing duty cycle
-  PCA9635_SetGroupPWM(hi2c2, PCA9635_ADDRESS, PCA9635_FLASH_DUTY_CYCLE); //Have to set individual brightness levels first
+  PCA9635_SetGroupPWM(hi2c, PCA9635_ADDRESS, PCA9635_FLASH_DUTY_CYCLE); //Have to set individual brightness levels first
 
   //Start LED test sequence
   nLEDTestSeqIndex = 1;
   nLEDTestSeqLastTime = HAL_GetTick();
-
-  //=====================================================================================================
-  // Wiper Config
-  //=====================================================================================================
-  /*
-  stWiper.nOnSw = &nWiperOn;
-  stWiper.nParkSw = &nWiperParkSw;
-  stWiper.nSlowOut = &nWiperSlowOut;
-  stWiper.nFastOut = &nWiperFastOut;
-  stWiper.nInterDelays[0] = 6000;
-  stWiper.nInterDelays[1] = 5000;
-  stWiper.nInterDelays[2] = 4000;
-  stWiper.nInterDelays[3] = 3000;
-  stWiper.nInterDelays[4] = 2000;
-  stWiper.nInterDelays[5] = 1000;
-  */
 
    /* Infinite loop */
   for(;;)
@@ -668,13 +755,10 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
     // DSEL to channel 1
     // Enable all DEN
     //=====================================================================================================
-    pfGpioBank1 &= ~PF_BANK1_DSEL;
     pfGpioBank2 &= ~PF_BANK2_DSEL;
-    pfGpioBank1 |= PF_BANK1_DEN;
     pfGpioBank2 |= PF_BANK2_DEN;
 
-    PCA9555_WriteReg16(hi2c1, PCA9555_ADDRESS_BANK1, PCA9555_CMD_OUT_PORT0, pfGpioBank1);
-    PCA9555_WriteReg16(hi2c2, PCA9555_ADDRESS_BANK2, PCA9555_CMD_OUT_PORT0, pfGpioBank2);
+    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
     //=====================================================================================================
     // ADS1115 Analog Input
@@ -682,23 +766,15 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
     for(int i = 0; i < 4; i++){
       //Send channel register
       //Sets ADC multiplexer - must delay after for conversion
-      ADS1x15_SendRegs(hi2c1, ADS1115_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
-      ADS1x15_SendRegs(hi2c2, ADS1115_ADDRESS_PF_BANK2, &stAdcPfBank2, i);
+      ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i);
 
       //Delay for conversion
       //860 SPS = 1.16ms per conversion - delay 2ms
       osDelay(ADS1015_CONVERSIONDELAY);
 
       //Read channel value
-      nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c1, ADS1115_ADDRESS_PF_BANK1, &stAdcPfBank1);
-      nPfISBank2Raw[i] = ADS1x15_ReadADC(hi2c2, ADS1115_ADDRESS_PF_BANK2, &stAdcPfBank2);
+      nPfISBank2Raw[i] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2);
     }
-
-    Profet_UpdateIS(&pf[0], nPfISBank1Raw[3]);
-    Profet_UpdateIS(&pf[1], nPfISBank1Raw[2]);
-    Profet_UpdateIS(&pf[2], nPfISBank1Raw[1]);
-    Profet_UpdateIS(&pf[4], nPfISBank1Raw[0]);
-
 
     Profet_UpdateIS(&pf[6], nPfISBank2Raw[0]);
     Profet_UpdateIS(&pf[7], nPfISBank2Raw[1]);
@@ -708,33 +784,26 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
     //=====================================================================================================
     //Flip Profet DSEL to channel 2
     //=====================================================================================================
-    pfGpioBank1 |= PF_BANK1_DSEL;
     pfGpioBank2 |= PF_BANK2_DSEL;
 
-    PCA9555_WriteReg16(hi2c1, PCA9555_ADDRESS_BANK1, PCA9555_CMD_OUT_PORT0, pfGpioBank1);
-    PCA9555_WriteReg16(hi2c2, PCA9555_ADDRESS_BANK2, PCA9555_CMD_OUT_PORT0, pfGpioBank2);
+    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
     for(int i = 0; i < 2; i++){
       //Send channel register
       //Sets ADC multiplexer - must delay after for conversion
-      ADS1x15_SendRegs(hi2c1, ADS1115_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
-      ADS1x15_SendRegs(hi2c2, ADS1115_ADDRESS_PF_BANK2, &stAdcPfBank2, i+2);
+      ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i+2);
 
       //Delay for conversion
       //860 SPS = 1.16ms per conversion - delay 2ms
-      osDelay(ADS1115_CONVERSIONDELAY);
+      osDelay(ADS1015_CONVERSIONDELAY);
 
       //Read channel value
-      nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c1, ADS1115_ADDRESS_PF_BANK1, &stAdcPfBank1);
-      nPfISBank2Raw[i+2] = ADS1x15_ReadADC(hi2c2, ADS1115_ADDRESS_PF_BANK2, &stAdcPfBank2);
+      nPfISBank2Raw[i+2] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2);
     }
 
     //=====================================================================================================
     // Scale to IS Values
     //=====================================================================================================
-    Profet_UpdateIS(&pf[3], nPfISBank1Raw[1]);
-    Profet_UpdateIS(&pf[5], nPfISBank1Raw[0]);
-
     Profet_UpdateIS(&pf[8], nPfISBank2Raw[2]);
     Profet_UpdateIS(&pf[10], nPfISBank2Raw[3]);
 
@@ -746,17 +815,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
     //=====================================================================================================
     InputLogic();
     OutputLogic();
-    PCA9555_WriteReg16(hi2c1, PCA9555_ADDRESS_BANK1, PCA9555_CMD_OUT_PORT0, pfGpioBank1);
-    PCA9555_WriteReg16(hi2c2, PCA9555_ADDRESS_BANK2, PCA9555_CMD_OUT_PORT0, pfGpioBank2);
-
-    //=====================================================================================================
-    // MCP9808 temperature sensor
-    //=====================================================================================================
-    fBoardTempC = MCP9808_ReadTempC(hi2c1, MCP9808_ADDRESS);
-    fBoardTempF = MCP9808_ConvertToF(fBoardTempC);
-
-    if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
-    if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
+    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
     //=====================================================================================================
     // Status LEDs
@@ -765,7 +824,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
     {
       nLEDTestSeqValues = (0x00000001 << ((nLEDTestSeqIndex-1)*2));
 
-      PCA9635_SetAllNum(hi2c2, PCA9635_ADDRESS, nLEDTestSeqValues);
+      PCA9635_SetAllNum(hi2c, PCA9635_ADDRESS, nLEDTestSeqValues);
 
       if((HAL_GetTick() - nLEDTestSeqLastTime) > LED_TEST_SEQ_DELAY)
       {
@@ -786,11 +845,11 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
       eStatusLeds[13] = bUsbConnected;   //USB
       eStatusLeds[14] = (HAL_GetTick() - nLastCanUpdate) < 1000;              //CAN
       eStatusLeds[15] = (eDevState == DEVICE_ERROR);   //Fault
-      PCA9635_SetAll(hi2c2, PCA9635_ADDRESS, eStatusLeds);
+      PCA9635_SetAll(hi2c, PCA9635_ADDRESS, eStatusLeds);
     }
 
     //Debug GPIO
-    EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
+    //EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
 
 #ifdef MEAS_HEAP_USE
     __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);

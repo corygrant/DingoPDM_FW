@@ -9,6 +9,7 @@ C_SRCS += \
 ../Drivers/Components/Src/canboard.c \
 ../Drivers/Components/Src/mb85rc.c \
 ../Drivers/Components/Src/mcp9808.c \
+../Drivers/Components/Src/pca9539.c \
 ../Drivers/Components/Src/pca9555.c \
 ../Drivers/Components/Src/pca9635.c \
 ../Drivers/Components/Src/profet.c \
@@ -20,6 +21,7 @@ OBJS += \
 ./Drivers/Components/Src/canboard.o \
 ./Drivers/Components/Src/mb85rc.o \
 ./Drivers/Components/Src/mcp9808.o \
+./Drivers/Components/Src/pca9539.o \
 ./Drivers/Components/Src/pca9555.o \
 ./Drivers/Components/Src/pca9635.o \
 ./Drivers/Components/Src/profet.o \
@@ -31,6 +33,7 @@ C_DEPS += \
 ./Drivers/Components/Src/canboard.d \
 ./Drivers/Components/Src/mb85rc.d \
 ./Drivers/Components/Src/mcp9808.d \
+./Drivers/Components/Src/pca9539.d \
 ./Drivers/Components/Src/pca9555.d \
 ./Drivers/Components/Src/pca9635.d \
 ./Drivers/Components/Src/profet.d \
@@ -45,7 +48,7 @@ Drivers/Components/Src/%.o Drivers/Components/Src/%.su: ../Drivers/Components/Sr
 clean: clean-Drivers-2f-Components-2f-Src
 
 clean-Drivers-2f-Components-2f-Src:
-	-$(RM) ./Drivers/Components/Src/ads1x15.d ./Drivers/Components/Src/ads1x15.o ./Drivers/Components/Src/ads1x15.su ./Drivers/Components/Src/canboard.d ./Drivers/Components/Src/canboard.o ./Drivers/Components/Src/canboard.su ./Drivers/Components/Src/mb85rc.d ./Drivers/Components/Src/mb85rc.o ./Drivers/Components/Src/mb85rc.su ./Drivers/Components/Src/mcp9808.d ./Drivers/Components/Src/mcp9808.o ./Drivers/Components/Src/mcp9808.su ./Drivers/Components/Src/pca9555.d ./Drivers/Components/Src/pca9555.o ./Drivers/Components/Src/pca9555.su ./Drivers/Components/Src/pca9635.d ./Drivers/Components/Src/pca9635.o ./Drivers/Components/Src/pca9635.su ./Drivers/Components/Src/profet.d ./Drivers/Components/Src/profet.o ./Drivers/Components/Src/profet.su ./Drivers/Components/Src/pushbutton.d ./Drivers/Components/Src/pushbutton.o ./Drivers/Components/Src/pushbutton.su ./Drivers/Components/Src/wipers.d ./Drivers/Components/Src/wipers.o ./Drivers/Components/Src/wipers.su
+	-$(RM) ./Drivers/Components/Src/ads1x15.d ./Drivers/Components/Src/ads1x15.o ./Drivers/Components/Src/ads1x15.su ./Drivers/Components/Src/canboard.d ./Drivers/Components/Src/canboard.o ./Drivers/Components/Src/canboard.su ./Drivers/Components/Src/mb85rc.d ./Drivers/Components/Src/mb85rc.o ./Drivers/Components/Src/mb85rc.su ./Drivers/Components/Src/mcp9808.d ./Drivers/Components/Src/mcp9808.o ./Drivers/Components/Src/mcp9808.su ./Drivers/Components/Src/pca9539.d ./Drivers/Components/Src/pca9539.o ./Drivers/Components/Src/pca9539.su ./Drivers/Components/Src/pca9555.d ./Drivers/Components/Src/pca9555.o ./Drivers/Components/Src/pca9555.su ./Drivers/Components/Src/pca9635.d ./Drivers/Components/Src/pca9635.o ./Drivers/Components/Src/pca9635.su ./Drivers/Components/Src/profet.d ./Drivers/Components/Src/profet.o ./Drivers/Components/Src/profet.su ./Drivers/Components/Src/pushbutton.d ./Drivers/Components/Src/pushbutton.o ./Drivers/Components/Src/pushbutton.su ./Drivers/Components/Src/wipers.d ./Drivers/Components/Src/wipers.o ./Drivers/Components/Src/wipers.su
 
 .PHONY: clean-Drivers-2f-Components-2f-Src
 

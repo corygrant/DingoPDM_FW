@@ -70,10 +70,17 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for i2cTask */
-osThreadId_t i2cTaskHandle;
-const osThreadAttr_t i2cTask_attributes = {
-  .name = "i2cTask",
+/* Definitions for i2c1Task */
+osThreadId_t i2c1TaskHandle;
+const osThreadAttr_t i2c1Task_attributes = {
+  .name = "i2c1Task",
+  .stack_size = 128 * 4,
+  .priority = (osPriority_t) osPriorityAboveNormal,
+};
+/* Definitions for i2c2Task */
+osThreadId_t i2c2TaskHandle;
+const osThreadAttr_t i2c2Task_attributes = {
+  .name = "i2c2Task",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
@@ -114,7 +121,8 @@ static void MX_CRC_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_IWDG_Init(void);
 void StartDefaultTask(void *argument);
-void StartI2CTask(void *argument);
+void StartI2C1Task(void *argument);
+void StartI2C2Task(void *argument);
 void StartProfetSMTask(void *argument);
 void StartCanTxTask(void *argument);
 void KickIWDGCallback(void *argument);
@@ -222,7 +230,10 @@ int main(void)
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of i2cTask */
-  i2cTaskHandle = osThreadNew(StartI2CTask, NULL, &i2cTask_attributes);
+  i2c1TaskHandle = osThreadNew(StartI2C1Task, NULL, &i2c1Task_attributes);
+
+  /* creation of i2cTask */
+  i2c2TaskHandle = osThreadNew(StartI2C2Task, NULL, &i2c2Task_attributes);
 
   /* creation of profetSMTask */
   profetSMTaskHandle = osThreadNew(StartProfetSMTask, NULL, &profetSMTask_attributes);
@@ -235,8 +246,11 @@ int main(void)
   if(defaultTaskHandle == 0x0)
     Error_Handler();
 
-  if(i2cTaskHandle == 0x0)
+  if(i2c1TaskHandle == 0x0)
     Error_Handler();
+
+  if(i2c2TaskHandle == 0x0)
+      Error_Handler();
 
   if(profetSMTaskHandle == 0x0)
     Error_Handler();
@@ -825,10 +839,17 @@ void StartDefaultTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartI2CTask */
-void StartI2CTask(void *argument)
+void StartI2C1Task(void *argument)
 {
   /* USER CODE BEGIN StartI2CTask */
-  I2CTask(&i2cTaskHandle, &hi2c1, &hi2c2);
+  I2C1Task(&i2c1TaskHandle, &hi2c1);
+  /* USER CODE END StartI2CTask */
+}
+
+void StartI2C2Task(void *argument)
+{
+  /* USER CODE BEGIN StartI2CTask */
+  I2C2Task(&i2c2TaskHandle, &hi2c2);
   /* USER CODE END StartI2CTask */
 }
 
