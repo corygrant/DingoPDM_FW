@@ -20,10 +20,16 @@
 #define PDM_BUILD 1
 
 #define PDM_NUM_OUTPUTS 12
-#define PDM_NUM_INPUTS 6
+#define PDM_NUM_INPUTS 8
 #define PDM_NUM_VIRT_INPUTS 20
 #define PDM_NUM_CAN_INPUTS 30
 #define PDM_NUM_FLASHERS 4
+#define PDM_NUM_WIPER_INTER_DELAYS 6
+#define PDM_NUM_WIPER_SPEED_MAP 8
+
+#define PDM_VAR_MAP_SIZE 73
+
+#define PDM_NUM_LEDS 16
 
 typedef enum{
   OPER_EQUAL,
@@ -57,7 +63,7 @@ typedef struct{
 
 typedef struct{
   uint8_t nEnabled;
-  uint16_t* pInput;
+  uint8_t* pInput;
   PushbuttonMode_t eMode;
   PushbuttonConfig_t ePbConfig;
   uint16_t nOnLevel;
@@ -85,7 +91,6 @@ typedef struct{
   uint8_t nEnabled;
   uint8_t nInput;
   uint16_t* pInput;
-  uint8_t nTriggerLevel;
   uint16_t nCurrentLimit;
   uint16_t nInrushLimit;
   uint16_t nInrushTime;
@@ -107,8 +112,8 @@ typedef struct{
   uint8_t nSwipeInput;
   uint8_t nWashInput;
   uint8_t nWashWipeCycles;
-  uint8_t nSpeedMap[8];
-  uint16_t nIntermitTime[6];
+  uint8_t nSpeedMap[PDM_NUM_WIPER_SPEED_MAP];
+  uint16_t nIntermitTime[PDM_NUM_WIPER_INTER_DELAYS];
 } PdmConfig_Wiper_t;
 
 typedef struct{

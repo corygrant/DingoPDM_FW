@@ -7,9 +7,13 @@
 
 #include "ads1x15.h"
 
-void ADS1x15_SendRegs(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings, uint8_t channel)
+#define I2C_TIMEOUT 100
+
+HAL_StatusTypeDef ADS1x15_SendRegs(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings, uint8_t channel)
 {
-	if(channel > 3) return;
+  HAL_StatusTypeDef eStatus;
+
+	if(channel > 3) return HAL_ERROR;
 
 	uint16_t config =
 				ADS1015_REG_CONFIG_CQUE_NONE |    // Disable the comparator (default val)
@@ -44,28 +48,45 @@ void ADS1x15_SendRegs(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t 
 	writeVals[1] = config >> 8;
 	writeVals[2] = config & 0xFF;
 
-	HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 3, 100);
+	eStatus = HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 3, I2C_TIMEOUT);
+  if( eStatus != HAL_OK)
+  {
+    return eStatus;
+  }
 
 	//Send convert register
 	writeVals[0] = ADS1015_REG_POINTER_CONVERT;
 
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, 100);
+  eStatus = HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, I2C_TIMEOUT);
+  if( eStatus != HAL_OK)
+  {
+    return eStatus;
+  }
+
+  return HAL_OK;
 }
 
-uint16_t ADS1x15_ReadADC(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings)
+HAL_StatusTypeDef ADS1x15_ReadADC(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings, uint16_t* val)
 {
+  HAL_StatusTypeDef eStatus;
+
   //Read received values
 	uint8_t readVals[2];
 
 	//Msg received - comms OK
 	settings->commsOk = 1;
 
-	HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 2, 100);
+	eStatus = HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 2, I2C_TIMEOUT);
+	if( eStatus != HAL_OK)
+  {
+    return eStatus;
+  }
 
 	uint16_t valRead = (readVals[0] << 8 | readVals[1]) >> settings->bitShift;
 
 	if (settings->deviceType == ADS1115) {
-	  return valRead;
+	  *val = valRead;
+	  return HAL_OK;
   }
 	else {
     // Shift 12-bit results right 4 bits for the ADS1015,
@@ -74,6 +95,7 @@ uint16_t ADS1x15_ReadADC(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings
       // negative number - extend the sign to 16th bit
       valRead |= 0xF000;
     }
-    return valRead;
+    *val = valRead;
+    return HAL_OK;
   }
 }

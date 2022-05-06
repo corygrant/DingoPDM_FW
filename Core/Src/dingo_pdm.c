@@ -8,11 +8,17 @@
 #include "dingo_pdm.h"
 #include "pdm_config.h"
 
+//TODO V3 Fix old analog input logic handling - to digital
+//TODO V3 Change USB renumeration logic - changed hardware
+//TODO V3 Add PCA9539 Profet GPIO reset pin logic
+//TODO V3 Add SPI CS on hardware NSS
+//TODO Remove mode? No MANUAL
+
 //========================================================================
 // Task Delays
 //========================================================================
 #define MAIN_TASK_DELAY 100
-#define I2C_TASK_DELAY 2
+#define I2C_TASK_DELAY 5
 #define CAN_TX_DELAY 50
 
 //========================================================================
@@ -93,7 +99,7 @@ DeviceState_t eDevState;
 // I2C GPIO Outputs
 // I2C ADC Inputs
 //========================================================================
-volatile ProfetTypeDef pf[12];
+volatile ProfetTypeDef pf[PDM_NUM_OUTPUTS];
 volatile uint16_t nILTotal;
 uint16_t pfGpioBank1, pfGpioBank2;
 uint16_t nPfISBank1Raw[4], nPfISBank2Raw[4];
@@ -103,12 +109,12 @@ ads1x15Settings_t stAdcPfBank1, stAdcPfBank2;
 // PCAL9554B User Digital Inputs
 //========================================================================
 uint8_t nUserDigInputRaw;
-uint8_t nUserDigInput[8];
+uint8_t nUserDigInput[PDM_NUM_INPUTS];
 
 //========================================================================
 // Output Logic
 //========================================================================
-uint8_t nOutputLogic[12];
+uint8_t nOutputLogic[PDM_NUM_OUTPUTS];
 
 //========================================================================
 // USB
@@ -136,7 +142,7 @@ const uint16_t* const STM32_TEMP_3V3_110C =  (uint16_t*)(0x1FFFF7C2);
 //========================================================================
 // Status LEDs
 //========================================================================
-PCA9635_LEDOnState_t eStatusLeds[16];
+PCA9635_LEDOnState_t eStatusLeds[PDM_NUM_LEDS];
 uint8_t nLEDTestSeqIndex;
 uint32_t nLEDTestSeqValues;
 uint32_t nLEDTestSeqLastTime;
@@ -171,13 +177,13 @@ static Wiper_t stWiper;
 //========================================================================
 // Variable and Input Mapping
 //========================================================================
-uint16_t* pVariableMap[71];
-uint16_t nPdmInputs[6];
-uint16_t nCanInputs[30];
-uint16_t nVirtInputs[20];
-uint16_t nOutputs[12];
-uint16_t nStarterDisable[12];
-uint16_t nOutputFlasher[12];
+uint16_t* pVariableMap[PDM_VAR_MAP_SIZE];
+uint16_t nPdmInputs[PDM_NUM_INPUTS];
+uint16_t nCanInputs[PDM_NUM_CAN_INPUTS];
+uint16_t nVirtInputs[PDM_NUM_VIRT_INPUTS];
+uint16_t nOutputs[PDM_NUM_OUTPUTS];
+uint16_t nStarterDisable[PDM_NUM_OUTPUTS];
+uint16_t nOutputFlasher[PDM_NUM_OUTPUTS];
 
 
 uint32_t nMsgCnt;
@@ -201,7 +207,7 @@ USBD_CDC_ItfTypeDef USBD_Interface_PDM =
 
 uint8_t nUsbMsgTx[9]; //Add \r to Usb Tx message
 
-uint8_t nManualOutputs[12];
+uint8_t nManualOutputs[PDM_NUM_OUTPUTS];
 
 uint8_t nReportingOn;
 uint16_t nReportingDelay;
@@ -397,52 +403,10 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 // MAIN
 //========================================================================
 //========================================================================
-void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4, CAN_HandleTypeDef* hcan, RTC_HandleTypeDef* hrtc, CRC_HandleTypeDef* hcrc){
+void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4, RTC_HandleTypeDef* hrtc, CRC_HandleTypeDef* hcrc){
 
   HAL_ADC_Start_DMA(hadc1, (uint32_t*) nAdc1Data, ADC_1_COUNT);
   HAL_ADC_Start_DMA(hadc4, (uint32_t*) nAdc4Data, ADC_4_COUNT);
-
-  //Configure the CAN Filter
-  CAN_FilterTypeDef  sFilterConfig;
-  sFilterConfig.FilterBank = 0;
-  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
-  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
-  sFilterConfig.FilterIdHigh = 0x0000;
-  sFilterConfig.FilterIdLow = 0x0000;
-  sFilterConfig.FilterMaskIdHigh = 0x0000;
-  sFilterConfig.FilterMaskIdLow = 0x0000;
-  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
-  sFilterConfig.FilterActivation = ENABLE;
-  sFilterConfig.SlaveStartFilterBank = 14;
-
-  if (HAL_CAN_ConfigFilter(hcan, &sFilterConfig) != HAL_OK)
-  {
-    /* Filter configuration Error */
-    Error_Handler();
-  }
-
-  //Start the CAN periphera
-  if (HAL_CAN_Start(hcan) != HAL_OK)
-  {
-    /* Start Error */
-    Error_Handler();
-  }
-
-  //Activate CAN RX notification
-  if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
-  {
-    /* Notification Error */
-    Error_Handler();
-  }
-
-  //Configure Transmission
-  stCanTxHeader.StdId = 1620;
-  stCanTxHeader.ExtId = 0;
-  stCanTxHeader.RTR = CAN_RTR_DATA;
-  stCanTxHeader.IDE = CAN_ID_STD;
-  stCanTxHeader.DLC = 8;
-  stCanTxHeader.TransmitGlobalTime = DISABLE;
-
 
   /* Init Device Library, add supported class and start the library. */
   if (USBD_Init(&hUSBD, &FS_Desc, DEVICE_FS) != USBD_OK)
@@ -483,17 +447,19 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     // USB Connection
     //=====================================================================================================
     if( (USB_VBUS_GPIO_Port->IDR & USB_VBUS_Pin) && !bUsbConnected){
-      USB_PULLUP_GPIO_Port->ODR |= USB_PULLUP_Pin;
+      //USB_PULLUP_GPIO_Port->ODR |= USB_PULLUP_Pin;
+      HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_SET);
       bUsbConnected = true;
     }
 
     if( !(USB_VBUS_GPIO_Port->IDR & USB_VBUS_Pin) && bUsbConnected){
-      USB_PULLUP_GPIO_Port->ODR &= ~USB_PULLUP_Pin;
+      //USB_PULLUP_GPIO_Port->ODR &= ~USB_PULLUP_Pin;
+      HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_RESET);
       bUsbConnected = false;
     }
 
     nILTotal = 0;
-    for(int i=0;i<12;i++)
+    for(int i=0;i<PDM_NUM_OUTPUTS;i++)
       nILTotal += pf[i].nIL;
 
 
@@ -543,7 +509,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     osDelay(MAIN_TASK_DELAY);
 
     //Debug GPIO
-    EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
+    //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
   }
 }
 
@@ -585,20 +551,20 @@ void OutputLogic(){
   }
 }
 
-void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
+void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTypeDef* hi2c2){
   //=====================================================================================================
   // MCP9808 Temperature Sensor Configuration
   //=====================================================================================================
-  if(MCP9808_Init(hi2c, MCP9808_ADDRESS) != MCP9808_OK)
+  if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
     printf("MCP9808 Init FAIL\n");
 
-  MCP9808_SetResolution(hi2c, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
+  MCP9808_SetResolution(hi2c1, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
 
-  if(MCP9808_SetLimit(hi2c, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
+  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
     printf("MCP9808 Set Upper Limit Failed\n");
-  if(MCP9808_SetLimit(hi2c, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
+  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
     printf("MCP9808 Set Lower Limit Failed\n");
-  if(MCP9808_SetLimit(hi2c, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
+  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
     printf("MCP9808 Set Critical Limit Failed\n");
 
   //Setup configuration
@@ -606,28 +572,35 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
   //Lock Tupper/Tlower window settings
   //Lock Tcrit settings
   //Set Tupper/Tlower hysteresis to +1.5 deg C
-  MCP9808_Write16(hi2c, MCP9808_ADDRESS, MCP9808_REG_CONFIG, (MCP9808_REG_CONFIG_ALERTCTRL | MCP9808_REG_CONFIG_WINLOCKED | MCP9808_REG_CONFIG_CRITLOCKED | MCP9808_REG_CONFIG_HYST_1_5));
+  MCP9808_Write16(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CONFIG, (MCP9808_REG_CONFIG_ALERTCTRL | MCP9808_REG_CONFIG_WINLOCKED | MCP9808_REG_CONFIG_CRITLOCKED | MCP9808_REG_CONFIG_HYST_1_5));
 
   //=====================================================================================================
   // PCAL9554B User Input Configuration
   //=====================================================================================================
   //Set configuration registers (all to input = 1)
-  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_CFG, 0xFF);
+  PCAL9554B_WriteReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_CFG, 0xFF);
   //Set latch register (no latch = 0)
-  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_IN_LATCH, 0x00);
+  PCAL9554B_WriteReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_IN_LATCH, 0x00);
   //Set pullup/pulldown enable register (all enable = 1)
-  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_PU_PD_ENABLE, 0xFF);
+  PCAL9554B_WriteReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_PU_PD_ENABLE, 0xFF);
   //Set pullup/pulldown selection register (all to pullup = 1)
-  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_PU_PD_SELECT, 0xFF);
+  PCAL9554B_WriteReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_PU_PD_SELECT, 0xFF);
   //Set interrupt mask (all to disable interrupt = 1)
-  PCAL9554B_WriteReg8(hi2c, PCAL9554B_ADDRESS, PCAL9554B_CMD_INT_MASK, 0xFF);
+  PCAL9554B_WriteReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_INT_MASK, 0xFF);
 
 
   //=====================================================================================================
   // PCA9539 Profet GPIO Configuration
   //=====================================================================================================
+  HAL_GPIO_WritePin(PF_RESET_Port, PF_RESET_Pin, GPIO_PIN_SET);
+  //Set all outputs to push-pull
+  PCA9539_WriteReg8(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT_CONFIG, 0x00);
   //Set configuration registers (all to output)
-  PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_CONFIG_PORT0, 0x0000);
+  PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_CONFIG_PORT0, 0x0000);
+  //Enable all pullup/pulldown
+  PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_PU_PD_ENABLE_PORT0, 0x0000);
+  //Set all outputs to pulldown
+  PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_PU_PD_SELECT_PORT0, 0x0000);
 
   //=====================================================================================================
   // ADS1x15 Analog In Configuration
@@ -637,21 +610,62 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
   stAdcPfBank1.gain = GAIN_ONE;
   stAdcPfBank1.dataRate = ADS1015_DATARATE_3300SPS;
 
+  //=====================================================================================================
+  // PCA9539 Profet GPIO Configuration
+  //=====================================================================================================
+  //Set all outputs to push-pull
+  PCA9539_WriteReg8(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT_CONFIG, 0x00);
+  //Set configuration registers (all to output)
+  PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_CONFIG_PORT0, 0x0000);
+  //Enable all pullup/pulldown
+  PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_PU_PD_ENABLE_PORT0, 0x0000);
+  //Set all outputs to pulldown
+  PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_PU_PD_SELECT_PORT0, 0x0000);
+
+  //=====================================================================================================
+  // ADS1x15 Analog In Configuration
+  //=====================================================================================================
+  stAdcPfBank2.deviceType = ADS1015;
+  stAdcPfBank2.bitShift = 0;
+  stAdcPfBank2.gain = GAIN_ONE;
+  stAdcPfBank2.dataRate = ADS1015_DATARATE_3300SPS;
+
+  //=====================================================================================================
+  // PCA9635 LED Configuration
+  //=====================================================================================================
+  //Send configuration, set to blink/flasher
+  PCA9635_Init(hi2c2, PCA9635_ADDRESS, PCA9635_BLINK);
+
+  //Set flashing frequency
+  PCA9635_SetGroupFreq(hi2c2, PCA9635_ADDRESS, PCA9635_FLASH_FREQ);
+
+  //Set PWM duty cycle for each channel (overriden by group PWM)
+  for(int i=0; i<PDM_NUM_LEDS; i++){
+    PCA9635_SetPWM(hi2c2, PCA9635_ADDRESS, i, 255);
+  }
+
+  //Set flashing duty cycle
+  PCA9635_SetGroupPWM(hi2c2, PCA9635_ADDRESS, PCA9635_FLASH_DUTY_CYCLE); //Have to set individual brightness levels first
+
+  //Start LED test sequence
+  nLEDTestSeqIndex = 1;
+  nLEDTestSeqLastTime = HAL_GetTick();
+
   /* Infinite loop */
   for(;;)
   {
    //=====================================================================================================
    // PCAL9554B User Input
    //=====================================================================================================
-   PCAL9554B_ReadReg8(hi2c, PCAL9554B_CMD_IN_PORT, nUserDigInputRaw);
-   nUserDigInput[0] = nUserDigInputRaw & 0x01;
-   nUserDigInput[1] = (nUserDigInputRaw & 0x02) >> 1;
-   nUserDigInput[2] = (nUserDigInputRaw & 0x04) >> 2;
-   nUserDigInput[3] = (nUserDigInputRaw & 0x08) >> 3;
-   nUserDigInput[4] = (nUserDigInputRaw & 0x10) >> 4;
-   nUserDigInput[5] = (nUserDigInputRaw & 0x20) >> 5;
-   nUserDigInput[6] = (nUserDigInputRaw & 0x40) >> 6;
-   nUserDigInput[7] = (nUserDigInputRaw & 0x80) >> 7;
+   nUserDigInputRaw = PCAL9554B_ReadReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_IN_PORT);
+   nUserDigInput[0] = !((nUserDigInputRaw & 0x08) >> 3);
+   nUserDigInput[1] = !((nUserDigInputRaw & 0x04) >> 2);
+   nUserDigInput[2] = !((nUserDigInputRaw & 0x02) >> 1);
+   nUserDigInput[3] = !(nUserDigInputRaw & 0x01);
+   nUserDigInput[4] = !((nUserDigInputRaw & 0x10) >> 4);
+   nUserDigInput[5] = !((nUserDigInputRaw & 0x20) >> 5);
+   nUserDigInput[6] = !((nUserDigInputRaw & 0x40) >> 6);
+   nUserDigInput[7] = !((nUserDigInputRaw & 0x80) >> 7);
 
    //=====================================================================================================
    // Set Profet
@@ -661,7 +675,7 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
    pfGpioBank1 &= ~PF_BANK1_DSEL;
    pfGpioBank1 |= PF_BANK1_DEN;
 
-   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
+   PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
    //=====================================================================================================
    // ADS1x15 Analog Input
@@ -669,14 +683,19 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
    for(int i = 0; i < 4; i++){
      //Send channel register
      //Sets ADC multiplexer - must delay after for conversion
-     ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
+     ADS1x15_SendRegs(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
 
      //Delay for conversion
      //860 SPS = 1.16ms per conversion - delay 2ms
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
      osDelay(ADS1015_CONVERSIONDELAY);
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
 
      //Read channel value
-     nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1);
+     if(ADS1x15_ReadADC(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, &nPfISBank1Raw[i]) != HAL_OK)
+     {
+       Error_Handler();
+     }
    }
 
    Profet_UpdateIS(&pf[0], nPfISBank1Raw[3]);
@@ -689,19 +708,24 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
    //=====================================================================================================
    pfGpioBank1 |= PF_BANK1_DSEL;
 
-   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
+   PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
    for(int i = 0; i < 2; i++){
      //Send channel register
      //Sets ADC multiplexer - must delay after for conversion
-     ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
+     ADS1x15_SendRegs(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
 
      //Delay for conversion
      //860 SPS = 1.16ms per conversion - delay 2ms
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
      osDelay(ADS1015_CONVERSIONDELAY);
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
 
      //Read channel value
-     nPfISBank1Raw[i] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1);
+     if(ADS1x15_ReadADC(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, &nPfISBank1Raw[i]) != HAL_OK)
+     {
+        Error_Handler();
+     }
    }
 
    //=====================================================================================================
@@ -717,178 +741,142 @@ void I2C1Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
    //=====================================================================================================
    InputLogic();
    OutputLogic();
-   PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
+   PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
    //=====================================================================================================
    // MCP9808 temperature sensor
    //=====================================================================================================
-   fBoardTempC = MCP9808_ReadTempC(hi2c, MCP9808_ADDRESS);
+   fBoardTempC = MCP9808_ReadTempC(hi2c1, MCP9808_ADDRESS);
    fBoardTempF = MCP9808_ConvertToF(fBoardTempC);
 
    if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
    if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
 
+
+
+   //=====================================================================================================
+   // Set Profet
+   // DSEL to channel 1
+   // Enable all DEN
+   //=====================================================================================================
+   pfGpioBank2 &= ~PF_BANK2_DSEL;
+   pfGpioBank2 |= PF_BANK2_DEN;
+
+   PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
+
+   //=====================================================================================================
+   // ADS1115 Analog Input
+   //=====================================================================================================
+   for(int i = 0; i < 4; i++){
+     //Send channel register
+     //Sets ADC multiplexer - must delay after for conversion
+     ADS1x15_SendRegs(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i);
+
+     //Delay for conversion
+     //860 SPS = 1.16ms per conversion - delay 2ms
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
+     osDelay(ADS1015_CONVERSIONDELAY);
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
+
+     //Read channel value
+     if(ADS1x15_ReadADC(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, &nPfISBank2Raw[i]) != HAL_OK)
+     {
+       Error_Handler();
+     }
+   }
+
+   Profet_UpdateIS(&pf[6], nPfISBank2Raw[0]);
+   Profet_UpdateIS(&pf[7], nPfISBank2Raw[1]);
+   Profet_UpdateIS(&pf[9], nPfISBank2Raw[2]);
+   Profet_UpdateIS(&pf[11], nPfISBank2Raw[3]);
+
+   //=====================================================================================================
+   //Flip Profet DSEL to channel 2
+   //=====================================================================================================
+   pfGpioBank2 |= PF_BANK2_DSEL;
+
+   PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
+
+   for(int i = 0; i < 2; i++){
+     //Send channel register
+     //Sets ADC multiplexer - must delay after for conversion
+     ADS1x15_SendRegs(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i+2);
+
+     //Delay for conversion
+     //860 SPS = 1.16ms per conversion - delay 2ms
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
+     osDelay(ADS1015_CONVERSIONDELAY);
+     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
+
+     //Read channel value
+     if(ADS1x15_ReadADC(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, &nPfISBank2Raw[i+2]) != HAL_OK)
+     {
+       Error_Handler();
+     }
+   }
+
+   //=====================================================================================================
+   // Scale to IS Values
+   //=====================================================================================================
+   Profet_UpdateIS(&pf[8], nPfISBank2Raw[2]);
+   Profet_UpdateIS(&pf[10], nPfISBank2Raw[3]);
+
+   //=====================================================================================================
+   // Profet I2C GPIO
+   // PCA9555
+   // PF1-6 Bank 1
+   // PF7-12 Bank 2
+   //=====================================================================================================
+   InputLogic();
+   OutputLogic();
+   PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
+
+   //=====================================================================================================
+   // Status LEDs
+   //=====================================================================================================
+   if(nLEDTestSeqIndex > 0)
+   {
+     nLEDTestSeqValues = (0x00000001 << ((nLEDTestSeqIndex-1)*2));
+
+     PCA9635_SetAllNum(hi2c2, PCA9635_ADDRESS, nLEDTestSeqValues);
+
+     if((HAL_GetTick() - nLEDTestSeqLastTime) > LED_TEST_SEQ_DELAY)
+     {
+       nLEDTestSeqLastTime = HAL_GetTick();
+       nLEDTestSeqIndex++;
+     }
+
+     //Last step
+     if(nLEDTestSeqIndex > 16)
+       nLEDTestSeqIndex = 0;
+   }
+   else
+   {
+     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
+       SetPfStatusLed(&eStatusLeds[i], &pf[i]);
+     }
+     eStatusLeds[12] = (eDevMode == DEVICE_AUTO) + ((eDevMode == DEVICE_MANUAL) * LED_FLASH);              //State
+     eStatusLeds[13] = bUsbConnected;   //USB
+     eStatusLeds[14] = (HAL_GetTick() - nLastCanUpdate) < 1000;              //CAN
+     eStatusLeds[15] = (eDevState == DEVICE_ERROR);   //Fault
+     PCA9635_SetAll(hi2c2, PCA9635_ADDRESS, eStatusLeds);
+   }
+
    //Debug GPIO
-   EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
+   HAL_GPIO_TogglePin(EXTRA1_GPIO_Port, EXTRA1_Pin);
+   HAL_GPIO_TogglePin(EXTRA3_GPIO_Port, EXTRA3_Pin);
+   //EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
 
 #ifdef MEAS_HEAP_USE
    __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
 #endif
 
-   //osDelay(I2C_TASK_DELAY);
+   osDelay(I2C_TASK_DELAY);
  }
 }
 
-void I2C2Task(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c){
-  //=====================================================================================================
-  // PCA9555 Profet GPIO Configuration
-  //=====================================================================================================
-  //Set configuration registers (all to output)
-  PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_CONFIG_PORT0, 0x0000);
 
-  //=====================================================================================================
-  // ADS1x15 Analog In Configuration
-  //=====================================================================================================
-  stAdcPfBank2.deviceType = ADS1015;
-  stAdcPfBank2.bitShift = 0;
-  stAdcPfBank2.gain = GAIN_ONE;
-  stAdcPfBank2.dataRate = ADS1015_DATARATE_3300SPS;
-
-  //=====================================================================================================
-  // PCA9635 LED Configuration
-  //=====================================================================================================
-  //Send configuration, set to blink/flasher
-  PCA9635_Init(hi2c, PCA9635_ADDRESS, PCA9635_BLINK);
-
-  //Set flashing frequency
-  PCA9635_SetGroupFreq(hi2c, PCA9635_ADDRESS, PCA9635_FLASH_FREQ);
-
-  //Set PWM duty cycle for each channel (overriden by group PWM)
-  for(int i=0; i<16; i++){
-    PCA9635_SetPWM(hi2c, PCA9635_ADDRESS, i, 255);
-  }
-
-  //Set flashing duty cycle
-  PCA9635_SetGroupPWM(hi2c, PCA9635_ADDRESS, PCA9635_FLASH_DUTY_CYCLE); //Have to set individual brightness levels first
-
-  //Start LED test sequence
-  nLEDTestSeqIndex = 1;
-  nLEDTestSeqLastTime = HAL_GetTick();
-
-   /* Infinite loop */
-  for(;;)
-  {
-    //=====================================================================================================
-    // Set Profet
-    // DSEL to channel 1
-    // Enable all DEN
-    //=====================================================================================================
-    pfGpioBank2 &= ~PF_BANK2_DSEL;
-    pfGpioBank2 |= PF_BANK2_DEN;
-
-    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
-
-    //=====================================================================================================
-    // ADS1115 Analog Input
-    //=====================================================================================================
-    for(int i = 0; i < 4; i++){
-      //Send channel register
-      //Sets ADC multiplexer - must delay after for conversion
-      ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i);
-
-      //Delay for conversion
-      //860 SPS = 1.16ms per conversion - delay 2ms
-      osDelay(ADS1015_CONVERSIONDELAY);
-
-      //Read channel value
-      nPfISBank2Raw[i] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2);
-    }
-
-    Profet_UpdateIS(&pf[6], nPfISBank2Raw[0]);
-    Profet_UpdateIS(&pf[7], nPfISBank2Raw[1]);
-    Profet_UpdateIS(&pf[9], nPfISBank2Raw[2]);
-    Profet_UpdateIS(&pf[11], nPfISBank2Raw[3]);
-
-    //=====================================================================================================
-    //Flip Profet DSEL to channel 2
-    //=====================================================================================================
-    pfGpioBank2 |= PF_BANK2_DSEL;
-
-    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
-
-    for(int i = 0; i < 2; i++){
-      //Send channel register
-      //Sets ADC multiplexer - must delay after for conversion
-      ADS1x15_SendRegs(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i+2);
-
-      //Delay for conversion
-      //860 SPS = 1.16ms per conversion - delay 2ms
-      osDelay(ADS1015_CONVERSIONDELAY);
-
-      //Read channel value
-      nPfISBank2Raw[i+2] = ADS1x15_ReadADC(hi2c, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2);
-    }
-
-    //=====================================================================================================
-    // Scale to IS Values
-    //=====================================================================================================
-    Profet_UpdateIS(&pf[8], nPfISBank2Raw[2]);
-    Profet_UpdateIS(&pf[10], nPfISBank2Raw[3]);
-
-    //=====================================================================================================
-    // Profet I2C GPIO
-    // PCA9555
-    // PF1-6 Bank 1
-    // PF7-12 Bank 2
-    //=====================================================================================================
-    InputLogic();
-    OutputLogic();
-    PCA9539_WriteReg16(hi2c, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
-
-    //=====================================================================================================
-    // Status LEDs
-    //=====================================================================================================
-    if(nLEDTestSeqIndex > 0)
-    {
-      nLEDTestSeqValues = (0x00000001 << ((nLEDTestSeqIndex-1)*2));
-
-      PCA9635_SetAllNum(hi2c, PCA9635_ADDRESS, nLEDTestSeqValues);
-
-      if((HAL_GetTick() - nLEDTestSeqLastTime) > LED_TEST_SEQ_DELAY)
-      {
-        nLEDTestSeqLastTime = HAL_GetTick();
-        nLEDTestSeqIndex++;
-      }
-
-      //Last step
-      if(nLEDTestSeqIndex > 16)
-        nLEDTestSeqIndex = 0;
-    }
-    else
-    {
-      for(int i=0; i<12; i++){
-        SetPfStatusLed(&eStatusLeds[i], &pf[i]);
-      }
-      eStatusLeds[12] = (eDevMode == DEVICE_AUTO) + ((eDevMode == DEVICE_MANUAL) * LED_FLASH);              //State
-      eStatusLeds[13] = bUsbConnected;   //USB
-      eStatusLeds[14] = (HAL_GetTick() - nLastCanUpdate) < 1000;              //CAN
-      eStatusLeds[15] = (eDevState == DEVICE_ERROR);   //Fault
-      PCA9635_SetAll(hi2c, PCA9635_ADDRESS, eStatusLeds);
-    }
-
-    //Debug GPIO
-    //EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
-
-#ifdef MEAS_HEAP_USE
-    __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
-#endif
-
-    //osDelay(I2C_TASK_DELAY);
-  }
-}
-
-
-void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_HandleTypeDef* hrtc)
+void ProfetSMTask(osThreadId_t* thisThreadId)
 {
   Profet_Init();
 
@@ -901,10 +889,10 @@ void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_Hand
   uint8_t nSend;
 
   for(;;){
-    for(int i=0; i<12; i++){
+    for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       Profet_SM(&pf[i]);
     }
-    WiperSM(&stWiper);
+    //WiperSM(&stWiper);
     MsgQueueRx_t stMsgRx;
     osStatus_t eStatus;
 
@@ -918,12 +906,12 @@ void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_Hand
     eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
     if(eStatus == osOK){
       if(stMsgRx.eMsgSrc == CAN_RX){
-        for(int i=0; i<30; i++){
+        for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
           EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
         }
       }
       if((stMsgRx.eMsgSrc == CAN_RX && stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId + 21) || (stMsgRx.eMsgSrc == USB_RX)){
-        EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
+        //EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
 
         nSend = 0;
 
@@ -936,13 +924,14 @@ void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_Hand
               if(stMsgRx.nRxLen == 4){
                 if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 23) && (stMsgRx.nRxData[3] == 20)){
                   //Write settings to FRAM
-                  uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+                  //uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+                  //TODO: Use flag to I2C task
 
                   stMsgUsbTx.nTxLen = 2;
                   stMsgCanTx.stTxHeader.DLC = 2;
 
                   stMsgUsbTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-                  stMsgUsbTx.nTxData[1] = nRet;
+                  stMsgUsbTx.nTxData[1] = 0;// nRet;
                   stMsgUsbTx.nTxData[2] = 0;
                   stMsgUsbTx.nTxData[3] = 0;
                   stMsgUsbTx.nTxData[4] = 0;
@@ -1098,14 +1087,16 @@ void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_Hand
                stDate.Date = stMsgRx.nRxData[6];
                stDate.WeekDay = RTC_WEEKDAY_MONDAY;
 
-               HAL_RTC_SetTime(hrtc, &stTime, RTC_FORMAT_BCD);
-               HAL_RTC_SetDate(hrtc, &stDate, RTC_FORMAT_BCD);
+               //HAL_RTC_SetTime(hrtc, &stTime, RTC_FORMAT_BCD);
+               //HAL_RTC_SetDate(hrtc, &stDate, RTC_FORMAT_BCD);
+               //TODO: Use flag to Main task
                nSend = 1;
              }
 
              if((stMsgRx.nRxLen == 1) || nSend){
-                 HAL_RTC_GetTime(hrtc, &stTime, RTC_FORMAT_BCD);
-                 HAL_RTC_GetDate(hrtc, &stDate, RTC_FORMAT_BCD);
+                 //HAL_RTC_GetTime(hrtc, &stTime, RTC_FORMAT_BCD);
+                 //HAL_RTC_GetDate(hrtc, &stDate, RTC_FORMAT_BCD);
+                 //TODO: Use flag to Main task
 
                  stMsgUsbTx.nTxLen = 7;
                  stMsgCanTx.stTxHeader.DLC = 7;
@@ -1157,6 +1148,7 @@ void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_Hand
 
     osDelay(5);
     //Debug GPIO
+
     //EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
   }
 
@@ -1164,6 +1156,47 @@ void ProfetSMTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c2, RTC_Hand
 
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 {
+  //Configure the CAN Filter
+  CAN_FilterTypeDef  sFilterConfig;
+  sFilterConfig.FilterBank = 0;
+  sFilterConfig.FilterMode = CAN_FILTERMODE_IDMASK;
+  sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
+  sFilterConfig.FilterIdHigh = 0x0000;
+  sFilterConfig.FilterIdLow = 0x0000;
+  sFilterConfig.FilterMaskIdHigh = 0x0000;
+  sFilterConfig.FilterMaskIdLow = 0x0000;
+  sFilterConfig.FilterFIFOAssignment = CAN_RX_FIFO0;
+  sFilterConfig.FilterActivation = ENABLE;
+  sFilterConfig.SlaveStartFilterBank = 14;
+
+  if (HAL_CAN_ConfigFilter(hcan, &sFilterConfig) != HAL_OK)
+  {
+    /* Filter configuration Error */
+    Error_Handler();
+  }
+
+  //Start the CAN periphera
+  if (HAL_CAN_Start(hcan) != HAL_OK)
+  {
+    /* Start Error */
+    Error_Handler();
+  }
+
+  //Activate CAN RX notification
+  if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
+  {
+    /* Notification Error */
+    Error_Handler();
+  }
+
+  //Configure Transmission
+  stCanTxHeader.StdId = 1620;
+  stCanTxHeader.ExtId = 0;
+  stCanTxHeader.RTR = CAN_RTR_DATA;
+  stCanTxHeader.IDE = CAN_ID_STD;
+  stCanTxHeader.DLC = 8;
+  stCanTxHeader.TransmitGlobalTime = DISABLE;
+
   for(;;){
     if(stPdmConfig.stCanOutput.nEnabled &&
         (stPdmConfig.stCanOutput.nUpdateTime > 0) &&
@@ -1377,45 +1410,21 @@ void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *prof
 void Profet_Init(){
 
   pf[0].eModel = BTS7002_1EPP;
-  pf[0].eState = OFF;
   pf[0].nNum = 0;
   pf[0].nIN_Port = &pfGpioBank1;
   pf[0].nIN_Pin = 0x0080;
-  pf[0].nDEN_Port = 0;
-  pf[0].nDEN_Pin = 0;
-  pf[0].nIL_Limit = 250; //25.0A;
-  pf[0].nIL_InRush_Limit = 300; //30A
-  pf[0].nIL_InRush_Time = 2000; //ms
-  pf[0].nOC_ResetTime = 1000;
-  pf[0].nOC_ResetLimit = 1;
   pf[0].fKilis = 2.286;
 
   pf[1].eModel = BTS7002_1EPP;
-  pf[1].eState = OFF;
   pf[1].nNum = 1;
   pf[1].nIN_Port = &pfGpioBank1;
   pf[1].nIN_Pin = 0x0002;
-  pf[1].nDEN_Port = 0;
-  pf[1].nDEN_Pin = 0;
-  pf[1].nIL_Limit = 150; //15.0A
-  pf[1].nIL_InRush_Limit = 300;
-  pf[1].nIL_InRush_Time = 2000; //ms
-  pf[1].nOC_ResetTime = 1000;
-  pf[1].nOC_ResetLimit = 2;
   pf[1].fKilis = 2.286;
 
   pf[2].eModel = BTS7008_2EPA_CH1;
-  pf[2].eState = OFF;
   pf[2].nNum = 2;
   pf[2].nIN_Port = &pfGpioBank1;
   pf[2].nIN_Pin = 0x8000;
-  pf[2].nDEN_Port = 0;
-  pf[2].nDEN_Pin = 0;
-  pf[2].nIL_Limit = 80; //8A;
-  pf[2].nIL_InRush_Limit = 160; //16A
-  pf[2].nIL_InRush_Time = 2000; //ms
-  pf[2].nOC_ResetTime = 1000;
-  pf[2].nOC_ResetLimit = 3;
   pf[2].fKilis = 0.554;
 
   pf[3].eModel = BTS7008_2EPA_CH2;
@@ -1423,13 +1432,6 @@ void Profet_Init(){
   pf[3].nNum = 3;
   pf[3].nIN_Port = &pfGpioBank1;
   pf[3].nIN_Pin = 0x1000;
-  pf[3].nDEN_Port = 0;
-  pf[3].nDEN_Pin = 0;
-  pf[3].nIL_Limit = 80;   //8A;
-  pf[3].nIL_InRush_Limit = 160; //16A
-  pf[3].nIL_InRush_Time = 2000; //ms
-  pf[3].nOC_ResetTime = 1000;
-  pf[3].nOC_ResetLimit = 2;
   pf[3].fKilis = 0.554;
 
   pf[4].eModel = BTS7008_2EPA_CH1;
@@ -1437,13 +1439,6 @@ void Profet_Init(){
   pf[4].nNum = 4;
   pf[4].nIN_Port = &pfGpioBank1;
   pf[4].nIN_Pin = 0x0800;
-  pf[4].nDEN_Port = 0;
-  pf[4].nDEN_Pin = 0;
-  pf[4].nIL_Limit = 80; //8A;
-  pf[4].nIL_InRush_Limit = 160; //16A
-  pf[4].nIL_InRush_Time = 2000; //ms
-  pf[4].nOC_ResetTime = 1000;
-  pf[4].nOC_ResetLimit = 2;
   pf[4].fKilis = 0.554;
 
   pf[5].eModel = BTS7008_2EPA_CH2;
@@ -1451,13 +1446,6 @@ void Profet_Init(){
   pf[5].nNum = 5;
   pf[5].nIN_Port = &pfGpioBank1;
   pf[5].nIN_Pin = 0x0100;
-  pf[5].nDEN_Port = 0;
-  pf[5].nDEN_Pin = 0;
-  pf[5].nIL_Limit = 80; ///8A;
-  pf[5].nIL_InRush_Limit = 160; //16A
-  pf[5].nIL_InRush_Time = 2000; //ms
-  pf[5].nOC_ResetTime = 1000;
-  pf[5].nOC_ResetLimit = 2;
   pf[5].fKilis = 0.554;
 
   pf[6].eModel = BTS7002_1EPP;
@@ -1465,13 +1453,6 @@ void Profet_Init(){
   pf[6].nNum = 6;
   pf[6].nIN_Port = &pfGpioBank2;
   pf[6].nIN_Pin = 0x0002;
-  pf[6].nDEN_Port = 0;
-  pf[6].nDEN_Pin = 0;
-  pf[6].nIL_Limit = 150; //15A;
-  pf[6].nIL_InRush_Limit = 300; //30A
-  pf[6].nIL_InRush_Time = 2000; //ms
-  pf[6].nOC_ResetTime = 1000;
-  pf[6].nOC_ResetLimit = 2;
   pf[6].fKilis = 2.286;
 
   pf[7].eModel = BTS7002_1EPP;
@@ -1479,13 +1460,6 @@ void Profet_Init(){
   pf[7].nNum = 7;
   pf[7].nIN_Port = &pfGpioBank2;
   pf[7].nIN_Pin = 0x0008;
-  pf[7].nDEN_Port = 0;
-  pf[7].nDEN_Pin = 0;
-  pf[7].nIL_Limit = 150; //15A;
-  pf[7].nIL_InRush_Limit = 300; //30A
-  pf[7].nIL_InRush_Time = 2000; //ms
-  pf[7].nOC_ResetTime = 1000;
-  pf[7].nOC_ResetLimit = 2;
   pf[7].fKilis = 2.286;
 
   pf[8].eModel = BTS7008_2EPA_CH1;
@@ -1493,13 +1467,6 @@ void Profet_Init(){
   pf[8].nNum = 8;
   pf[8].nIN_Port = &pfGpioBank2;
   pf[8].nIN_Pin = 0x0010;
-  pf[8].nDEN_Port = 0;
-  pf[8].nDEN_Pin = 0;
-  pf[8].nIL_Limit = 80; //8A;
-  pf[8].nIL_InRush_Limit = 160; //16A
-  pf[8].nIL_InRush_Time = 2000; //ms
-  pf[8].nOC_ResetTime = 1000;
-  pf[8].nOC_ResetLimit = 2;
   pf[8].fKilis = 0.554;
 
   pf[9].eModel = BTS7008_2EPA_CH2;
@@ -1507,13 +1474,6 @@ void Profet_Init(){
   pf[9].nNum = 9;
   pf[9].nIN_Port = &pfGpioBank2;
   pf[9].nIN_Pin = 0x0080;
-  pf[9].nDEN_Port = 0;
-  pf[9].nDEN_Pin = 0;
-  pf[9].nIL_Limit = 80; //8A;
-  pf[9].nIL_InRush_Limit = 160; //16A
-  pf[9].nIL_InRush_Time = 2000; //ms
-  pf[9].nOC_ResetTime = 1000;
-  pf[9].nOC_ResetLimit = 2;
   pf[9].fKilis = 0.554;
 
   pf[10].eModel = BTS7008_2EPA_CH1;
@@ -1521,13 +1481,6 @@ void Profet_Init(){
   pf[10].nNum = 10;
   pf[10].nIN_Port = &pfGpioBank2;
   pf[10].nIN_Pin = 0x0100;
-  pf[10].nDEN_Port = 0;
-  pf[10].nDEN_Pin = 0;
-  pf[10].nIL_Limit = 80; // 8A;
-  pf[10].nIL_InRush_Limit = 160; //16A
-  pf[10].nIL_InRush_Time = 2000; //ms
-  pf[10].nOC_ResetTime = 1000;
-  pf[10].nOC_ResetLimit = 2;
   pf[10].fKilis = 0.554;
 
   pf[11].eModel = BTS7008_2EPA_CH2;
@@ -1535,13 +1488,6 @@ void Profet_Init(){
   pf[11].nNum = 11;
   pf[11].nIN_Port = &pfGpioBank2;
   pf[11].nIN_Pin = 0x0800;
-  pf[11].nDEN_Port = 0;
-  pf[11].nDEN_Pin = 0;
-  pf[11].nIL_Limit = 50; //8A
-  pf[11].nIL_InRush_Limit = 160; //16A
-  pf[11].nIL_InRush_Time = 2000; //ms
-  pf[11].nOC_ResetTime = 1000;
-  pf[11].nOC_ResetLimit = 2;
   pf[11].fKilis = 0.554;
 }
 
@@ -1555,51 +1501,52 @@ int _write(int file, char *ptr, int len){
   return len;
 }
 
-uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
+uint8_t ReadPdmConfig()
 {
-  //PdmConfig_SetDefault(&stPdmConfig);
+  PdmConfig_SetDefault(&stPdmConfig);
+
+  /*
   //PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
 
   if(PdmConfig_Read(hi2c2, MB85RC_ADDRESS, &stPdmConfig) == 0){
     PdmConfig_SetDefault(&stPdmConfig);
   }
+  */
 
   //Map the variable map first before using
-  //ADS1x15 inputs
-  for(int i=0; i<6; i++)
+  //User inputs
+  for(int i=0; i<PDM_NUM_INPUTS; i++)
     pVariableMap[i+1] = &nPdmInputs[i];
 
   //CAN inputs
-  for(int i=0; i<30; i++)
-    pVariableMap[i + 7] = &nCanInputs[i];
+  for(int i=0; i<PDM_NUM_CAN_INPUTS; i++)
+    pVariableMap[i + 9] = &nCanInputs[i];
 
-  for(int i=0; i<20; i++)
-    pVariableMap[i + 37] = &nVirtInputs[i];
+  for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
+    pVariableMap[i + 39] = &nVirtInputs[i];
 
-  for(int i=0; i<12; i++)
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    pVariableMap[i + 57] = &nOutputs[i];
+    pVariableMap[i + 59] = &nOutputs[i];
   }
 
-  pVariableMap[69] = &stWiper.nSlowOut;
-  pVariableMap[70] = &stWiper.nFastOut;
+  pVariableMap[71] = &stWiper.nSlowOut;
+  pVariableMap[72] = &stWiper.nFastOut;
 
 
   //Assign variable map values
-  for(int i=0; i<12; i++)
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
     stPdmConfig.stOutput[i].pInput = pVariableMap[stPdmConfig.stOutput[i].nInput];
   }
 
   //Map input values to config structure
-  //stPdmConfig.stInput[0].pInput = &nAiBank1Raw[0];
-  //stPdmConfig.stInput[1].pInput = &nAiBank1Raw[1];
-  //stPdmConfig.stInput[2].pInput = &nAiBank1Raw[2];
-  //stPdmConfig.stInput[3].pInput = &nAiBank1Raw[3];
-  //stPdmConfig.stInput[4].pInput = &nAiBank2Raw[0];
-  //stPdmConfig.stInput[5].pInput = &nAiBank2Raw[1];
+  for(int i=0; i<PDM_NUM_INPUTS; i++)
+  {
+    stPdmConfig.stInput[i].pInput = &nUserDigInput[i];
+  }
 
-  for(int i=0; i<20; i++)
+  for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
   {
     stPdmConfig.stVirtualInput[i].pVar0 = pVariableMap[stPdmConfig.stVirtualInput[i].nVar0];
     stPdmConfig.stVirtualInput[i].pVar1 = pVariableMap[stPdmConfig.stVirtualInput[i].nVar1];
@@ -1616,16 +1563,17 @@ uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
   stWiper.pSpeedInput = pVariableMap[stPdmConfig.stWiper.nSpeedInput];
   stWiper.pWashInput = pVariableMap[stPdmConfig.stWiper.nWashInput];
   stWiper.nWashWipeCycles = stPdmConfig.stWiper.nWashWipeCycles;
-  for(int i=0; i<6; i++)
+  for(int i=0; i<PDM_NUM_WIPER_INTER_DELAYS; i++)
     stWiper.nInterDelays[i] = stPdmConfig.stWiper.nIntermitTime[i];
-  for(int i=0; i<8; i++)
+  for(int i=0; i<PDM_NUM_WIPER_SPEED_MAP; i++)
     stWiper.eSpeedMap[i] = (WiperSpeed_t)stPdmConfig.stWiper.nSpeedMap[i];
 
   stPdmConfig.stStarter.pInput = pVariableMap[stPdmConfig.stStarter.nInput];
 
-  for(int i=0; i<4; i++)
+  for(int i=0; i<PDM_NUM_FLASHERS; i++)
     stPdmConfig.stFlasher[i].pInput = pVariableMap[stPdmConfig.stFlasher[i].nInput];
 
 
   return PDM_OK;
+
 }

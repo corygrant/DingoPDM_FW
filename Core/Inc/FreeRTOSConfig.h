@@ -80,6 +80,12 @@
 #define configTIMER_QUEUE_LENGTH                 10
 #define configTIMER_TASK_STACK_DEPTH             256
 
+#define configGENERATE_RUN_TIME_STATS 1
+extern void ConfigureRunTimeCounter(void);
+#define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ConfigureRunTimeCounter()
+extern uint32_t GetRunTimeCounter(void);
+#define portGET_RUN_TIME_COUNTER_VALUE() GetRunTimeCounter()
+
 /* Set the following definitions to 1 to include the API function, or zero
 to exclude the API function. */
 #define INCLUDE_vTaskPrioritySet            1

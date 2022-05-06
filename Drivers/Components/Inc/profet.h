@@ -42,8 +42,6 @@ typedef struct {
   uint16_t nNum;
   uint16_t *nIN_Port;
   uint16_t nIN_Pin;
-  GPIO_TypeDef *nDEN_Port;
-  uint16_t nDEN_Pin;
   volatile uint16_t nIS_Avg;
   volatile uint32_t nIS_Sum;
   uint16_t nIL_Limit;

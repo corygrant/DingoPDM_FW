@@ -71,16 +71,9 @@ const osThreadAttr_t defaultTask_attributes = {
   .priority = (osPriority_t) osPriorityNormal,
 };
 /* Definitions for i2c1Task */
-osThreadId_t i2c1TaskHandle;
-const osThreadAttr_t i2c1Task_attributes = {
-  .name = "i2c1Task",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
-};
-/* Definitions for i2c2Task */
-osThreadId_t i2c2TaskHandle;
-const osThreadAttr_t i2c2Task_attributes = {
-  .name = "i2c2Task",
+osThreadId_t i2cTaskHandle;
+const osThreadAttr_t i2cTask_attributes = {
+  .name = "i2cTask",
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
@@ -95,7 +88,7 @@ const osThreadAttr_t profetSMTask_attributes = {
 osThreadId_t canTxTaskHandle;
 const osThreadAttr_t canTxTask_attributes = {
   .name = "canTxTask",
-  .stack_size = 128 * 4,
+  .stack_size = 256 * 4,
   .priority = (osPriority_t) osPriorityNormal1,
 };
 /* Definitions for KickIWDG */
@@ -104,6 +97,10 @@ const osTimerAttr_t KickIWDG_attributes = {
   .name = "KickIWDG"
 };
 /* USER CODE BEGIN PV */
+
+#if( configGENERATE_RUN_TIME_STATS == 1)
+  PRIVILEGED_DATA volatile static uint32_t nRunTimeCount = 0UL;
+#endif
 
 /* USER CODE END PV */
 
@@ -121,8 +118,7 @@ static void MX_CRC_Init(void);
 static void MX_ADC1_Init(void);
 static void MX_IWDG_Init(void);
 void StartDefaultTask(void *argument);
-void StartI2C1Task(void *argument);
-void StartI2C2Task(void *argument);
+void StartI2CTask(void *argument);
 void StartProfetSMTask(void *argument);
 void StartCanTxTask(void *argument);
 void KickIWDGCallback(void *argument);
@@ -230,10 +226,7 @@ int main(void)
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
   /* creation of i2cTask */
-  i2c1TaskHandle = osThreadNew(StartI2C1Task, NULL, &i2c1Task_attributes);
-
-  /* creation of i2cTask */
-  i2c2TaskHandle = osThreadNew(StartI2C2Task, NULL, &i2c2Task_attributes);
+  i2cTaskHandle = osThreadNew(StartI2CTask, NULL, &i2cTask_attributes);
 
   /* creation of profetSMTask */
   profetSMTaskHandle = osThreadNew(StartProfetSMTask, NULL, &profetSMTask_attributes);
@@ -246,11 +239,8 @@ int main(void)
   if(defaultTaskHandle == 0x0)
     Error_Handler();
 
-  if(i2c1TaskHandle == 0x0)
+  if(i2cTaskHandle == 0x0)
     Error_Handler();
-
-  if(i2c2TaskHandle == 0x0)
-      Error_Handler();
 
   if(profetSMTaskHandle == 0x0)
     Error_Handler();
@@ -260,7 +250,7 @@ int main(void)
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  if(ReadPdmConfig(&hi2c2) != PDM_OK)
+  if(ReadPdmConfig() != PDM_OK)
     Error_Handler();
   /* USER CODE END RTOS_EVENTS */
 
@@ -297,13 +287,13 @@ void SystemClock_Config(void)
   /** Initializes the RCC Oscillators according to the specified parameters
   * in the RCC_OscInitTypeDef structure.
   */
-  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_LSI|RCC_OSCILLATORTYPE_HSE
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI|RCC_OSCILLATORTYPE_HSE
                               |RCC_OSCILLATORTYPE_LSE;
   RCC_OscInitStruct.HSEState = RCC_HSE_ON;
   RCC_OscInitStruct.HSEPredivValue = RCC_HSE_PREDIV_DIV1;
   RCC_OscInitStruct.LSEState = RCC_LSE_ON;
   RCC_OscInitStruct.HSIState = RCC_HSI_ON;
-  RCC_OscInitStruct.LSIState = RCC_LSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
   RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL9;
@@ -327,8 +317,8 @@ void SystemClock_Config(void)
   }
   PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_I2C1
                               |RCC_PERIPHCLK_I2C2|RCC_PERIPHCLK_RTC;
-  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_SYSCLK;
-  PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_SYSCLK;
+  PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_HSI;
+  PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_HSI;
   PeriphClkInit.RTCClockSelection = RCC_RTCCLKSOURCE_LSE;
   PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
@@ -545,7 +535,7 @@ static void MX_I2C1_Init(void)
 
   /* USER CODE END I2C1_Init 1 */
   hi2c1.Instance = I2C1;
-  hi2c1.Init.Timing = 0x00702681;
+  hi2c1.Init.Timing = 0x00300208;// 0x00702681;
   hi2c1.Init.OwnAddress1 = 0;
   hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -593,7 +583,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.Timing = 0x00702681;
+  hi2c2.Init.Timing = 0x00300208;// 0x00702681;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
   hi2c2.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
@@ -770,40 +760,45 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOA_CLK_ENABLE();
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, EXTRA1_Pin|EXTRA3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, EXTRA2_Pin|USB_PULLUP_Pin|EXTRA3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, EXTRA2_Pin|PF_RESET_Pin|USB_PULLUP_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : EXTRA1_Pin */
   GPIO_InitStruct.Pin = EXTRA1_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(EXTRA1_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : EXTRA2_Pin EXTRA3_Pin */
-  GPIO_InitStruct.Pin = EXTRA2_Pin|EXTRA3_Pin;
+  GPIO_InitStruct.Pin = EXTRA3_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+  HAL_GPIO_Init(EXTRA3_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USB_VBUS_Pin */
+  GPIO_InitStruct.Pin = EXTRA2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(EXTRA2_GPIO_Port, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = PF_RESET_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(PF_RESET_Port, &GPIO_InitStruct);
+
   GPIO_InitStruct.Pin = USB_VBUS_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   HAL_GPIO_Init(USB_VBUS_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : USB_PULLUP_Pin */
   GPIO_InitStruct.Pin = USB_PULLUP_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_OD;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(USB_PULLUP_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA8 */
   GPIO_InitStruct.Pin = GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
@@ -814,8 +809,17 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+#if( configGENERATE_RUN_TIME_STATS == 1)
+  void ConfigureRunTimeCounter(void)
+  {
+    nRunTimeCount = 0;
+  }
 
-
+  uint32_t GetRunTimeCounter(void)
+  {
+    return nRunTimeCount;
+  }
+#endif
 /* USER CODE END 4 */
 
 /* USER CODE BEGIN Header_StartDefaultTask */
@@ -828,7 +832,7 @@ static void MX_GPIO_Init(void)
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN 5 */
-  PdmMainTask(&defaultTaskHandle, &hadc1, &hadc4, &hcan, &hrtc, &hcrc);
+  PdmMainTask(&defaultTaskHandle, &hadc1, &hadc4, &hrtc, &hcrc);
   /* USER CODE END 5 */
 }
 
@@ -839,17 +843,10 @@ void StartDefaultTask(void *argument)
 * @retval None
 */
 /* USER CODE END Header_StartI2CTask */
-void StartI2C1Task(void *argument)
+void StartI2CTask(void *argument)
 {
   /* USER CODE BEGIN StartI2CTask */
-  I2C1Task(&i2c1TaskHandle, &hi2c1);
-  /* USER CODE END StartI2CTask */
-}
-
-void StartI2C2Task(void *argument)
-{
-  /* USER CODE BEGIN StartI2CTask */
-  I2C2Task(&i2c2TaskHandle, &hi2c2);
+  I2CTask(&i2cTaskHandle, &hi2c1, &hi2c2);
   /* USER CODE END StartI2CTask */
 }
 
@@ -863,7 +860,7 @@ void StartI2C2Task(void *argument)
 void StartProfetSMTask(void *argument)
 {
   /* USER CODE BEGIN StartProfetSMTask */
-  ProfetSMTask(&profetSMTaskHandle, &hi2c2, &hrtc);
+  ProfetSMTask(&profetSMTaskHandle);
   /* USER CODE END StartProfetSMTask */
 }
 
@@ -905,6 +902,9 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE END Callback 0 */
   if (htim->Instance == TIM6) {
     HAL_IncTick();
+    #if( configGENERATE_RUN_TIME_STATS == 1)
+      nRunTimeCount = nRunTimeCount + 1;
+    #endif
   }
   /* USER CODE BEGIN Callback 1 */
 

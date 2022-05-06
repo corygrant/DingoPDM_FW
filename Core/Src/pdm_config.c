@@ -477,7 +477,7 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 
 void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Device Configuration
-  pConfig->stDevConfig.nVersion = 2;
+  pConfig->stDevConfig.nVersion = 3;
   pConfig->stDevConfig.nCanEnabled = 1;
   pConfig->stDevConfig.nCanSpeed = 6;
 
@@ -487,157 +487,155 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Inputs
   pConfig->stInput[0].nEnabled = 1;
   pConfig->stInput[0].eMode = MODE_MOMENTARY;
-  pConfig->stInput[0].nOnLevel = 10000;
+  pConfig->stInput[0].nOnLevel = 0;
   pConfig->stInput[0].nDebounceTime = 20;
 
   pConfig->stInput[1].nEnabled = 1;
   pConfig->stInput[1].eMode = MODE_MOMENTARY;
-  pConfig->stInput[1].nOnLevel = 16383;
+  pConfig->stInput[1].nOnLevel = 0;
   pConfig->stInput[1].nDebounceTime = 20;
 
   pConfig->stInput[2].nEnabled = 1;
   pConfig->stInput[2].eMode = MODE_MOMENTARY;
-  pConfig->stInput[2].nOnLevel = 16383;
+  pConfig->stInput[2].nOnLevel = 0;
   pConfig->stInput[2].nDebounceTime = 20;
 
   pConfig->stInput[3].nEnabled = 1;
   pConfig->stInput[3].eMode = MODE_MOMENTARY;
-  pConfig->stInput[3].nOnLevel = 10000;
+  pConfig->stInput[3].nOnLevel = 0;
   pConfig->stInput[3].nDebounceTime = 20;
 
   pConfig->stInput[4].nEnabled = 1;
   pConfig->stInput[4].eMode = MODE_MOMENTARY;
-  pConfig->stInput[4].nOnLevel = 16383;
+  pConfig->stInput[4].nOnLevel = 0;
   pConfig->stInput[4].nDebounceTime = 20;
 
   pConfig->stInput[5].nEnabled = 1;
   pConfig->stInput[5].eMode = MODE_MOMENTARY;
-  pConfig->stInput[5].nOnLevel = 16383;
+  pConfig->stInput[5].nOnLevel = 0;
   pConfig->stInput[5].nDebounceTime = 20;
+
+  pConfig->stInput[6].nEnabled = 1;
+  pConfig->stInput[6].eMode = MODE_MOMENTARY;
+  pConfig->stInput[6].nOnLevel = 0;
+  pConfig->stInput[6].nDebounceTime = 20;
+
+  pConfig->stInput[7].nEnabled = 1;
+  pConfig->stInput[7].eMode = MODE_MOMENTARY;
+  pConfig->stInput[7].nOnLevel = 0;
+  pConfig->stInput[7].nDebounceTime = 20;
 
   //Outputs
   pConfig->stOutput[0].nEnabled = 1;
-  pConfig->stOutput[0].nInput = 4;
-  pConfig->stOutput[0].nTriggerLevel = 0;
-  pConfig->stOutput[0].nCurrentLimit = 0;
-  pConfig->stOutput[0].nInrushLimit = 0;
-  pConfig->stOutput[0].nInrushTime = 0;
+  pConfig->stOutput[0].nInput = 1;
+  pConfig->stOutput[0].nCurrentLimit = 250;
+  pConfig->stOutput[0].nInrushLimit = 300;
+  pConfig->stOutput[0].nInrushTime = 2000;
   pConfig->stOutput[0].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[0].nResetTime = 0;
-  pConfig->stOutput[0].nResetLimit = 0;
+  pConfig->stOutput[0].nResetTime = 1000;
+  pConfig->stOutput[0].nResetLimit = 1;
 
   pConfig->stOutput[1].nEnabled = 1;
-  pConfig->stOutput[1].nInput = 3;
-  pConfig->stOutput[1].nTriggerLevel = 0;
-  pConfig->stOutput[1].nCurrentLimit = 0;
-  pConfig->stOutput[1].nInrushLimit = 0;
-  pConfig->stOutput[1].nInrushTime = 0;
+  pConfig->stOutput[1].nInput = 2;
+  pConfig->stOutput[1].nCurrentLimit = 150;
+  pConfig->stOutput[1].nInrushLimit = 300;
+  pConfig->stOutput[1].nInrushTime = 2000;
   pConfig->stOutput[1].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[1].nResetTime = 0;
-  pConfig->stOutput[1].nResetLimit = 0;
+  pConfig->stOutput[1].nResetTime = 1000;
+  pConfig->stOutput[1].nResetLimit = 2;
 
   pConfig->stOutput[2].nEnabled = 1;
-  pConfig->stOutput[2].nInput = 2;
-  pConfig->stOutput[2].nTriggerLevel = 0;
-  pConfig->stOutput[2].nCurrentLimit = 0;
-  pConfig->stOutput[2].nInrushLimit = 0;
-  pConfig->stOutput[2].nInrushTime = 0;
+  pConfig->stOutput[2].nInput = 3;
+  pConfig->stOutput[2].nCurrentLimit = 80;
+  pConfig->stOutput[2].nInrushLimit = 160;
+  pConfig->stOutput[2].nInrushTime = 2000;
   pConfig->stOutput[2].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[2].nResetTime = 0;
-  pConfig->stOutput[2].nResetLimit = 0;
+  pConfig->stOutput[2].nResetTime = 1000;
+  pConfig->stOutput[2].nResetLimit = 3;
 
   pConfig->stOutput[3].nEnabled = 1;
-  pConfig->stOutput[3].nInput = 8;
-  pConfig->stOutput[3].nTriggerLevel = 0;
-  pConfig->stOutput[3].nCurrentLimit = 0;
-  pConfig->stOutput[3].nInrushLimit = 0;
-  pConfig->stOutput[3].nInrushTime = 0;
+  pConfig->stOutput[3].nInput = 4;
+  pConfig->stOutput[3].nCurrentLimit = 80;
+  pConfig->stOutput[3].nInrushLimit = 160;
+  pConfig->stOutput[3].nInrushTime = 2000;
   pConfig->stOutput[3].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[3].nResetTime = 0;
-  pConfig->stOutput[3].nResetLimit = 0;
+  pConfig->stOutput[3].nResetTime = 1000;
+  pConfig->stOutput[3].nResetLimit = 2;
 
   pConfig->stOutput[4].nEnabled = 1;
-  pConfig->stOutput[4].nInput = 9;
-  pConfig->stOutput[4].nTriggerLevel = 0;
-  pConfig->stOutput[4].nCurrentLimit = 0;
-  pConfig->stOutput[4].nInrushLimit = 0;
-  pConfig->stOutput[4].nInrushTime = 0;
+  pConfig->stOutput[4].nInput = 5;
+  pConfig->stOutput[4].nCurrentLimit = 80;
+  pConfig->stOutput[4].nInrushLimit = 160;
+  pConfig->stOutput[4].nInrushTime = 2000;
   pConfig->stOutput[4].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[4].nResetTime = 0;
-  pConfig->stOutput[4].nResetLimit = 0;
+  pConfig->stOutput[4].nResetTime = 1000;
+  pConfig->stOutput[4].nResetLimit = 2;
 
   pConfig->stOutput[5].nEnabled = 1;
-  pConfig->stOutput[5].nInput = 37;
-  pConfig->stOutput[5].nTriggerLevel = 0;
-  pConfig->stOutput[5].nCurrentLimit = 0;
-  pConfig->stOutput[5].nInrushLimit = 0;
-  pConfig->stOutput[5].nInrushTime = 0;
+  pConfig->stOutput[5].nInput = 6;
+  pConfig->stOutput[5].nCurrentLimit = 80;
+  pConfig->stOutput[5].nInrushLimit = 160;
+  pConfig->stOutput[5].nInrushTime = 2000;
   pConfig->stOutput[5].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[5].nResetTime = 0;
-  pConfig->stOutput[5].nResetLimit = 0;
+  pConfig->stOutput[5].nResetTime = 1000;
+  pConfig->stOutput[5].nResetLimit = 2;
 
   pConfig->stOutput[6].nEnabled = 1;
-  pConfig->stOutput[6].nInput = 38;
-  pConfig->stOutput[6].nTriggerLevel = 0;
-  pConfig->stOutput[6].nCurrentLimit = 0;
-  pConfig->stOutput[6].nInrushLimit = 0;
-  pConfig->stOutput[6].nInrushTime = 0;
+  pConfig->stOutput[6].nInput = 7;
+  pConfig->stOutput[6].nCurrentLimit = 150;
+  pConfig->stOutput[6].nInrushLimit = 300;
+  pConfig->stOutput[6].nInrushTime = 2000;
   pConfig->stOutput[6].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[6].nResetTime = 0;
-  pConfig->stOutput[6].nResetLimit = 0;
+  pConfig->stOutput[6].nResetTime = 1000;
+  pConfig->stOutput[6].nResetLimit = 2;
 
   pConfig->stOutput[7].nEnabled = 1;
-  pConfig->stOutput[7].nInput = 12;
-  pConfig->stOutput[7].nTriggerLevel = 0;
-  pConfig->stOutput[7].nCurrentLimit = 0;
-  pConfig->stOutput[7].nInrushLimit = 0;
-  pConfig->stOutput[7].nInrushTime = 0;
+  pConfig->stOutput[7].nInput = 8;
+  pConfig->stOutput[7].nCurrentLimit = 150;
+  pConfig->stOutput[7].nInrushLimit = 300;
+  pConfig->stOutput[7].nInrushTime = 2000;
   pConfig->stOutput[7].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[7].nResetTime = 0;
-  pConfig->stOutput[7].nResetLimit = 0;
+  pConfig->stOutput[7].nResetTime = 1000;
+  pConfig->stOutput[7].nResetLimit = 2;
 
   pConfig->stOutput[8].nEnabled = 1;
-  pConfig->stOutput[8].nInput = 13;
-  pConfig->stOutput[8].nTriggerLevel = 0;
-  pConfig->stOutput[8].nCurrentLimit = 0;
-  pConfig->stOutput[8].nInrushLimit = 0;
-  pConfig->stOutput[8].nInrushTime = 0;
+  pConfig->stOutput[8].nInput = 1;
+  pConfig->stOutput[8].nCurrentLimit = 80;
+  pConfig->stOutput[8].nInrushLimit = 160;
+  pConfig->stOutput[8].nInrushTime = 2000;
   pConfig->stOutput[8].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[8].nResetTime = 0;
-  pConfig->stOutput[8].nResetLimit = 0;
+  pConfig->stOutput[8].nResetTime = 1000;
+  pConfig->stOutput[8].nResetLimit = 2;
 
   pConfig->stOutput[9].nEnabled = 1;
-  pConfig->stOutput[9].nInput = 14;
-  pConfig->stOutput[9].nTriggerLevel = 0;
-  pConfig->stOutput[9].nCurrentLimit = 0;
-  pConfig->stOutput[9].nInrushLimit = 0;
-  pConfig->stOutput[9].nInrushTime = 0;
+  pConfig->stOutput[9].nInput = 2;
+  pConfig->stOutput[9].nCurrentLimit = 80;
+  pConfig->stOutput[9].nInrushLimit = 160;
+  pConfig->stOutput[9].nInrushTime = 2000;
   pConfig->stOutput[9].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[9].nResetTime = 0;
-  pConfig->stOutput[9].nResetLimit = 0;
+  pConfig->stOutput[9].nResetTime = 1000;
+  pConfig->stOutput[9].nResetLimit = 2;
 
   pConfig->stOutput[10].nEnabled = 1;
-  pConfig->stOutput[10].nInput = 69;
-  pConfig->stOutput[10].nTriggerLevel = 0;
-  pConfig->stOutput[10].nCurrentLimit = 0;
-  pConfig->stOutput[10].nInrushLimit = 0;
-  pConfig->stOutput[10].nInrushTime = 0;
+  pConfig->stOutput[10].nInput = 7;
+  pConfig->stOutput[10].nCurrentLimit = 80;
+  pConfig->stOutput[10].nInrushLimit = 160;
+  pConfig->stOutput[10].nInrushTime = 2000;
   pConfig->stOutput[10].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[10].nResetTime = 0;
-  pConfig->stOutput[10].nResetLimit = 0;
+  pConfig->stOutput[10].nResetTime = 1000;
+  pConfig->stOutput[10].nResetLimit = 2;
 
   pConfig->stOutput[11].nEnabled = 1;
-  pConfig->stOutput[11].nInput = 70;
-  pConfig->stOutput[11].nTriggerLevel = 0;
-  pConfig->stOutput[11].nCurrentLimit = 0;
-  pConfig->stOutput[11].nInrushLimit = 0;
-  pConfig->stOutput[11].nInrushTime = 0;
+  pConfig->stOutput[11].nInput = 8;
+  pConfig->stOutput[11].nCurrentLimit = 80;
+  pConfig->stOutput[11].nInrushLimit = 160;
+  pConfig->stOutput[11].nInrushTime = 2000;
   pConfig->stOutput[11].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[11].nResetTime = 0;
-  pConfig->stOutput[11].nResetLimit = 0;
+  pConfig->stOutput[11].nResetTime = 1000;
+  pConfig->stOutput[11].nResetLimit = 2;
 
   //Virtual Inputs
-  pConfig->stVirtualInput[0].nEnabled = 1;
+  pConfig->stVirtualInput[0].nEnabled = 0;
   pConfig->stVirtualInput[0].nNot0 = 0;
   pConfig->stVirtualInput[0].nVar0 = 10;
   pConfig->stVirtualInput[0].eCond0 = COND_AND;
@@ -648,7 +646,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stVirtualInput[0].nVar2 = 0;
   pConfig->stVirtualInput[0].eMode = MODE_LATCHING;
 
-  pConfig->stVirtualInput[1].nEnabled = 1;
+  pConfig->stVirtualInput[1].nEnabled = 0;
   pConfig->stVirtualInput[1].nNot0 = 0;
   pConfig->stVirtualInput[1].nVar0 = 11;
   pConfig->stVirtualInput[1].eCond0 = COND_AND;
@@ -858,7 +856,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stVirtualInput[19].eMode = MODE_MOMENTARY;
 
   //Wiper
-  pConfig->stWiper.nEnabled = 1;
+  pConfig->stWiper.nEnabled = 0;
   pConfig->stWiper.nMode = 2;
   pConfig->stWiper.nSlowInput = 0;
   pConfig->stWiper.nFastInput = 0;
@@ -887,18 +885,18 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   //Flasher
   pConfig->stFlasher[0].nEnabled = 1;
-  pConfig->stFlasher[0].nInput = 37;
+  pConfig->stFlasher[0].nInput = 7;
   pConfig->stFlasher[0].nFlashOnTime = 500;
   pConfig->stFlasher[0].nFlashOffTime = 500;
   pConfig->stFlasher[0].nSingleCycle = 0;
-  pConfig->stFlasher[0].nOutput = 5;
+  pConfig->stFlasher[0].nOutput = 10;
 
   pConfig->stFlasher[1].nEnabled = 1;
-  pConfig->stFlasher[1].nInput = 38;
-  pConfig->stFlasher[1].nFlashOnTime = 500;
-  pConfig->stFlasher[1].nFlashOffTime = 500;
+  pConfig->stFlasher[1].nInput = 8;
+  pConfig->stFlasher[1].nFlashOnTime = 250;
+  pConfig->stFlasher[1].nFlashOffTime = 250;
   pConfig->stFlasher[1].nSingleCycle = 0;
-  pConfig->stFlasher[1].nOutput = 6;
+  pConfig->stFlasher[1].nOutput = 11;
 
   pConfig->stFlasher[2].nEnabled = 0;
   pConfig->stFlasher[2].nInput = 0;
@@ -915,7 +913,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stFlasher[3].nOutput = 0;
 
   //Starter
-  pConfig->stStarter.nEnabled = 1;
+  pConfig->stStarter.nEnabled = 0;
   pConfig->stStarter.nInput = 8;
   pConfig->stStarter.nDisableOut[0] = 0;
   pConfig->stStarter.nDisableOut[1] = 1;
@@ -1172,7 +1170,83 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stCanInput[29].eMode = MODE_MOMENTARY;
 
   //CAN Output
-  pConfig->stCanOutput.nEnabled = 1;
+  pConfig->stCanOutput.nEnabled = 0;
   pConfig->stCanOutput.nBaseId = 2000;
   pConfig->stCanOutput.nUpdateTime = 50;
 }
+
+/*
+0   None
+1   PDM In 1
+2   PDM In 2
+3   PDM In 3
+4   PDM In 4
+5   PDM In 5
+6   PDM In 6
+7   PDM In 7
+8   PDM In 8
+9   CAN In 1
+10  CAN In 2
+11  CAN In 3
+12  CAN In 4
+13  CAN In 5
+14  CAN In 6
+15  CAN In 7
+16  CAN In 8
+17  CAN In 9
+18  CAN In 10
+19  CAN In 11
+20  CAN In 12
+21  CAN In 13
+22  CAN In 14
+23  CAN In 15
+24  CAN In 16
+25  CAN In 17
+26  CAN In 18
+27  CAN In 19
+28  CAN In 20
+29  CAN In 21
+30  CAN In 22
+31  CAN In 23
+32  CAN In 24
+33  CAN In 25
+34  CAN In 26
+35  CAN In 27
+36  CAN In 28
+37  CAN In 29
+38  CAN In 30
+39  Virtual In 1
+40  Virtual In 2
+41  Virtual In 3
+42  Virtual In 4
+43  Virtual In 5
+44  Virtual In 6
+45  Virtual In 7
+46  Virtual In 8
+47  Virtual In 9
+48  Virtual In 10
+49  Virtual In 11
+50  Virtual In 12
+51  Virtual In 13
+52  Virtual In 14
+53  Virtual In 15
+54  Virtual In 16
+55  Virtual In 17
+56  Virtual In 18
+57  Virtual In 19
+58  Virtual In 20
+59  Output 1
+60  Output 2
+61  Output 3
+62  Output 4
+63  Output 5
+64  Output 6
+65  Output 7
+66  Output 8
+67  Output 9
+68  Output 10
+69  Output 11
+70  Output 12
+71  Wiper Slow Out
+72  Wiper Fast Out
+ */

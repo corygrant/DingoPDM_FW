@@ -133,7 +133,7 @@ void MCP9808_Write16(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg, uint16
   writeVals[0] = reg;
   writeVals[1] = val >> 8;
   writeVals[2] = val & 0xFF;
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 3, HAL_MAX_DELAY);
+  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 3, 100);
 }
 uint16_t MCP9808_Read16(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
 {
@@ -142,9 +142,9 @@ uint16_t MCP9808_Read16(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
   uint16_t val = 0xFFFF;
 
   writeVals[0] = reg;
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, HAL_MAX_DELAY);
+  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, 100);
 
-  HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 2, HAL_MAX_DELAY);
+  HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 2, 100);
 
   val = (readVals[0] << 8 | readVals[1]);
 
@@ -157,7 +157,7 @@ void MCP9808_Write8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg, uint16_
 
   writeVals[0] = reg;
   writeVals[1] = val;
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 2, HAL_MAX_DELAY);
+  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 2, 100);
 }
 
 uint8_t MCP9808_Read8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
@@ -168,9 +168,9 @@ uint8_t MCP9808_Read8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
   uint8_t val = 0xFF;
 
   writeVals[0] = reg;
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, HAL_MAX_DELAY);
+  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, 100);
 
-  HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 1, HAL_MAX_DELAY);
+  HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 1, 100);
 
   val = readVals[0];
 

@@ -13,7 +13,7 @@ void PCAL9554B_WriteReg8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg, ui
 
   writeVals[0] = reg;
   writeVals[1] = val;
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 2, HAL_MAX_DELAY);
+  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 2, 100);
 }
 
 uint8_t PCAL9554B_ReadReg8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
@@ -24,9 +24,9 @@ uint8_t PCAL9554B_ReadReg8(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t reg)
   uint8_t val = 0xFF;
 
   writeVals[0] = reg;
-  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, HAL_MAX_DELAY);
+  HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 1, 100);
 
-  HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 1, HAL_MAX_DELAY);
+  HAL_I2C_Master_Receive(hi2c, addr << 1, readVals, 1, 100);
 
   val = readVals[0];
 

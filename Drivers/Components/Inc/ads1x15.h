@@ -20,7 +20,7 @@
 /*=========================================================================
     CONVERSION DELAY (in mS)
     -----------------------------------------------------------------------*/
-#define ADS1015_CONVERSIONDELAY (1) ///< Conversion delay
+#define ADS1015_CONVERSIONDELAY (2) ///< Conversion delay
 #define ADS1115_CONVERSIONDELAY (2) ///< Conversion delay
 /*=========================================================================*/
 
@@ -162,7 +162,7 @@ typedef struct{
   uint8_t commsOk;
 } ads1x15Settings_t;
 
-void ADS1x15_SendRegs(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings, uint8_t channel);
-uint16_t ADS1x15_ReadADC(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings);
+HAL_StatusTypeDef ADS1x15_SendRegs(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings, uint8_t channel);
+HAL_StatusTypeDef ADS1x15_ReadADC(I2C_HandleTypeDef* hi2c, uint16_t addr, ads1x15Settings_t *settings, uint16_t* val);
 
 #endif /* SRC_ADS1X15_ADS1X15_H_ */

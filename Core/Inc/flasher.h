@@ -12,6 +12,6 @@
 #include "stm32f3xx_hal.h"
 #include "pdm_config.h"
 
-void EvaluateFlasher(PdmConfig_Flasher_t *pFlasher, uint16_t pResult[12]);
+void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[12]);
 
 #endif /* INC_FLASHER_H_ */

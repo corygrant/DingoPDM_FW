@@ -55,22 +55,25 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-
+void ConfigureRunTimeCounter(void);
+uint32_t GetRunTimeCounter(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
-#define EXTRA1_Pin GPIO_PIN_4
+#define EXTRA1_Pin GPIO_PIN_2
 #define EXTRA1_GPIO_Port GPIOA
 #define EXTRA2_Pin GPIO_PIN_2
 #define EXTRA2_GPIO_Port GPIOB
+#define EXTRA3_Pin GPIO_PIN_15
+#define EXTRA3_GPIO_Port GPIOA
 #define USB_VBUS_Pin GPIO_PIN_10
 #define USB_VBUS_GPIO_Port GPIOB
 #define USB_PULLUP_Pin GPIO_PIN_11
 #define USB_PULLUP_GPIO_Port GPIOB
 #define BATT_SENSE_Pin GPIO_PIN_12
 #define BATT_SENSE_GPIO_Port GPIOB
-#define EXTRA3_Pin GPIO_PIN_4
-#define EXTRA3_GPIO_Port GPIOB
+#define PF_RESET_Port GPIOB
+#define PF_RESET_Pin GPIO_PIN_4
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
