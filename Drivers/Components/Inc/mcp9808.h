@@ -49,6 +49,7 @@
 
 uint8_t MCP9808_Init(I2C_HandleTypeDef* hi2c, uint16_t addr);
 float MCP9808_ReadTempC(I2C_HandleTypeDef* hi2c, uint16_t addr);
+int16_t MCP9808_ReadTempC_Int(I2C_HandleTypeDef* hi2c, uint16_t addr);
 float MCP9808_ReadTempF(I2C_HandleTypeDef* hi2c, uint16_t addr);
 float MCP9808_ConvertToF(float degC);
 uint8_t MCP9808_GetResolution(I2C_HandleTypeDef* hi2c, uint16_t addr);

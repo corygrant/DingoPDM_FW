@@ -125,7 +125,7 @@ bool bUsbConnected = false;
 //========================================================================
 // MCP9808 PCB Temperature
 //========================================================================
-float fBoardTempC, fBoardTempF;
+int16_t nBoardTempC;
 
 //========================================================================
 // STM ADC
@@ -429,14 +429,50 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
   /* Infinite loop */
   for(;;)
   {
+
+    //=====================================================================================================
+    // Standby
+    //=====================================================================================================
+    /* Check if the system was resumed from Standby mode */
+    if ((__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET) ||
+        (__HAL_PWR_GET_FLAG(PWR_FLAG_WU) != RESET))
+    {
+      /* Clear Standby flag */
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+
+      HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
+
+    }
+
+
+    //Check standby pin
+    //If no voltage - enter standby
+    if(!(STANDBY_GPIO_Port->IDR & STANDBY_Pin)){
+
+      HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
+
+      HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2); //PC13
+
+      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+
+      HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN2); //PC13
+
+      HAL_PWR_EnterSTANDBYMode();
+    }
+    else
+    {
+      HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2); //PC13
+    }
+
     //=====================================================================================================
     // ADC channels
     // ADC1 = Vbat and device temperature
     // ADC4 = Battery sense
     //=====================================================================================================
     nBattSense = (uint16_t)(((float)nAdc4Data[0]) * 0.0519 - 11.3);
-    nStmTemp = (uint16_t)((80.0 / ((float)(*STM32_TEMP_3V3_110C) - (float)(*STM32_TEMP_3V3_30C)) *
-                          (((float)nAdc1Data[0]) - (float)(*STM32_TEMP_3V3_30C)) + 30.0) * 10.0);
+    nStmTemp = (uint16_t)(80.0 / ((float)(*STM32_TEMP_3V3_110C) - (float)(*STM32_TEMP_3V3_30C)) *
+                          (((float)nAdc1Data[0]) - (float)(*STM32_TEMP_3V3_30C)) + 30.0);
 
     //=====================================================================================================
     // CANBoard check connection
@@ -746,8 +782,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    //=====================================================================================================
    // MCP9808 temperature sensor
    //=====================================================================================================
-   fBoardTempC = MCP9808_ReadTempC(hi2c1, MCP9808_ADDRESS);
-   fBoardTempF = MCP9808_ConvertToF(fBoardTempC);
+   nBoardTempC = MCP9808_ReadTempC_Int(hi2c1, MCP9808_ADDRESS);
 
    if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
    if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
@@ -864,7 +899,6 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
    //Debug GPIO
    HAL_GPIO_TogglePin(EXTRA1_GPIO_Port, EXTRA1_Pin);
-   HAL_GPIO_TogglePin(EXTRA3_GPIO_Port, EXTRA3_Pin);
    //EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
 
 #ifdef MEAS_HEAP_USE
@@ -1121,6 +1155,31 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
 
              break;
 
+           //Get Temperature
+           // 'F'
+           case MSG_RX_GET_TEMP:
+             if((stMsgRx.nRxLen == 1) || nSend){
+                  stMsgUsbTx.nTxLen = 7;
+                  stMsgCanTx.stTxHeader.DLC = 7;
+
+                  stMsgUsbTx.nTxData[0] = MSG_TX_GET_TEMP;
+                  stMsgUsbTx.nTxData[1] = nBoardTempC >> 8;
+                  stMsgUsbTx.nTxData[2] = nBoardTempC;
+                  stMsgUsbTx.nTxData[3] = nStmTemp >> 8;
+                  stMsgUsbTx.nTxData[4] = nStmTemp;
+                  stMsgUsbTx.nTxData[5] = 0;
+                  stMsgUsbTx.nTxData[6] = 0;
+                  stMsgUsbTx.nTxData[7] = 0;
+
+                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+             }
+             break;
+
            default:
              PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueUsbTx, &qMsgQueueCanTx);
              break;
@@ -1279,8 +1338,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       nCanTxData[3] = nILTotal;
       nCanTxData[4] = nBattSense >> 8;
       nCanTxData[5] = nBattSense;
-      nCanTxData[6] = (uint16_t)fBoardTempC >> 8;
-      nCanTxData[7] = (uint16_t)fBoardTempC;
+      nCanTxData[6] = nBoardTempC >> 8;
+      nCanTxData[7] = nBoardTempC;
 
       //=======================================================
       //Send CAN msg
@@ -1505,6 +1564,16 @@ uint8_t ReadPdmConfig()
 {
   PdmConfig_SetDefault(&stPdmConfig);
 
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
+  {
+    pf[i].nIL_Limit = stPdmConfig.stOutput[i].nCurrentLimit;
+    pf[i].nIL_InRush_Limit = stPdmConfig.stOutput[i].nInrushLimit;
+    pf[i].nIL_InRush_Time = stPdmConfig.stOutput[i].nInrushTime;
+    //pf[i]. = stPdmConfig.stOutput[i].eResetMode;
+    //pf[i] = stPdmConfig.stOutput[i].nResetTime;
+    pf[i].nOC_ResetLimit = stPdmConfig.stOutput[i].nResetLimit;
+
+  }
   /*
   //PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
 

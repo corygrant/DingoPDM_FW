@@ -35,8 +35,8 @@ typedef enum
   MSG_RX_SET_STARTER = 'D',
   MSG_RX_SET_CAN_INPUTS = 'N',
   MSG_RX_SET_TIME = 'T',
-  MSG_RX_GET_VERSION = 'V'
-
+  MSG_RX_GET_VERSION = 'V',
+  MSG_RX_GET_TEMP = 'F'
 } MsgQueueRxCmd_t;
 
 typedef enum
@@ -57,8 +57,8 @@ typedef enum
   MSG_TX_SET_STARTER = 'd',
   MSG_TX_SET_CAN_INPUTS = 'n',
   MSG_TX_SET_TIME = 't',
-  MSG_TX_GET_VERSION = 'v'
-
+  MSG_TX_GET_VERSION = 'v',
+  MSG_TX_GET_TEMP = 'f'
 } MsgQueueTxCmd_t;
 
 typedef struct

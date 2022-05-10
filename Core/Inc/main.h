@@ -60,6 +60,8 @@ uint32_t GetRunTimeCounter(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define STANDBY_Pin GPIO_PIN_13
+#define STANDBY_GPIO_Port GPIOC
 #define EXTRA1_Pin GPIO_PIN_2
 #define EXTRA1_GPIO_Port GPIOA
 #define EXTRA2_Pin GPIO_PIN_2

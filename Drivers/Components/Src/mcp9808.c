@@ -43,6 +43,21 @@ float MCP9808_ReadTempC(I2C_HandleTypeDef* hi2c, uint16_t addr)
   return temp;
 }
 
+int16_t MCP9808_ReadTempC_Int(I2C_HandleTypeDef* hi2c, uint16_t addr)
+{
+  uint16_t t = MCP9808_Read16(hi2c, addr, MCP9808_REG_AMBIENT_TEMP);
+
+  MCP9808_MapLimitBits(t);
+
+  if (t != 0xFFFF) {
+    t = t & 0x0FFF;
+    t /= 16.0;
+    if (t & 0x1000)
+      t = -t;
+  }
+  return t;
+}
+
 float MCP9808_ReadTempF(I2C_HandleTypeDef* hi2c, uint16_t addr)
 {
   float temp = 0.0;
