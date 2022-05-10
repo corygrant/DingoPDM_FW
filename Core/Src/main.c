@@ -55,9 +55,6 @@
 
 /* USER CODE BEGIN PV */
 
-#if( configGENERATE_RUN_TIME_STATS == 1)
-  PRIVILEGED_DATA volatile static uint32_t nRunTimeCount = 0UL;
-#endif
 
 /* USER CODE END PV */
 
@@ -65,7 +62,9 @@
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
 /* USER CODE BEGIN PFP */
-
+#if( configGENERATE_RUN_TIME_STATS == 1)
+void IncrementRuntimeStats(void);
+#endif
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
@@ -194,17 +193,7 @@ void SystemClock_Config(void)
 }
 
 /* USER CODE BEGIN 4 */
-#if( configGENERATE_RUN_TIME_STATS == 1)
-  void ConfigureRunTimeCounter(void)
-  {
-    nRunTimeCount = 0;
-  }
 
-  uint32_t GetRunTimeCounter(void)
-  {
-    return nRunTimeCount;
-  }
-#endif
 /* USER CODE END 4 */
 
 /**
@@ -226,7 +215,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   /* USER CODE BEGIN Callback 1 */
 #if( configGENERATE_RUN_TIME_STATS == 1)
     if (htim->Instance == TIM6) {
-      nRunTimeCount = nRunTimeCount + 1;
+      IncrementRuntimeStats();
     }
 #endif
   /* USER CODE END Callback 1 */

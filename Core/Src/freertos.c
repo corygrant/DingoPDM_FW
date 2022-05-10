@@ -50,15 +50,18 @@
 /* USER CODE BEGIN Variables */
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc4;
-
 CAN_HandleTypeDef hcan;
 CRC_HandleTypeDef hcrc;
-
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
 IWDG_HandleTypeDef hiwdg;
 RTC_HandleTypeDef hrtc;
 SPI_HandleTypeDef hspi1;
+
+#if( configGENERATE_RUN_TIME_STATS == 1)
+  PRIVILEGED_DATA volatile static uint32_t nRunTimeCount = 0UL;
+#endif
+
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -96,7 +99,7 @@ const osTimerAttr_t KickIWDG_attributes = {
 
 /* Private function prototypes -----------------------------------------------*/
 /* USER CODE BEGIN FunctionPrototypes */
-
+void IncrementRuntimeStats(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
@@ -269,6 +272,24 @@ void KickIWDGCallback(void *argument)
 
 /* Private application code --------------------------------------------------*/
 /* USER CODE BEGIN Application */
+#if( configGENERATE_RUN_TIME_STATS == 1)
+void ConfigureRunTimeCounter(void);
+uint32_t GetRunTimeCounter(void);
 
+void ConfigureRunTimeCounter(void)
+{
+  nRunTimeCount = 0;
+}
+
+uint32_t GetRunTimeCounter(void)
+{
+  return nRunTimeCount;
+}
+
+void IncrementRuntimeStats(void)
+{
+  nRunTimeCount = nRunTimeCount + 1;
+}
+#endif
 /* USER CODE END Application */
 

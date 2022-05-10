@@ -55,8 +55,7 @@ extern "C" {
 void Error_Handler(void);
 
 /* USER CODE BEGIN EFP */
-void ConfigureRunTimeCounter(void);
-uint32_t GetRunTimeCounter(void);
+
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
