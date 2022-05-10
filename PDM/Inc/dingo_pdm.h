@@ -8,6 +8,7 @@
 #ifndef INC_DINGO_PDM_H_
 #define INC_DINGO_PDM_H_
 
+#include <can_input.h>
 #include <stdbool.h>
 #include "stdio.h"
 #include "cmsis_os.h"
@@ -18,23 +19,22 @@
 #include "usbd_desc.h"
 
 #include "msg_queue.h"
-#include "profet.h"
-#include "ads1x15.h"
-#include "mcp9808.h"
-#include "pca9539.h"
-#include "pcal9554b.h"
-#include "pca9635.h"
-#include "mb85rc.h"
 #include "logger.h"
-#include "profet.h"
-#include "canboard.h"
-#include "wipers.h"
-#include "pushbutton.h"
-#include "can_input.h"
 #include "pdm_input.h"
-#include "virtual_input.h"
 #include "starter.h"
 #include "flasher.h"
+#include "ads1x15.h"
+#include "canboard.h"
+#include "mb85rc.h"
+#include "mcp9808.h"
+#include "pca9539.h"
+#include "pca9635.h"
+#include "pcal9554b.h"
+#include "profet.h"
+#include "profet.h"
+#include "pushbutton.h"
+#include "virtual_input.h"
+#include "wipers.h"
 
 //#define MEAS_HEAP_USE
 

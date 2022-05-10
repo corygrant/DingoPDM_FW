@@ -6,7 +6,7 @@
  */
 
 
-#include <pca9635.h>
+#include "pca9635.h"
 
 void PCA9635_Init(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t blinking)
 {

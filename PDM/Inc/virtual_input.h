@@ -5,8 +5,8 @@
  *      Author: coryg
  */
 
-#ifndef INC_VIRTUAL_INPUT_H_
-#define INC_VIRTUAL_INPUT_H_
+#ifndef COMPONENTS_INC_VIRTUAL_INPUT_H_
+#define COMPONENTS_INC_VIRTUAL_INPUT_H_
 
 #include "stdint.h"
 #include "stm32f3xx_hal.h"
@@ -14,4 +14,4 @@
 
 void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult);
 
-#endif /* INC_VIRTUAL_INPUT_H_ */
+#endif /* COMPONENTS_INC_VIRTUAL_INPUT_H_ */

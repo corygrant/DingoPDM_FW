@@ -10,13 +10,13 @@
 
 #include "msg_queue.h"
 #include "stdint.h"
-#include "pushbutton.h"
-#include "mb85rc.h"
 #include "cmsis_os.h"
 #include "string.h"
+#include "mb85rc.h"
+#include "pushbutton.h"
 
-#define PDM_MAJOR_VERSION 0
-#define PDM_MINOR_VERSION 1
+#define PDM_MAJOR_VERSION 3
+#define PDM_MINOR_VERSION 0
 #define PDM_BUILD 1
 
 #define PDM_NUM_OUTPUTS 12

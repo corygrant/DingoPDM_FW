@@ -483,13 +483,11 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     // USB Connection
     //=====================================================================================================
     if( (USB_VBUS_GPIO_Port->IDR & USB_VBUS_Pin) && !bUsbConnected){
-      //USB_PULLUP_GPIO_Port->ODR |= USB_PULLUP_Pin;
       HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_SET);
       bUsbConnected = true;
     }
 
     if( !(USB_VBUS_GPIO_Port->IDR & USB_VBUS_Pin) && bUsbConnected){
-      //USB_PULLUP_GPIO_Port->ODR &= ~USB_PULLUP_Pin;
       HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_RESET);
       bUsbConnected = false;
     }
