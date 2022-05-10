@@ -626,7 +626,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   //=====================================================================================================
   // PCA9539 Profet GPIO Configuration
   //=====================================================================================================
-  HAL_GPIO_WritePin(PF_RESET_Port, PF_RESET_Pin, GPIO_PIN_SET);
+  HAL_GPIO_WritePin(PF_RESET_GPIO_Port, PF_RESET_Pin, GPIO_PIN_SET);
   //Set all outputs to push-pull
   PCA9539_WriteReg8(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT_CONFIG, 0x00);
   //Set configuration registers (all to output)
