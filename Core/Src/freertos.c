@@ -77,13 +77,6 @@ const osThreadAttr_t i2cTask_attributes = {
   .stack_size = 128 * 4,
   .priority = (osPriority_t) osPriorityAboveNormal,
 };
-/* Definitions for profetSMTask */
-osThreadId_t profetSMTaskHandle;
-const osThreadAttr_t profetSMTask_attributes = {
-  .name = "profetSMTask",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityHigh,
-};
 /* Definitions for canTxTask */
 osThreadId_t canTxTaskHandle;
 const osThreadAttr_t canTxTask_attributes = {
@@ -104,7 +97,6 @@ void IncrementRuntimeStats(void);
 
 void StartDefaultTask(void *argument);
 void StartI2CTask(void *argument);
-void StartProfetSMTask(void *argument);
 void StartCanTxTask(void *argument);
 //void KickIWDGCallback(void *argument);
 
@@ -172,9 +164,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of i2cTask */
   i2cTaskHandle = osThreadNew(StartI2CTask, NULL, &i2cTask_attributes);
 
-  /* creation of profetSMTask */
-  profetSMTaskHandle = osThreadNew(StartProfetSMTask, NULL, &profetSMTask_attributes);
-
   /* creation of canTxTask */
   canTxTaskHandle = osThreadNew(StartCanTxTask, NULL, &canTxTask_attributes);
 
@@ -184,9 +173,6 @@ void MX_FREERTOS_Init(void) {
     Error_Handler();
 
   if(i2cTaskHandle == 0x0)
-    Error_Handler();
-
-  if(profetSMTaskHandle == 0x0)
     Error_Handler();
 
   if(canTxTaskHandle == 0x0)
@@ -232,20 +218,6 @@ void StartI2CTask(void *argument)
   /* USER CODE BEGIN StartI2CTask */
   I2CTask(&i2cTaskHandle, &hi2c1, &hi2c2);
   /* USER CODE END StartI2CTask */
-}
-
-/* USER CODE BEGIN Header_StartProfetSMTask */
-/**
-* @brief Function implementing the profetSMTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartProfetSMTask */
-void StartProfetSMTask(void *argument)
-{
-  /* USER CODE BEGIN StartProfetSMTask */
-  ProfetSMTask(&profetSMTaskHandle);
-  /* USER CODE END StartProfetSMTask */
 }
 
 /* USER CODE BEGIN Header_StartCanTxTask */
