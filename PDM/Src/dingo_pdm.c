@@ -505,6 +505,13 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     if( !READ_BIT(USB_VBUS_GPIO_Port->IDR, USB_VBUS_Pin) && bUsbConnected){
       HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_RESET);
       bUsbConnected = false;
+
+      //TODO: Heartbeat to control software?
+      //Reset back to auto mode if in manual
+      if (eDevMode == DEVICE_MANUAL){
+        for(int i=0; i<12; i++) nManualOutputs[i] = 0;
+        eDevMode = DEVICE_AUTO;
+      }
     }
 
     //=====================================================================================================
@@ -613,14 +620,14 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
                switch(eDevMode){
                case DEVICE_AUTO:
                  if(GET_BIT_AT(stMsgRx.nRxData[1],0)){ //Manual sent
-                   for(int i=0; i<12; i++)
-                     nManualOutputs[i] = 0;
+                   for(int i=0; i<12; i++) nManualOutputs[i] = 0;
                    eDevMode = DEVICE_MANUAL;
                  }
                  break;
 
                case DEVICE_MANUAL:
                  if(!GET_BIT_AT(stMsgRx.nRxData[1], 0)){ //Auto sent
+                   for(int i=0; i<12; i++) nManualOutputs[i] = 0;
                    eDevMode = DEVICE_AUTO;
                  }
                  break;
