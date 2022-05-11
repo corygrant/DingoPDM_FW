@@ -17,7 +17,7 @@
 //========================================================================
 // Task Delays
 //========================================================================
-#define MAIN_TASK_DELAY 100
+#define MAIN_TASK_DELAY 5
 #define I2C_TASK_DELAY 5
 #define CAN_TX_DELAY 50
 
@@ -431,6 +431,16 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     Error_Handler();
   }
 
+  Profet_Init();
+
+  MsgQueueUsbTx_t stMsgUsbTx;
+  MsgQueueCanTx_t stMsgCanTx;
+
+  RTC_TimeTypeDef stTime = {0};
+  RTC_DateTypeDef stDate = {0};
+
+  uint8_t nSend;
+
   /* Infinite loop */
   for(;;)
   {
@@ -497,49 +507,321 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
       bUsbConnected = false;
     }
 
+    //=====================================================================================================
+    // Totalize current
+    //=====================================================================================================
     nILTotal = 0;
     for(int i=0;i<PDM_NUM_OUTPUTS;i++)
       nILTotal += pf[i].nIL;
 
+    /*
+    int nUsbNumBytes = sprintf(cUsbBuffer, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %c%c%c%c%c%c%c%c%c%c%c%c", pf[0].nIL, pf[1].nIL, pf[2].nIL, pf[3].nIL,
+                                                                  pf[4].nIL, pf[5].nIL, pf[6].nIL, pf[7].nIL,
+                                                                  pf[8].nIL, pf[9].nIL, pf[10].nIL, pf[11].nIL, nILTotal, (uint16_t)fBoardTempC,
+                                                                  pf[0].cState, pf[1].cState, pf[2].cState, pf[3].cState,
+                                                                  pf[4].cState, pf[5].cState, pf[6].cState, pf[7].cState,
+                                                                  pf[8].cState, pf[9].cState, pf[10].cState, pf[11].cState);
+
+    //CRC init in main.c must be set up as:
+    //
+    //  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
+    //  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
+    //  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_BYTE;
+    //  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_ENABLE;
+    //  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
+    //
+    //  AND CRC value must be inverted after calculating
+    //
+
+    uint32_t nUsbCrc = HAL_CRC_Calculate(hcrc, (uint32_t *)cUsbBuffer, nUsbNumBytes);
+    nUsbCrc = ~nUsbCrc;
+    char sCrc[12];
+    sprintf(sCrc, " %08lX\n\r", nUsbCrc);
+    strcat(cUsbBuffer, sCrc);
 
 
+    uint8_t nRet = USBD_CDC_Transmit((uint8_t*)cUsbBuffer, sizeof(cUsbBuffer));
 
-      /*
-      int nUsbNumBytes = sprintf(cUsbBuffer, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %c%c%c%c%c%c%c%c%c%c%c%c", pf[0].nIL, pf[1].nIL, pf[2].nIL, pf[3].nIL,
-                                                                    pf[4].nIL, pf[5].nIL, pf[6].nIL, pf[7].nIL,
-                                                                    pf[8].nIL, pf[9].nIL, pf[10].nIL, pf[11].nIL, nILTotal, (uint16_t)fBoardTempC,
-                                                                    pf[0].cState, pf[1].cState, pf[2].cState, pf[3].cState,
-                                                                    pf[4].cState, pf[5].cState, pf[6].cState, pf[7].cState,
-                                                                    pf[8].cState, pf[9].cState, pf[10].cState, pf[11].cState);
+    if(nRet == USBD_FAIL)
+      printf("USB TX Fail\n");
 
-      //CRC init in main.c must be set up as:
-      //
-      //  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
-      //  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
-      //  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_BYTE;
-      //  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_ENABLE;
-      //  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
-      //
-      //  AND CRC value must be inverted after calculating
-      //
+    if(nRet == USBD_BUSY)
+      printf("USB TX Busy\n");
 
-      uint32_t nUsbCrc = HAL_CRC_Calculate(hcrc, (uint32_t *)cUsbBuffer, nUsbNumBytes);
-      nUsbCrc = ~nUsbCrc;
-      char sCrc[12];
-      sprintf(sCrc, " %08lX\n\r", nUsbCrc);
-      strcat(cUsbBuffer, sCrc);
+    memset(cUsbBuffer,0,120);
+    */
+
+    for(int i=0; i<PDM_NUM_OUTPUTS; i++){
+      Profet_SM(&pf[i]);
+    }
+    //WiperSM(&stWiper);
+    MsgQueueRx_t stMsgRx;
+    osStatus_t eStatus;
+
+    nMsgCnt = osMessageQueueGetCount(qMsgQueueRx);
+
+    eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
+    if(eStatus == osOK){
+      if(stMsgRx.eMsgSrc == CAN_RX){
+        for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
+          EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
+        }
+      }
+      if((stMsgRx.eMsgSrc == CAN_RX && stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId + 21) || (stMsgRx.eMsgSrc == USB_RX)){
+        //EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
+
+        nSend = 0;
+
+        switch((MsgQueueRxCmd_t)stMsgRx.nRxData[0]){
+
+            //Burn Settings
+            // 'B'
+            case MSG_RX_BURN_SETTINGS:
+              //Check special number sequence
+              if(stMsgRx.nRxLen == 4){
+                if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 23) && (stMsgRx.nRxData[3] == 20)){
+                  //Write settings to FRAM
+                  //uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+                  //TODO: Use flag to I2C task
+
+                  stMsgUsbTx.nTxLen = 2;
+                  stMsgCanTx.stTxHeader.DLC = 2;
+
+                  stMsgUsbTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
+                  stMsgUsbTx.nTxData[1] = 0;// nRet;
+                  stMsgUsbTx.nTxData[2] = 0;
+                  stMsgUsbTx.nTxData[3] = 0;
+                  stMsgUsbTx.nTxData[4] = 0;
+                  stMsgUsbTx.nTxData[5] = 0;
+                  stMsgUsbTx.nTxData[6] = 0;
+                  stMsgUsbTx.nTxData[7] = 0;
+
+                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+                }
+              }
+            break;
+
+           //Set Mode
+           // 'M'
+           case MSG_RX_SET_MODE:
+             if(stMsgRx.nRxLen == 2){
+               switch(eDevMode){
+               case DEVICE_AUTO:
+                 if(GET_BIT_AT(stMsgRx.nRxData[1],0)){ //Manual sent
+                   for(int i=0; i<12; i++)
+                     nManualOutputs[i] = 0;
+                   eDevMode = DEVICE_MANUAL;
+                 }
+                 break;
+
+               case DEVICE_MANUAL:
+                 if(!GET_BIT_AT(stMsgRx.nRxData[1], 0)){ //Auto sent
+                   eDevMode = DEVICE_AUTO;
+                 }
+                 break;
+               }
+               nSend = 1;
+             }
+
+             if((stMsgRx.nRxLen == 1) || (nSend)){
+               stMsgUsbTx.nTxLen = 2;
+               stMsgCanTx.stTxHeader.DLC = 2;
+
+               stMsgUsbTx.nTxData[0] = MSG_TX_SET_MODE;
+               stMsgUsbTx.nTxData[1] = (uint8_t)eDevMode;
+               stMsgUsbTx.nTxData[2] = 0;
+               stMsgUsbTx.nTxData[3] = 0;
+               stMsgUsbTx.nTxData[4] = 0;
+               stMsgUsbTx.nTxData[5] = 0;
+               stMsgUsbTx.nTxData[6] = 0;
+               stMsgUsbTx.nTxData[7] = 0;
+
+               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+             }
+           break;
 
 
-      uint8_t nRet = USBD_CDC_Transmit((uint8_t*)cUsbBuffer, sizeof(cUsbBuffer));
+           //Force Outputs
+           // 'Q'
+           case MSG_RX_FORCE_OUTPUTS:
+             if(stMsgRx.nRxLen == 7){
+               if(eDevMode == DEVICE_MANUAL){
+                 nManualOutputs[0] = (stMsgRx.nRxData[1] & 0x01);
+                 nManualOutputs[1] = (stMsgRx.nRxData[1] & 0x02) >> 1;
+                 nManualOutputs[2] = (stMsgRx.nRxData[1] & 0x04) >> 2;
+                 nManualOutputs[3] = (stMsgRx.nRxData[1] & 0x08) >> 3;
+                 nManualOutputs[4] = (stMsgRx.nRxData[1] & 0x10) >> 4;
+                 nManualOutputs[5] = (stMsgRx.nRxData[1] & 0x20) >> 5;
+                 nManualOutputs[6] = (stMsgRx.nRxData[1] & 0x40) >> 6;
+                 nManualOutputs[7] = (stMsgRx.nRxData[1] & 0x80) >> 7;
+                 nManualOutputs[8] = (stMsgRx.nRxData[2] & 0x01);
+                 nManualOutputs[9] = (stMsgRx.nRxData[2] & 0x02) >> 1;
+                 nManualOutputs[10] = (stMsgRx.nRxData[2] & 0x04) >> 2;
+                 nManualOutputs[11] = (stMsgRx.nRxData[2] & 0x08) >> 3;
+                 nSend = 1;
+               }
+             }
+             if((stMsgRx.nRxLen == 1) || (nSend)){
+               stMsgUsbTx.nTxLen = 7;
+               stMsgCanTx.stTxHeader.DLC = 7;
 
-      if(nRet == USBD_FAIL)
-        printf("USB TX Fail\n");
+               stMsgUsbTx.nTxData[0] = MSG_TX_FORCE_OUTPUTS;
+               stMsgUsbTx.nTxData[1] = ((nManualOutputs[7] & 0x01) << 7) + ((nManualOutputs[6] & 0x01) << 6) +
+                                       ((nManualOutputs[5] & 0x01) << 5) + ((nManualOutputs[4] & 0x01) << 4) +
+                                       ((nManualOutputs[3] & 0x01) << 3) + ((nManualOutputs[2] & 0x01) << 2) +
+                                       ((nManualOutputs[1] & 0x01) << 1) + (nManualOutputs[0] & 0x01);
+               stMsgUsbTx.nTxData[2] = ((nManualOutputs[11] & 0x01) << 3) + ((nManualOutputs[10] & 0x01) << 2) +
+                                       ((nManualOutputs[9] & 0x01) << 1) + (nManualOutputs[8] & 0x01);
 
-      if(nRet == USBD_BUSY)
-        printf("USB TX Busy\n");
+               //TODO:Add manual output modes
+               stMsgUsbTx.nTxData[3] = 0;
+               stMsgUsbTx.nTxData[4] = 0;
+               stMsgUsbTx.nTxData[5] = 0;
+               stMsgUsbTx.nTxData[6] = 0;
+               stMsgUsbTx.nTxData[7] = 0;
 
-      memset(cUsbBuffer,0,120);
-      */
+               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+             }
+           break;
+
+           //Set Reporting
+           // 'R'
+           case MSG_RX_SET_REPORTING:
+             if(stMsgRx.nRxLen == 3){
+               nReportingOn = stMsgRx.nRxData[1] & 0x01;
+               nReportingDelay = stMsgRx.nRxData[2] * 100;
+               nSend = 1;
+             }
+             if((stMsgRx.nRxLen == 1) || (nSend)){
+               stMsgUsbTx.nTxLen = 3;
+               stMsgCanTx.stTxHeader.DLC = 3;
+
+               stMsgUsbTx.nTxData[0] = MSG_TX_SET_REPORTING;
+               stMsgUsbTx.nTxData[1] = (nReportingOn & 0x01);
+               stMsgUsbTx.nTxData[2] = (uint8_t)(nReportingDelay / 100);
+               stMsgUsbTx.nTxData[3] = 0;
+               stMsgUsbTx.nTxData[4] = 0;
+               stMsgUsbTx.nTxData[5] = 0;
+               stMsgUsbTx.nTxData[6] = 0;
+               stMsgUsbTx.nTxData[7] = 0;
+
+               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+             }
+           break;
+
+           //Set Time
+           // 'T'
+           case MSG_RX_SET_TIME:
+             if(stMsgRx.nRxLen == 7){
+               stTime.Hours = stMsgRx.nRxData[1];
+               stTime.Minutes = stMsgRx.nRxData[2];
+               stTime.Seconds = stMsgRx.nRxData[3];
+               stTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
+               stTime.StoreOperation = RTC_STOREOPERATION_RESET;
+
+               stDate.Year = stMsgRx.nRxData[4];
+               stDate.Month = stMsgRx.nRxData[5];
+               stDate.Date = stMsgRx.nRxData[6];
+               stDate.WeekDay = RTC_WEEKDAY_MONDAY;
+
+               //HAL_RTC_SetTime(hrtc, &stTime, RTC_FORMAT_BCD);
+               //HAL_RTC_SetDate(hrtc, &stDate, RTC_FORMAT_BCD);
+               //TODO: Use flag to Main task
+               nSend = 1;
+             }
+
+             if((stMsgRx.nRxLen == 1) || nSend){
+                 //HAL_RTC_GetTime(hrtc, &stTime, RTC_FORMAT_BCD);
+                 //HAL_RTC_GetDate(hrtc, &stDate, RTC_FORMAT_BCD);
+                 //TODO: Use flag to Main task
+
+                 stMsgUsbTx.nTxLen = 7;
+                 stMsgCanTx.stTxHeader.DLC = 7;
+
+                 stMsgUsbTx.nTxData[0] = MSG_TX_SET_TIME;
+                 stMsgUsbTx.nTxData[1] = stTime.Hours;
+                 stMsgUsbTx.nTxData[2] = stTime.Minutes;
+                 stMsgUsbTx.nTxData[3] = stTime.Seconds;
+                 stMsgUsbTx.nTxData[4] = stDate.Year;
+                 stMsgUsbTx.nTxData[5] = stDate.Month;
+                 stMsgUsbTx.nTxData[6] = stDate.Date;
+                 stMsgUsbTx.nTxData[7] = 0;
+
+                 stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+                 memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+                 osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+                 osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+             }
+
+
+             break;
+
+           //Get Temperature
+           // 'F'
+           case MSG_RX_GET_TEMP:
+             if((stMsgRx.nRxLen == 1) || nSend){
+                  stMsgUsbTx.nTxLen = 7;
+                  stMsgCanTx.stTxHeader.DLC = 7;
+
+                  stMsgUsbTx.nTxData[0] = MSG_TX_GET_TEMP;
+                  stMsgUsbTx.nTxData[1] = nBoardTempC >> 8;
+                  stMsgUsbTx.nTxData[2] = nBoardTempC;
+                  stMsgUsbTx.nTxData[3] = nStmTemp >> 8;
+                  stMsgUsbTx.nTxData[4] = nStmTemp;
+                  stMsgUsbTx.nTxData[5] = 0;
+                  stMsgUsbTx.nTxData[6] = 0;
+                  stMsgUsbTx.nTxData[7] = 0;
+
+                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
+
+                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
+
+                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
+                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+             }
+             break;
+
+           //All other message types
+           default:
+             PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueUsbTx, &qMsgQueueCanTx);
+             break;
+        }
+      }
+    }
+
+    MsgQueueUsbTx_t stMsgTx;
+    if(osMessageQueueGet(qMsgQueueUsbTx, &stMsgTx, NULL, 0U) == osOK){
+      if(bUsbConnected){
+        if(USBD_CDC_Transmit((uint8_t*)stMsgTx.nTxData, stMsgTx.nTxLen) != USBD_OK){
+
+          //TODO: bUsbConnected is physical connection - CAN RX commands get queued up and not dumped
+          //Send failed - add back to queue
+          //osMessageQueuePut(qMsgQueueUsbTx, &stMsgTx, 0U, 0U);
+        }
+      }
+    }
 
 #ifdef MEAS_HEAP_USE
     __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
@@ -928,295 +1210,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
 void ProfetSMTask(osThreadId_t* thisThreadId)
 {
-  Profet_Init();
 
-  MsgQueueUsbTx_t stMsgUsbTx;
-  MsgQueueCanTx_t stMsgCanTx;
-
-  RTC_TimeTypeDef stTime = {0};
-  RTC_DateTypeDef stDate = {0};
-
-  uint8_t nSend;
-
-  for(;;){
-    for(int i=0; i<PDM_NUM_OUTPUTS; i++){
-      Profet_SM(&pf[i]);
-    }
-    //WiperSM(&stWiper);
-    MsgQueueRx_t stMsgRx;
-    osStatus_t eStatus;
-
-    nMsgCnt = osMessageQueueGetCount(qMsgQueueRx);
-
-    eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
-    if(eStatus == osOK){
-      if(stMsgRx.eMsgSrc == CAN_RX){
-        for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
-          EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
-        }
-      }
-      if((stMsgRx.eMsgSrc == CAN_RX && stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId + 21) || (stMsgRx.eMsgSrc == USB_RX)){
-        //EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
-
-        nSend = 0;
-
-        switch((MsgQueueRxCmd_t)stMsgRx.nRxData[0]){
-
-            //Burn Settings
-            // 'B'
-            case MSG_RX_BURN_SETTINGS:
-              //Check special number sequence
-              if(stMsgRx.nRxLen == 4){
-                if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 23) && (stMsgRx.nRxData[3] == 20)){
-                  //Write settings to FRAM
-                  //uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
-                  //TODO: Use flag to I2C task
-
-                  stMsgUsbTx.nTxLen = 2;
-                  stMsgCanTx.stTxHeader.DLC = 2;
-
-                  stMsgUsbTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-                  stMsgUsbTx.nTxData[1] = 0;// nRet;
-                  stMsgUsbTx.nTxData[2] = 0;
-                  stMsgUsbTx.nTxData[3] = 0;
-                  stMsgUsbTx.nTxData[4] = 0;
-                  stMsgUsbTx.nTxData[5] = 0;
-                  stMsgUsbTx.nTxData[6] = 0;
-                  stMsgUsbTx.nTxData[7] = 0;
-
-                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-                }
-              }
-            break;
-
-           //Set Mode
-           // 'M'
-           case MSG_RX_SET_MODE:
-             if(stMsgRx.nRxLen == 2){
-               switch(eDevMode){
-               case DEVICE_AUTO:
-                 if(GET_BIT_AT(stMsgRx.nRxData[1],0)){ //Manual sent
-                   for(int i=0; i<12; i++)
-                     nManualOutputs[i] = 0;
-                   eDevMode = DEVICE_MANUAL;
-                 }
-                 break;
-
-               case DEVICE_MANUAL:
-                 if(!GET_BIT_AT(stMsgRx.nRxData[1], 0)){ //Auto sent
-                   eDevMode = DEVICE_AUTO;
-                 }
-                 break;
-               }
-               nSend = 1;
-             }
-
-             if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 2;
-               stMsgCanTx.stTxHeader.DLC = 2;
-
-               stMsgUsbTx.nTxData[0] = MSG_TX_SET_MODE;
-               stMsgUsbTx.nTxData[1] = (uint8_t)eDevMode;
-               stMsgUsbTx.nTxData[2] = 0;
-               stMsgUsbTx.nTxData[3] = 0;
-               stMsgUsbTx.nTxData[4] = 0;
-               stMsgUsbTx.nTxData[5] = 0;
-               stMsgUsbTx.nTxData[6] = 0;
-               stMsgUsbTx.nTxData[7] = 0;
-
-               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-           break;
-
-
-           //Force Outputs
-           // 'Q'
-           case MSG_RX_FORCE_OUTPUTS:
-             if(stMsgRx.nRxLen == 7){
-               if(eDevMode == DEVICE_MANUAL){
-                 nManualOutputs[0] = (stMsgRx.nRxData[1] & 0x01);
-                 nManualOutputs[1] = (stMsgRx.nRxData[1] & 0x02) >> 1;
-                 nManualOutputs[2] = (stMsgRx.nRxData[1] & 0x04) >> 2;
-                 nManualOutputs[3] = (stMsgRx.nRxData[1] & 0x08) >> 3;
-                 nManualOutputs[4] = (stMsgRx.nRxData[1] & 0x10) >> 4;
-                 nManualOutputs[5] = (stMsgRx.nRxData[1] & 0x20) >> 5;
-                 nManualOutputs[6] = (stMsgRx.nRxData[1] & 0x40) >> 6;
-                 nManualOutputs[7] = (stMsgRx.nRxData[1] & 0x80) >> 7;
-                 nManualOutputs[8] = (stMsgRx.nRxData[2] & 0x01);
-                 nManualOutputs[9] = (stMsgRx.nRxData[2] & 0x02) >> 1;
-                 nManualOutputs[10] = (stMsgRx.nRxData[2] & 0x04) >> 2;
-                 nManualOutputs[11] = (stMsgRx.nRxData[2] & 0x08) >> 3;
-                 nSend = 1;
-               }
-             }
-             if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 7;
-               stMsgCanTx.stTxHeader.DLC = 7;
-
-               stMsgUsbTx.nTxData[0] = MSG_TX_FORCE_OUTPUTS;
-               stMsgUsbTx.nTxData[1] = ((nManualOutputs[7] & 0x01) << 7) + ((nManualOutputs[6] & 0x01) << 6) +
-                                       ((nManualOutputs[5] & 0x01) << 5) + ((nManualOutputs[4] & 0x01) << 4) +
-                                       ((nManualOutputs[3] & 0x01) << 3) + ((nManualOutputs[2] & 0x01) << 2) +
-                                       ((nManualOutputs[1] & 0x01) << 1) + (nManualOutputs[0] & 0x01);
-               stMsgUsbTx.nTxData[2] = ((nManualOutputs[11] & 0x01) << 3) + ((nManualOutputs[10] & 0x01) << 2) +
-                                       ((nManualOutputs[9] & 0x01) << 1) + (nManualOutputs[8] & 0x01);
-
-               //TODO:Add manual output modes
-               stMsgUsbTx.nTxData[3] = 0;
-               stMsgUsbTx.nTxData[4] = 0;
-               stMsgUsbTx.nTxData[5] = 0;
-               stMsgUsbTx.nTxData[6] = 0;
-               stMsgUsbTx.nTxData[7] = 0;
-
-               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-           break;
-
-           //Set Reporting
-           // 'R'
-           case MSG_RX_SET_REPORTING:
-             if(stMsgRx.nRxLen == 3){
-               nReportingOn = stMsgRx.nRxData[1] & 0x01;
-               nReportingDelay = stMsgRx.nRxData[2] * 100;
-               nSend = 1;
-             }
-             if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 3;
-               stMsgCanTx.stTxHeader.DLC = 3;
-
-               stMsgUsbTx.nTxData[0] = MSG_TX_SET_REPORTING;
-               stMsgUsbTx.nTxData[1] = (nReportingOn & 0x01);
-               stMsgUsbTx.nTxData[2] = (uint8_t)(nReportingDelay / 100);
-               stMsgUsbTx.nTxData[3] = 0;
-               stMsgUsbTx.nTxData[4] = 0;
-               stMsgUsbTx.nTxData[5] = 0;
-               stMsgUsbTx.nTxData[6] = 0;
-               stMsgUsbTx.nTxData[7] = 0;
-
-               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-           break;
-
-           //Set Time
-           // 'T'
-           case MSG_RX_SET_TIME:
-             if(stMsgRx.nRxLen == 7){
-               stTime.Hours = stMsgRx.nRxData[1];
-               stTime.Minutes = stMsgRx.nRxData[2];
-               stTime.Seconds = stMsgRx.nRxData[3];
-               stTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-               stTime.StoreOperation = RTC_STOREOPERATION_RESET;
-
-               stDate.Year = stMsgRx.nRxData[4];
-               stDate.Month = stMsgRx.nRxData[5];
-               stDate.Date = stMsgRx.nRxData[6];
-               stDate.WeekDay = RTC_WEEKDAY_MONDAY;
-
-               //HAL_RTC_SetTime(hrtc, &stTime, RTC_FORMAT_BCD);
-               //HAL_RTC_SetDate(hrtc, &stDate, RTC_FORMAT_BCD);
-               //TODO: Use flag to Main task
-               nSend = 1;
-             }
-
-             if((stMsgRx.nRxLen == 1) || nSend){
-                 //HAL_RTC_GetTime(hrtc, &stTime, RTC_FORMAT_BCD);
-                 //HAL_RTC_GetDate(hrtc, &stDate, RTC_FORMAT_BCD);
-                 //TODO: Use flag to Main task
-
-                 stMsgUsbTx.nTxLen = 7;
-                 stMsgCanTx.stTxHeader.DLC = 7;
-
-                 stMsgUsbTx.nTxData[0] = MSG_TX_SET_TIME;
-                 stMsgUsbTx.nTxData[1] = stTime.Hours;
-                 stMsgUsbTx.nTxData[2] = stTime.Minutes;
-                 stMsgUsbTx.nTxData[3] = stTime.Seconds;
-                 stMsgUsbTx.nTxData[4] = stDate.Year;
-                 stMsgUsbTx.nTxData[5] = stDate.Month;
-                 stMsgUsbTx.nTxData[6] = stDate.Date;
-                 stMsgUsbTx.nTxData[7] = 0;
-
-                 stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-                 memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-                 osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-                 osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-
-
-             break;
-
-           //Get Temperature
-           // 'F'
-           case MSG_RX_GET_TEMP:
-             if((stMsgRx.nRxLen == 1) || nSend){
-                  stMsgUsbTx.nTxLen = 7;
-                  stMsgCanTx.stTxHeader.DLC = 7;
-
-                  stMsgUsbTx.nTxData[0] = MSG_TX_GET_TEMP;
-                  stMsgUsbTx.nTxData[1] = nBoardTempC >> 8;
-                  stMsgUsbTx.nTxData[2] = nBoardTempC;
-                  stMsgUsbTx.nTxData[3] = nStmTemp >> 8;
-                  stMsgUsbTx.nTxData[4] = nStmTemp;
-                  stMsgUsbTx.nTxData[5] = 0;
-                  stMsgUsbTx.nTxData[6] = 0;
-                  stMsgUsbTx.nTxData[7] = 0;
-
-                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-             break;
-
-           //All other message types
-           default:
-             PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueUsbTx, &qMsgQueueCanTx);
-             break;
-        }
-      }
-    }
-
-    MsgQueueUsbTx_t stMsgTx;
-    if(osMessageQueueGet(qMsgQueueUsbTx, &stMsgTx, NULL, 0U) == osOK){
-      if(bUsbConnected){
-        if(USBD_CDC_Transmit((uint8_t*)stMsgTx.nTxData, stMsgTx.nTxLen) != USBD_OK){
-
-          //TODO: bUsbConnected is physical connection - CAN RX commands get queued up and not dumped
-          //Send failed - add back to queue
-          //osMessageQueuePut(qMsgQueueUsbTx, &stMsgTx, 0U, 0U);
-        }
-      }
-    }
-
-#ifdef MEAS_HEAP_USE
-    __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
-#endif
-
-    osDelay(5);
-  }
 
 }
 
