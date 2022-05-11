@@ -55,6 +55,11 @@
 #define PF_BANK2_DEN 0x0445
 
 //========================================================================
+// CAN Termination
+//========================================================================
+#define CAN_TERM 0x8000
+
+//========================================================================
 // STM ADC Counts
 //========================================================================
 #define ADC_1_COUNT 1
@@ -448,7 +453,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
 
     //Check standby pin
     //If no voltage - enter standby
-    if(!(STANDBY_GPIO_Port->IDR & STANDBY_Pin)){
+    if(!READ_BIT(STANDBY_GPIO_Port->IDR, STANDBY_Pin)){
 
       HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
 
@@ -482,12 +487,12 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     //=====================================================================================================
     // USB Connection
     //=====================================================================================================
-    if( (USB_VBUS_GPIO_Port->IDR & USB_VBUS_Pin) && !bUsbConnected){
+    if( READ_BIT(USB_VBUS_GPIO_Port->IDR, USB_VBUS_Pin) && !bUsbConnected){
       HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_SET);
       bUsbConnected = true;
     }
 
-    if( !(USB_VBUS_GPIO_Port->IDR & USB_VBUS_Pin) && bUsbConnected){
+    if( !READ_BIT(USB_VBUS_GPIO_Port->IDR, USB_VBUS_Pin) && bUsbConnected){
       HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_RESET);
       bUsbConnected = false;
     }
@@ -692,22 +697,22 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    // PCAL9554B User Input
    //=====================================================================================================
    nUserDigInputRaw = PCAL9554B_ReadReg8(hi2c1, PCAL9554B_ADDRESS, PCAL9554B_CMD_IN_PORT);
-   nUserDigInput[0] = !((nUserDigInputRaw & 0x08) >> 3);
-   nUserDigInput[1] = !((nUserDigInputRaw & 0x04) >> 2);
-   nUserDigInput[2] = !((nUserDigInputRaw & 0x02) >> 1);
-   nUserDigInput[3] = !(nUserDigInputRaw & 0x01);
-   nUserDigInput[4] = !((nUserDigInputRaw & 0x10) >> 4);
-   nUserDigInput[5] = !((nUserDigInputRaw & 0x20) >> 5);
-   nUserDigInput[6] = !((nUserDigInputRaw & 0x40) >> 6);
-   nUserDigInput[7] = !((nUserDigInputRaw & 0x80) >> 7);
+   nUserDigInput[0] = !GET_BIT_AT(nUserDigInputRaw, 3);
+   nUserDigInput[1] = !GET_BIT_AT(nUserDigInputRaw, 2);
+   nUserDigInput[2] = !GET_BIT_AT(nUserDigInputRaw, 1);
+   nUserDigInput[3] = !GET_BIT_AT(nUserDigInputRaw, 0);
+   nUserDigInput[4] = !GET_BIT_AT(nUserDigInputRaw, 4);
+   nUserDigInput[5] = !GET_BIT_AT(nUserDigInputRaw, 5);
+   nUserDigInput[6] = !GET_BIT_AT(nUserDigInputRaw, 6);
+   nUserDigInput[7] = !GET_BIT_AT(nUserDigInputRaw, 7);
 
    //=====================================================================================================
    // Set Profet
    // DSEL to channel 1
    // Enable all DEN
    //=====================================================================================================
-   pfGpioBank1 &= ~PF_BANK1_DSEL;
-   pfGpioBank1 |= PF_BANK1_DEN;
+   CLEAR_BIT(pfGpioBank1, PF_BANK1_DSEL);
+   SET_BIT(pfGpioBank1, PF_BANK1_DEN);
 
    PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
@@ -740,7 +745,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    //=====================================================================================================
    //Flip Profet DSEL to channel 2
    //=====================================================================================================
-   pfGpioBank1 |= PF_BANK1_DSEL;
+   SET_BIT(pfGpioBank1, PF_BANK1_DSEL);
 
    PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
@@ -792,8 +797,21 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    // DSEL to channel 1
    // Enable all DEN
    //=====================================================================================================
-   pfGpioBank2 &= ~PF_BANK2_DSEL;
-   pfGpioBank2 |= PF_BANK2_DEN;
+   CLEAR_BIT(pfGpioBank2, PF_BANK2_DSEL);
+   SET_BIT(pfGpioBank2, PF_BANK2_DEN);
+
+   //=====================================================================================================
+   // Set CAN Terminating Resistor
+   // Output 16 of Bank 2
+   //=====================================================================================================
+   if(stPdmConfig.stDevConfig.nCanTerm == 1)
+   {
+     SET_BIT(pfGpioBank2, CAN_TERM);
+   }
+   else
+   {
+     CLEAR_BIT(pfGpioBank2, CAN_TERM);
+   }
 
    PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
@@ -826,7 +844,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    //=====================================================================================================
    //Flip Profet DSEL to channel 2
    //=====================================================================================================
-   pfGpioBank2 |= PF_BANK2_DSEL;
+   SET_BIT(pfGpioBank2, PF_BANK2_DSEL);
 
    PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
@@ -929,12 +947,7 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
     osStatus_t eStatus;
 
     nMsgCnt = osMessageQueueGetCount(qMsgQueueRx);
-    /*
-    if(nMsgCnt == 16)
-      EXTRA2_GPIO_Port->ODR |= EXTRA2_Pin;
-    else
-      EXTRA2_GPIO_Port->ODR &= ~EXTRA2_Pin;
-*/
+
     eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
     if(eStatus == osOK){
       if(stMsgRx.eMsgSrc == CAN_RX){
@@ -987,7 +1000,7 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
              if(stMsgRx.nRxLen == 2){
                switch(eDevMode){
                case DEVICE_AUTO:
-                 if(stMsgRx.nRxData[1] & 0x01){ //Manual sent
+                 if(GET_BIT_AT(stMsgRx.nRxData[1],0)){ //Manual sent
                    for(int i=0; i<12; i++)
                      nManualOutputs[i] = 0;
                    eDevMode = DEVICE_MANUAL;
@@ -995,7 +1008,7 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
                  break;
 
                case DEVICE_MANUAL:
-                 if(!(stMsgRx.nRxData[1] & 0x01)){ //Auto sent
+                 if(!GET_BIT_AT(stMsgRx.nRxData[1], 0)){ //Auto sent
                    eDevMode = DEVICE_AUTO;
                  }
                  break;
@@ -1178,6 +1191,7 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
              }
              break;
 
+           //All other message types
            default:
              PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueUsbTx, &qMsgQueueCanTx);
              break;
@@ -1188,8 +1202,6 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
     MsgQueueUsbTx_t stMsgTx;
     if(osMessageQueueGet(qMsgQueueUsbTx, &stMsgTx, NULL, 0U) == osOK){
       if(bUsbConnected){
-        //memcpy(&nUsbMsgTx, &stMsgTx.nTxData, stMsgTx.nTxLen);
-        //nUsbMsgTx[stMsgTx.nTxLen] = '\r';
         if(USBD_CDC_Transmit((uint8_t*)stMsgTx.nTxData, stMsgTx.nTxLen) != USBD_OK){
 
           //TODO: bUsbConnected is physical connection - CAN RX commands get queued up and not dumped
@@ -1204,9 +1216,6 @@ void ProfetSMTask(osThreadId_t* thisThreadId)
 #endif
 
     osDelay(5);
-    //Debug GPIO
-
-    //EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
   }
 
 }
@@ -1280,18 +1289,18 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 
 
       //=======================================================
-      //Build Msg 0 (Analog inputs 1-4)
+      //Build Msg 0 (Digital inputs 1-8)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 0;
       stCanTxHeader.DLC = 8; //Bytes to send
-      //nCanTxData[0] = nAiBank1Raw[0] >> 8;
-      //nCanTxData[1] = nAiBank1Raw[0];
-      //nCanTxData[2] = nAiBank1Raw[1] >> 8;
-      //nCanTxData[3] = nAiBank1Raw[1];
-      //nCanTxData[4] = nAiBank1Raw[2] >> 8;
-      //nCanTxData[5] = nAiBank1Raw[2];
-      //nCanTxData[6] = nAiBank1Raw[3] >> 8;
-      //nCanTxData[7] = nAiBank1Raw[3];
+      nCanTxData[0] = nUserDigInput[0];
+      nCanTxData[1] = nUserDigInput[1];
+      nCanTxData[2] = nUserDigInput[2];
+      nCanTxData[3] = nUserDigInput[3];
+      nCanTxData[4] = nUserDigInput[4];
+      nCanTxData[5] = nUserDigInput[5];
+      nCanTxData[6] = nUserDigInput[6];
+      nCanTxData[7] = nUserDigInput[7];
 
       //=======================================================
       //Send CAN msg
@@ -1303,32 +1312,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osDelay(CAN_TX_MSG_SPLIT);
 
       //=======================================================
-      //Build Msg 1 (Analog inputs 5-6)
+      //Build Msg 1 (Device status)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 1;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      //nCanTxData[0] = nAiBank2Raw[0] >> 8;
-      //nCanTxData[1] = nAiBank2Raw[0];
-      //nCanTxData[2] = nAiBank2Raw[1] >> 8;
-      //nCanTxData[3] = nAiBank2Raw[1];
-      //nCanTxData[4] = 0;
-      //nCanTxData[5] = 0;
-      //nCanTxData[6] = 0;
-      //nCanTxData[7] = 0;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-
-      //=======================================================
-      //Build Msg 2 (Device status)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 2;
       stCanTxHeader.DLC = 8; //Bytes to send
       nCanTxData[0] = eDevState;
       nCanTxData[1] = 0;
@@ -1349,9 +1335,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osDelay(CAN_TX_MSG_SPLIT);
 
       //=======================================================
-      //Build Msg 3 (Out 1-4 Current)
+      //Build Msg 2 (Out 1-4 Current)
       //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 3;
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 2;
       stCanTxHeader.DLC = 8; //Bytes to send
       nCanTxData[0] = pf[0].nIL >> 8;
       nCanTxData[1] = pf[0].nIL;
@@ -1372,9 +1358,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osDelay(CAN_TX_MSG_SPLIT);
 
       //=======================================================
-      //Build Msg 4 (Out 5-8 Current)
+      //Build Msg 3 (Out 5-8 Current)
       //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 4;
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 3;
       stCanTxHeader.DLC = 8; //Bytes to send
       nCanTxData[0] = pf[4].nIL >> 8;
       nCanTxData[1] = pf[4].nIL;
@@ -1395,9 +1381,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osDelay(CAN_TX_MSG_SPLIT);
 
       //=======================================================
-      //Build Msg 5 (Out 9-12 Current)
+      //Build Msg 4 (Out 9-12 Current)
       //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 5;
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 4;
       stCanTxHeader.DLC = 8; //Bytes to send
       nCanTxData[0] = pf[8].nIL >> 8;
       nCanTxData[1] = pf[8].nIL;
@@ -1418,9 +1404,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osDelay(CAN_TX_MSG_SPLIT);
 
       //=======================================================
-      //Build Msg 6 (Out 1-12 Status)
+      //Build Msg 5 (Out 1-12 Status)
       //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 6;
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 5;
       stCanTxHeader.DLC = 8; //Bytes to send
       nCanTxData[0] = (pf[1].eState << 4) + pf[0].eState;
       nCanTxData[1] = (pf[3].eState << 4) + pf[2].eState;
@@ -1445,7 +1431,13 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osDelay(stPdmConfig.stCanOutput.nUpdateTime);
     }
     else{
-      osDelay(50);
+      //Not transmitting
+      //Clear CAN TX reply messages generated by config RX messages
+      if(osMessageQueueGetCount(qMsgQueueCanTx) > 0)
+      {
+        osMessageQueueReset(qMsgQueueCanTx);
+      }
+      osDelay(1000); //Don't need to check for config changes very often
     }
 
   }
@@ -1562,6 +1554,7 @@ uint8_t ReadPdmConfig()
 {
   PdmConfig_SetDefault(&stPdmConfig);
 
+  //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
     pf[i].nIL_Limit = stPdmConfig.stOutput[i].nCurrentLimit;

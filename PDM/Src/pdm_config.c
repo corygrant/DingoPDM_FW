@@ -46,6 +46,7 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 
         pConfig->stDevConfig.nCanEnabled = stMsgRx->nRxData[1] & 0x01;
         pConfig->stCanOutput.nEnabled = (stMsgRx->nRxData[1] & 0x02) >> 1;
+        pConfig->stDevConfig.nCanTerm = (stMsgRx->nRxData[1] & 0x04) >> 2;
         pConfig->stDevConfig.nCanSpeed = (stMsgRx->nRxData[1] & 0xF0) >> 4;
 
         pConfig->stCanOutput.nBaseId = (stMsgRx->nRxData[2] << 8) + stMsgRx->nRxData[3];
@@ -58,7 +59,7 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
         stMsgCanTx.stTxHeader.DLC = 5;
 
         stMsgUsbTx.nTxData[0] = MSG_TX_SET_CAN;
-        stMsgUsbTx.nTxData[1] = ((pConfig->stDevConfig.nCanSpeed & 0x0F) << 4) + ((pConfig->stCanOutput.nEnabled & 0x01) << 1) + (pConfig->stDevConfig.nCanEnabled & 0x01);
+        stMsgUsbTx.nTxData[1] = ((pConfig->stDevConfig.nCanSpeed & 0x0F) << 4) + ((pConfig->stDevConfig.nCanTerm & 0x01) << 2) + ((pConfig->stCanOutput.nEnabled & 0x01) << 1) + (pConfig->stDevConfig.nCanEnabled & 0x01);
         stMsgUsbTx.nTxData[2] = (uint8_t)((pConfig->stCanOutput.nBaseId & 0xFF00) >> 8);
         stMsgUsbTx.nTxData[3] = (uint8_t)(pConfig->stCanOutput.nBaseId & 0x00FF);
         stMsgUsbTx.nTxData[4] = (uint8_t)((pConfig->stCanOutput.nUpdateTime) / 100);
@@ -479,6 +480,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Device Configuration
   pConfig->stDevConfig.nVersion = 3;
   pConfig->stDevConfig.nCanEnabled = 1;
+  pConfig->stDevConfig.nCanTerm = 1;
   pConfig->stDevConfig.nCanSpeed = 6;
 
   //Logging

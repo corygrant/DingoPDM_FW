@@ -54,6 +54,7 @@ typedef enum{
 typedef struct{
   uint8_t nVersion;
   uint8_t nCanEnabled;
+  uint8_t nCanTerm;
   uint8_t nCanSpeed;
 } PdmConfig_DeviceConfig_t;
 

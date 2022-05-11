@@ -49,6 +49,13 @@ extern "C" {
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
 
+//**************
+//See stm32f3xx.h for other bit macros
+//**************
+#define BIT_MASK_AT(pos)         (1 << (pos))
+#define SET_BIT_AT(value,pos)    ((value) |= BIT_MASK_AT(pos))
+#define CLEAR_BIT_AT(value,pos)  ((value) &= ~BIT_MASK_AT(pos))
+#define GET_BIT_AT(value,pos)    (((value) & BIT_MASK_AT(pos)) ? 1 : 0)
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
