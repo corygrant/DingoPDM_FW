@@ -62,6 +62,8 @@ typedef enum
 
 typedef struct
 {
+  uint8_t nEnabled;
+
   WiperMode_t eMode;
   WiperState_t eState;
 

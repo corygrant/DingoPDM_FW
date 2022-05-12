@@ -524,7 +524,7 @@ static void InterPause(Wiper_t* wiper)
   }
 
   //Copy inter delay to local variable
-  uint16_t nDelay;
+  uint16_t nDelay = 0;
   switch(wiper->eSelectedSpeed)
   {
   case PARK:
@@ -626,6 +626,8 @@ static void Swipe(Wiper_t* wiper)
 
 void WiperSM(Wiper_t* wiper)
 {
+  if(!(wiper->nEnabled == 1)) return;
+
   wiper->eSelectedSpeed = wiper->eSpeedMap[*wiper->pSpeedInput];
 
   switch(wiper->eState)

@@ -180,15 +180,9 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  if(ReadPdmConfig() != PDM_OK)
+  if(ReadPdmConfig(&hi2c2) != PDM_OK)
     Error_Handler();
   /* USER CODE END RTOS_THREADS */
-
-  /* USER CODE BEGIN RTOS_EVENTS */
-  /* add events, ... */
-  if(ReadPdmConfig() != PDM_OK)
-    Error_Handler();
-  /* USER CODE END RTOS_EVENTS */
 
 }
 

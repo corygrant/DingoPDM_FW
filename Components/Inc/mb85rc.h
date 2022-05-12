@@ -11,7 +11,6 @@
 #include "stdint.h"
 #include "stm32f3xx_hal.h"
 
-#define MB85RC_OK 1
 #define MB85RC_SLAVE_ID 0xF8
 #define MB85RC_MANUF_ID 0x00A
 #define MB85RC_PROD_ID 0x510

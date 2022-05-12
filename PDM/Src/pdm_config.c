@@ -10,30 +10,68 @@ static uint8_t nVirtInNum;
 static uint8_t nFlasherNum;
 static uint8_t nCanInputNum;
 
-uint8_t PdmConfig_Read(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig){
+uint8_t PdmConfig_Check(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig)
+{
   //Verifty that FRAM is communicating
-  if(MB85RC_CheckId(hi2c, nAddr) != MB85RC_OK){
+  if(MB85RC_CheckId(hi2c, nAddr) != HAL_OK){
+      return 0;
+  }
+
+  uint16_t nSizeOfConfig = sizeof(*pConfig);
+  uint16_t nSizeInMem = 0;
+
+  //Get size from 2 bytes after config
+  if(!(MB85RC_Read(hi2c, nAddr, sizeof(*pConfig), (uint8_t*)&nSizeInMem, sizeof(nSizeInMem)) == HAL_OK))
+  {
+    return 0;
+  }
+
+  //Check that the value stored matches the config size
+  if(nSizeInMem == nSizeOfConfig) return 1;
+
+  return 0;
+}
+
+uint8_t PdmConfig_Read(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig)
+{
+  //Verifty that FRAM is communicating
+  if(MB85RC_CheckId(hi2c, nAddr) != HAL_OK){
       return 0;
   }
 
   //Takes approx. 60ms to read entire struct
-  MB85RC_Read(hi2c, nAddr, 0x0, (uint8_t*)pConfig, sizeof(*pConfig));
+  if(!MB85RC_Read(hi2c, nAddr, 0x0, (uint8_t*)pConfig, sizeof(*pConfig)) == HAL_OK)
+  {
+    return 0;
+  }
 
   return 1;
 }
 
-uint8_t PdmConfig_Write(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig){
+uint8_t PdmConfig_Write(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig)
+{
   //Verifty that FRAM is communicating
-  if(MB85RC_CheckId(hi2c, nAddr) != MB85RC_OK){
+  if(MB85RC_CheckId(hi2c, nAddr) != HAL_OK){
       return 0;
   }
 
-  MB85RC_Write(hi2c, nAddr, 0x0, (uint8_t*)pConfig, sizeof(*pConfig));
+  if(!MB85RC_Write(hi2c, nAddr, 0x0, (uint8_t*)pConfig, sizeof(*pConfig)) == HAL_OK)
+  {
+    return 0;
+  }
+
+  uint16_t nSizeOfConfig = sizeof(*pConfig);
+
+  if(!MB85RC_Write(hi2c, nAddr, sizeof(*pConfig), (uint8_t*)&nSizeOfConfig, sizeof(nSizeOfConfig)) == HAL_OK)
+  {
+    return 0;
+  }
 
   return 1;
 }
 
-uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueUsbTx, osMessageQueueId_t* qMsgQueueCanTx){
+uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueUsbTx, osMessageQueueId_t* qMsgQueueCanTx)
+{
 
   nSend = 0;
 

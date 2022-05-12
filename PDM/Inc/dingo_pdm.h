@@ -31,7 +31,6 @@
 #include "pca9635.h"
 #include "pcal9554b.h"
 #include "profet.h"
-#include "profet.h"
 #include "pushbutton.h"
 #include "virtual_input.h"
 #include "wipers.h"
@@ -87,11 +86,6 @@ uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len);
 
 void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4, RTC_HandleTypeDef* hrtc, CRC_HandleTypeDef* hcrc);
 void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTypeDef* hi2c2);
-void ProfetSMTask(osThreadId_t* thisThreadId);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);
-void Profet_Init();
-void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *profet);
-void GetRTCTimeDate(RTC_HandleTypeDef* hrtc, uint16_t *year, uint8_t *month, uint8_t *day, uint8_t *hour, uint8_t *minute, uint8_t *second);
-
-uint8_t ReadPdmConfig();
+uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2);
 #endif /* INC_DINGO_PDM_H_ */

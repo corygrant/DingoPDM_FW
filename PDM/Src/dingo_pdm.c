@@ -8,11 +8,13 @@
 #include "dingo_pdm.h"
 #include "pdm_config.h"
 
-//TODO V3 Fix old analog input logic handling - to digital
-//TODO V3 Change USB renumeration logic - changed hardware
 //TODO V3 Add PCA9539 Profet GPIO reset pin logic
-//TODO V3 Add SPI CS on hardware NSS
 //TODO Remove mode? No MANUAL
+
+//========================================================================
+// Write Default Config to Memory
+//========================================================================
+#define WRITE_DEFAULT_CONFIG 0
 
 //========================================================================
 // Task Delays
@@ -190,6 +192,8 @@ uint16_t nOutputs[PDM_NUM_OUTPUTS];
 uint16_t nStarterDisable[PDM_NUM_OUTPUTS];
 uint16_t nOutputFlasher[PDM_NUM_OUTPUTS];
 
+//TODO: Replace with RTOS safe version
+uint8_t nBurn;
 
 uint32_t nMsgCnt;
 
@@ -220,6 +224,12 @@ uint32_t nReportingLastTime;
 
 uint8_t nCanEnable;
 CAN_BitRate_t eCanBitRate;
+
+void InputLogic();
+void OutputLogic();
+void Profet_Init();
+void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *profet);
+void GetRTCTimeDate(RTC_HandleTypeDef* hrtc, uint16_t *year, uint8_t *month, uint8_t *day, uint8_t *hour, uint8_t *minute, uint8_t *second);
 
 //==============================================================================================================================================
 
@@ -561,7 +571,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       Profet_SM(&pf[i]);
     }
-    //WiperSM(&stWiper);
+    WiperSM(&stWiper);
     MsgQueueRx_t stMsgRx;
     osStatus_t eStatus;
 
@@ -590,12 +600,13 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
                   //Write settings to FRAM
                   //uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
                   //TODO: Use flag to I2C task
+                  nBurn = 1;
 
                   stMsgUsbTx.nTxLen = 2;
                   stMsgCanTx.stTxHeader.DLC = 2;
 
                   stMsgUsbTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-                  stMsgUsbTx.nTxData[1] = 0;// nRet;
+                  stMsgUsbTx.nTxData[1] = 1;// nRet;
                   stMsgUsbTx.nTxData[2] = 0;
                   stMsgUsbTx.nTxData[3] = 0;
                   stMsgUsbTx.nTxData[4] = 0;
@@ -661,7 +672,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
            //Force Outputs
            // 'Q'
            case MSG_RX_FORCE_OUTPUTS:
-             if(stMsgRx.nRxLen == 7){
+             if(stMsgRx.nRxLen == 3){
                if(eDevMode == DEVICE_MANUAL){
                  nManualOutputs[0] = (stMsgRx.nRxData[1] & 0x01);
                  nManualOutputs[1] = (stMsgRx.nRxData[1] & 0x02) >> 1;
@@ -679,8 +690,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
                }
              }
              if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 7;
-               stMsgCanTx.stTxHeader.DLC = 7;
+               stMsgUsbTx.nTxLen = 3;
+               stMsgCanTx.stTxHeader.DLC = 3;
 
                stMsgUsbTx.nTxData[0] = MSG_TX_FORCE_OUTPUTS;
                stMsgUsbTx.nTxData[1] = ((nManualOutputs[7] & 0x01) << 7) + ((nManualOutputs[6] & 0x01) << 6) +
@@ -689,13 +700,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
                                        ((nManualOutputs[1] & 0x01) << 1) + (nManualOutputs[0] & 0x01);
                stMsgUsbTx.nTxData[2] = ((nManualOutputs[11] & 0x01) << 3) + ((nManualOutputs[10] & 0x01) << 2) +
                                        ((nManualOutputs[9] & 0x01) << 1) + (nManualOutputs[8] & 0x01);
-
-               //TODO:Add manual output modes
-               stMsgUsbTx.nTxData[3] = 0;
-               stMsgUsbTx.nTxData[4] = 0;
-               stMsgUsbTx.nTxData[5] = 0;
-               stMsgUsbTx.nTxData[6] = 0;
-               stMsgUsbTx.nTxData[7] = 0;
 
                stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
 
@@ -838,44 +842,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
 
     //Debug GPIO
     //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
-  }
-}
-
-void InputLogic(){
-  for(int i=0; i<PDM_NUM_INPUTS; i++)
-    EvaluateInput(&stPdmConfig.stInput[i], &nPdmInputs[i]);
-
-  for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
-    EvaluateVirtInput(&stPdmConfig.stVirtualInput[i], &nVirtInputs[i]);
-
-  //Map profet state to integer for use as virtual input pointer
-  for(int i=0; i<PDM_NUM_OUTPUTS; i++){
-    nOutputs[i] = pf[i].eState == ON;
-    EvaluateStarter(&stPdmConfig.stStarter, i, &nStarterDisable[i]);
-  }
-
-  for(int i=0; i<PDM_NUM_OUTPUTS; i++){
-      if( (stPdmConfig.stFlasher[0].nOutput != i) &&
-          (stPdmConfig.stFlasher[1].nOutput != i) &&
-          (stPdmConfig.stFlasher[2].nOutput != i) &&
-          (stPdmConfig.stFlasher[3].nOutput != i))
-        nOutputFlasher[i] = 1;
-  }
-  for(int i=0; i<PDM_NUM_FLASHERS; i++){
-    EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
-  }
-}
-
-void OutputLogic(){
-  //Copy output logic to profet requested state
-  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
-  {
-    if(eDevMode == DEVICE_AUTO){
-      pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
-    }
-    if(eDevMode == DEVICE_MANUAL){
-      pf[i].eReqState = (ProfetStateTypeDef)nManualOutputs[i];
-    }
   }
 }
 
@@ -1079,7 +1045,14 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
    if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
 
-
+   //=====================================================================================================
+   // Burn Settings to FRAM
+   //=====================================================================================================
+   if(nBurn == 1)
+   {
+     uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+     nBurn = 0;
+   }
 
    //=====================================================================================================
    // Set Profet
@@ -1212,13 +1185,6 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
    osDelay(I2C_TASK_DELAY);
  }
-}
-
-
-void ProfetSMTask(osThreadId_t* thisThreadId)
-{
-
-
 }
 
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
@@ -1444,6 +1410,44 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
   }
 }
 
+void InputLogic(){
+  for(int i=0; i<PDM_NUM_INPUTS; i++)
+    EvaluateInput(&stPdmConfig.stInput[i], &nPdmInputs[i]);
+
+  for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
+    EvaluateVirtInput(&stPdmConfig.stVirtualInput[i], &nVirtInputs[i]);
+
+  //Map profet state to integer for use as virtual input pointer
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++){
+    nOutputs[i] = pf[i].eState == ON;
+    EvaluateStarter(&stPdmConfig.stStarter, i, &nStarterDisable[i]);
+  }
+
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++){
+      if( (stPdmConfig.stFlasher[0].nOutput != i) &&
+          (stPdmConfig.stFlasher[1].nOutput != i) &&
+          (stPdmConfig.stFlasher[2].nOutput != i) &&
+          (stPdmConfig.stFlasher[3].nOutput != i))
+        nOutputFlasher[i] = 1;
+  }
+  for(int i=0; i<PDM_NUM_FLASHERS; i++){
+    EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
+  }
+}
+
+void OutputLogic(){
+  //Copy output logic to profet requested state
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
+  {
+    if(eDevMode == DEVICE_AUTO){
+      pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
+    }
+    if(eDevMode == DEVICE_MANUAL){
+      pf[i].eReqState = (ProfetStateTypeDef)nManualOutputs[i];
+    }
+  }
+}
+
 void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *profet)
 {
   //0 = Off
@@ -1551,9 +1555,26 @@ int _write(int file, char *ptr, int len){
   return len;
 }
 
-uint8_t ReadPdmConfig()
+uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
 {
-  PdmConfig_SetDefault(&stPdmConfig);
+  if(WRITE_DEFAULT_CONFIG == 1)
+  {
+    PdmConfig_SetDefault(&stPdmConfig);
+    PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+  }
+  else
+  {
+    if(PdmConfig_Check(hi2c2, MB85RC_ADDRESS, &stPdmConfig) == 1)
+    {
+      if(PdmConfig_Read(hi2c2, MB85RC_ADDRESS, &stPdmConfig) == 0)
+      {
+        PdmConfig_SetDefault(&stPdmConfig);
+      }
+    }
+    else{
+      PdmConfig_SetDefault(&stPdmConfig);
+    }
+  }
 
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
@@ -1566,13 +1587,6 @@ uint8_t ReadPdmConfig()
     pf[i].nOC_ResetLimit = stPdmConfig.stOutput[i].nResetLimit;
 
   }
-  /*
-  //PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
-
-  if(PdmConfig_Read(hi2c2, MB85RC_ADDRESS, &stPdmConfig) == 0){
-    PdmConfig_SetDefault(&stPdmConfig);
-  }
-  */
 
   //Map the variable map first before using
   //User inputs
@@ -1614,6 +1628,7 @@ uint8_t ReadPdmConfig()
     stPdmConfig.stVirtualInput[i].pVar2 = pVariableMap[stPdmConfig.stVirtualInput[i].nVar2];
   }
 
+  stWiper.nEnabled = stPdmConfig.stWiper.nEnabled;
   stWiper.eMode = stPdmConfig.stWiper.nMode;
   stWiper.pSlowInput = pVariableMap[stPdmConfig.stWiper.nSlowInput];
   stWiper.pFastInput = pVariableMap[stPdmConfig.stWiper.nFastInput];

@@ -166,7 +166,7 @@ typedef struct{
   PdmConfig_CanOutput_t stCanOutput;
 } PdmConfig_t;
 
-
+uint8_t PdmConfig_Check(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig);
 uint8_t PdmConfig_Read(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig);
 uint8_t PdmConfig_Write(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig);
 uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx, osMessageQueueId_t* qMsgQueueCanTx);

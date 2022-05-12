@@ -170,6 +170,8 @@ static void Fault(volatile ProfetTypeDef *profet)
 {
   profet->cState = 'F';
   *profet->nIN_Port &= ~profet->nIN_Pin;
+
+  //TODO: Reset from fault requires DEN cycle
 }
 
 void Profet_SM(volatile ProfetTypeDef *profet) {
