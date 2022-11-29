@@ -7,14 +7,10 @@
 
 #include "dingo_pdm.h"
 #include "pdm_config.h"
+#include "main.h"
 
 //TODO V3 Add PCA9539 Profet GPIO reset pin logic
 //TODO Remove mode? No MANUAL
-
-//========================================================================
-// Write Default Config to Memory
-//========================================================================
-#define WRITE_DEFAULT_CONFIG 0
 
 //========================================================================
 // Task Delays
@@ -92,7 +88,6 @@ PdmConfig_t stPdmConfig;
 // Message Queues
 //========================================================================
 osMessageQueueId_t qMsgQueueRx;
-osMessageQueueId_t qMsgQueueUsbTx;
 osMessageQueueId_t qMsgQueueCanTx;
 
 //========================================================================
@@ -124,12 +119,6 @@ uint8_t nUserDigInput[PDM_NUM_INPUTS];
 uint8_t nOutputLogic[PDM_NUM_OUTPUTS];
 
 //========================================================================
-// USB
-//========================================================================
-char cUsbBuffer[120];
-bool bUsbConnected = false;
-
-//========================================================================
 // MCP9808 PCB Temperature
 //========================================================================
 int16_t nBoardTempC;
@@ -153,12 +142,6 @@ PCA9635_LEDOnState_t eStatusLeds[PDM_NUM_LEDS];
 uint8_t nLEDTestSeqIndex;
 uint32_t nLEDTestSeqValues;
 uint32_t nLEDTestSeqLastTime;
-
-//========================================================================
-// Real Time Clock
-//========================================================================
-uint16_t nRtcYear;
-uint8_t nRtcMonth, nRtcDay, nRtcHour, nRtcMinute, nRtcSecond;
 
 //========================================================================
 // CAN
@@ -197,27 +180,6 @@ uint8_t nBurn;
 
 uint32_t nMsgCnt;
 
-uint8_t USBD_RxBuffer[USBD_RX_DATA_SIZE];
-uint8_t USBD_TxBuffer[USBD_TX_DATA_SIZE];
-USBD_HandleTypeDef hUSBD;
-
-static int8_t USBD_CDC_Init(void);
-static int8_t USBD_CDC_DeInit(void);
-static int8_t USBD_CDC_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length);
-static int8_t USBD_CDC_Receive(uint8_t* pbuf, uint32_t *Len);
-
-USBD_CDC_ItfTypeDef USBD_Interface_PDM =
-{
-  USBD_CDC_Init,
-  USBD_CDC_DeInit,
-  USBD_CDC_Control,
-  USBD_CDC_Receive
-};
-
-uint8_t nUsbMsgTx[9]; //Add \r to Usb Tx message
-
-uint8_t nManualOutputs[PDM_NUM_OUTPUTS];
-
 uint8_t nReportingOn;
 uint16_t nReportingDelay;
 uint32_t nReportingLastTime;
@@ -229,165 +191,6 @@ void InputLogic();
 void OutputLogic();
 void Profet_Init();
 void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *profet);
-void GetRTCTimeDate(RTC_HandleTypeDef* hrtc, uint16_t *year, uint8_t *month, uint8_t *day, uint8_t *hour, uint8_t *minute, uint8_t *second);
-
-//==============================================================================================================================================
-
-/**
-  * @brief  Initializes the CDC media low layer over the FS USB IP
-  * @retval USBD_OK if all operations are OK else USBD_FAIL
-  */
-static int8_t USBD_CDC_Init(void)
-{
-  /* Set Application Buffers */
-  USBD_CDC_SetTxBuffer(&hUSBD, USBD_TxBuffer, 0);
-  USBD_CDC_SetRxBuffer(&hUSBD, USBD_RxBuffer);
-  return (USBD_OK);
-}
-
-/**
-  * @brief  DeInitializes the CDC media low layer
-  * @retval USBD_OK if all operations are OK else USBD_FAIL
-  */
-static int8_t USBD_CDC_DeInit(void)
-{
-  return (USBD_OK);
-}
-
-/**
-  * @brief  Manage the CDC class requests
-  * @param  cmd: Command code
-  * @param  pbuf: Buffer containing command data (request parameters)
-  * @param  length: Number of data to be sent (in bytes)
-  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
-  */
-static int8_t USBD_CDC_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length)
-{
-  switch(cmd)
-  {
-    case CDC_SEND_ENCAPSULATED_COMMAND:
-
-    break;
-
-    case CDC_GET_ENCAPSULATED_RESPONSE:
-
-    break;
-
-    case CDC_SET_COMM_FEATURE:
-
-    break;
-
-    case CDC_GET_COMM_FEATURE:
-
-    break;
-
-    case CDC_CLEAR_COMM_FEATURE:
-
-    break;
-
-  /*******************************************************************************/
-  /* Line Coding Structure                                                       */
-  /*-----------------------------------------------------------------------------*/
-  /* Offset | Field       | Size | Value  | Description                          */
-  /* 0      | dwDTERate   |   4  | Number |Data terminal rate, in bits per second*/
-  /* 4      | bCharFormat |   1  | Number | Stop bits                            */
-  /*                                        0 - 1 Stop bit                       */
-  /*                                        1 - 1.5 Stop bits                    */
-  /*                                        2 - 2 Stop bits                      */
-  /* 5      | bParityType |  1   | Number | Parity                               */
-  /*                                        0 - None                             */
-  /*                                        1 - Odd                              */
-  /*                                        2 - Even                             */
-  /*                                        3 - Mark                             */
-  /*                                        4 - Space                            */
-  /* 6      | bDataBits  |   1   | Number Data bits (5, 6, 7, 8 or 16).          */
-  /*******************************************************************************/
-    case CDC_SET_LINE_CODING:
-
-    break;
-
-    case CDC_GET_LINE_CODING:
-      pbuf[0] = (uint8_t)(115200);
-      pbuf[1] = (uint8_t)(115200 >> 8);
-      pbuf[2] = (uint8_t)(115200 >> 16);
-      pbuf[3] = (uint8_t)(115200 >> 24);
-      pbuf[4] = 0; //Stop bits (1)
-      pbuf[5] = 0; //Parity (none)
-      pbuf[6] = 8; //Number of bits (8)
-    break;
-
-    case CDC_SET_CONTROL_LINE_STATE:
-
-    break;
-
-    case CDC_SEND_BREAK:
-
-    break;
-
-  default:
-    break;
-  }
-
-  return (USBD_OK);
-}
-
-/**
-  * @brief  Data received over USB OUT endpoint are sent over CDC interface
-  *         through this function.
-  *
-  *         @note
-  *         This function will issue a NAK packet on any OUT packet received on
-  *         USB endpoint until exiting this function. If you exit this function
-  *         before transfer is complete on CDC interface (ie. using DMA controller)
-  *         it will result in receiving more data while previous ones are still
-  *         not sent.
-  *
-  * @param  Buf: Buffer of data to be received
-  * @param  Len: Number of data received (in bytes)
-  * @retval Result of the operation: USBD_OK if all operations are OK else USBD_FAIL
-  */
-static int8_t USBD_CDC_Receive(uint8_t* Buf, uint32_t *Len)
-{
-  MsgQueueRx_t stMsg;
-  stMsg.eMsgSrc = USB_RX;
-  stMsg.nCRC = 0xFFFFFFFF;
-  stMsg.nRxLen = 0;
-  for(uint8_t i=0; i<*Len; i++){
-    if(i < 8){
-      stMsg.nRxData[i] = Buf[i];
-      stMsg.nRxLen++;
-    }
-  }
-
-  osMessageQueuePut(qMsgQueueRx, &stMsg, 0U, 0U);
-
-  USBD_CDC_SetRxBuffer(&hUSBD, &Buf[0]);
-  USBD_CDC_ReceivePacket(&hUSBD);
-  return (USBD_OK);
-}
-
-/**
-  * @brief  CDC_Transmit_FS
-  *         Data to send over USB IN endpoint are sent over CDC interface
-  *         through this function.
-  *         @note
-  *
-  *
-  * @param  Buf: Buffer of data to be sent
-  * @param  Len: Number of data to be sent (in bytes)
-  * @retval USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
-  */
-uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len)
-{
-  uint8_t result = USBD_OK;
-  USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUSBD.pClassData;
-  if (hcdc->TxState != 0){
-    return USBD_BUSY;
-  }
-  USBD_CDC_SetTxBuffer(&hUSBD, Buf, Len);
-  result = USBD_CDC_TransmitPacket(&hUSBD);
-  return result;
-}
 
 //========================================================================
 // CAN Receive Callback
@@ -418,77 +221,20 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 // MAIN
 //========================================================================
 //========================================================================
-void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4, RTC_HandleTypeDef* hrtc, CRC_HandleTypeDef* hcrc){
+void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4){
 
   HAL_ADC_Start_DMA(hadc1, (uint32_t*) nAdc1Data, ADC_1_COUNT);
   HAL_ADC_Start_DMA(hadc4, (uint32_t*) nAdc4Data, ADC_4_COUNT);
 
-  /* Init Device Library, add supported class and start the library. */
-  if (USBD_Init(&hUSBD, &FS_Desc, DEVICE_FS) != USBD_OK)
-  {
-    Error_Handler();
-  }
-  if (USBD_RegisterClass(&hUSBD, &USBD_CDC) != USBD_OK)
-  {
-    Error_Handler();
-  }
-  if (USBD_CDC_RegisterInterface(&hUSBD, &USBD_Interface_PDM) != USBD_OK)
-  {
-    Error_Handler();
-  }
-  if (USBD_Start(&hUSBD) != USBD_OK)
-  {
-    Error_Handler();
-  }
-
   Profet_Init();
 
-  MsgQueueUsbTx_t stMsgUsbTx;
-  MsgQueueCanTx_t stMsgCanTx;
+  //MsgQueueCanTx_t stMsgCanTx;
 
-  RTC_TimeTypeDef stTime = {0};
-  RTC_DateTypeDef stDate = {0};
-
-  uint8_t nSend;
+  //uint8_t nSend;
 
   /* Infinite loop */
   for(;;)
   {
-
-    //=====================================================================================================
-    // Standby
-    //=====================================================================================================
-    /* Check if the system was resumed from Standby mode */
-    if ((__HAL_PWR_GET_FLAG(PWR_FLAG_SB) != RESET) ||
-        (__HAL_PWR_GET_FLAG(PWR_FLAG_WU) != RESET))
-    {
-      /* Clear Standby flag */
-      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_SB);
-      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-
-      HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
-
-    }
-
-
-    //Check standby pin
-    //If no voltage - enter standby
-    if(!READ_BIT(STANDBY_GPIO_Port->IDR, STANDBY_Pin)){
-
-      HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
-
-      HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2); //PC13
-
-      __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
-
-      HAL_PWR_EnableWakeUpPin(PWR_WAKEUP_PIN2); //PC13
-
-      HAL_PWR_EnterSTANDBYMode();
-    }
-    else
-    {
-      HAL_PWR_DisableWakeUpPin(PWR_WAKEUP_PIN2); //PC13
-    }
 
     //=====================================================================================================
     // ADC channels
@@ -505,68 +251,12 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     CANBoardCheckConnection(&stCANBoard_RX);
 
     //=====================================================================================================
-    // USB Connection
-    //=====================================================================================================
-    if( READ_BIT(USB_VBUS_GPIO_Port->IDR, USB_VBUS_Pin) && !bUsbConnected){
-      HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_SET);
-      bUsbConnected = true;
-    }
-
-    if( !READ_BIT(USB_VBUS_GPIO_Port->IDR, USB_VBUS_Pin) && bUsbConnected){
-      HAL_GPIO_WritePin(USB_PULLUP_GPIO_Port, USB_PULLUP_Pin, GPIO_PIN_RESET);
-      bUsbConnected = false;
-
-      //TODO: Heartbeat to control software?
-      //Reset back to auto mode if in manual
-      if (eDevMode == DEVICE_MANUAL){
-        for(int i=0; i<12; i++) nManualOutputs[i] = 0;
-        eDevMode = DEVICE_AUTO;
-      }
-    }
-
-    //=====================================================================================================
     // Totalize current
     //=====================================================================================================
     nILTotal = 0;
     for(int i=0;i<PDM_NUM_OUTPUTS;i++)
       nILTotal += pf[i].nIL;
 
-    /*
-    int nUsbNumBytes = sprintf(cUsbBuffer, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %c%c%c%c%c%c%c%c%c%c%c%c", pf[0].nIL, pf[1].nIL, pf[2].nIL, pf[3].nIL,
-                                                                  pf[4].nIL, pf[5].nIL, pf[6].nIL, pf[7].nIL,
-                                                                  pf[8].nIL, pf[9].nIL, pf[10].nIL, pf[11].nIL, nILTotal, (uint16_t)fBoardTempC,
-                                                                  pf[0].cState, pf[1].cState, pf[2].cState, pf[3].cState,
-                                                                  pf[4].cState, pf[5].cState, pf[6].cState, pf[7].cState,
-                                                                  pf[8].cState, pf[9].cState, pf[10].cState, pf[11].cState);
-
-    //CRC init in main.c must be set up as:
-    //
-    //  hcrc.Init.DefaultPolynomialUse = DEFAULT_POLYNOMIAL_ENABLE;
-    //  hcrc.Init.DefaultInitValueUse = DEFAULT_INIT_VALUE_ENABLE;
-    //  hcrc.Init.InputDataInversionMode = CRC_INPUTDATA_INVERSION_BYTE;
-    //  hcrc.Init.OutputDataInversionMode = CRC_OUTPUTDATA_INVERSION_ENABLE;
-    //  hcrc.InputDataFormat = CRC_INPUTDATA_FORMAT_BYTES;
-    //
-    //  AND CRC value must be inverted after calculating
-    //
-
-    uint32_t nUsbCrc = HAL_CRC_Calculate(hcrc, (uint32_t *)cUsbBuffer, nUsbNumBytes);
-    nUsbCrc = ~nUsbCrc;
-    char sCrc[12];
-    sprintf(sCrc, " %08lX\n\r", nUsbCrc);
-    strcat(cUsbBuffer, sCrc);
-
-
-    uint8_t nRet = USBD_CDC_Transmit((uint8_t*)cUsbBuffer, sizeof(cUsbBuffer));
-
-    if(nRet == USBD_FAIL)
-      printf("USB TX Fail\n");
-
-    if(nRet == USBD_BUSY)
-      printf("USB TX Busy\n");
-
-    memset(cUsbBuffer,0,120);
-    */
 
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       Profet_SM(&pf[i]);
@@ -584,9 +274,9 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
           EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
         }
       }
-      if((stMsgRx.eMsgSrc == CAN_RX && stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId + 21) || (stMsgRx.eMsgSrc == USB_RX)){
-        //EXTRA2_GPIO_Port->ODR ^= EXTRA2_Pin;
 
+      /*
+      if(stMsgRx.eMsgSrc == CAN_RX && stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId + 21){
         nSend = 0;
 
         switch((MsgQueueRxCmd_t)stMsgRx.nRxData[0]){
@@ -602,113 +292,23 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
                   //TODO: Use flag to I2C task
                   nBurn = 1;
 
-                  stMsgUsbTx.nTxLen = 2;
                   stMsgCanTx.stTxHeader.DLC = 2;
 
-                  stMsgUsbTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-                  stMsgUsbTx.nTxData[1] = 1;// nRet;
-                  stMsgUsbTx.nTxData[2] = 0;
-                  stMsgUsbTx.nTxData[3] = 0;
-                  stMsgUsbTx.nTxData[4] = 0;
-                  stMsgUsbTx.nTxData[5] = 0;
-                  stMsgUsbTx.nTxData[6] = 0;
-                  stMsgUsbTx.nTxData[7] = 0;
+                  stMsgCanTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
+                  stMsgCanTx.nTxData[1] = 1;// nRet;
+                  stMsgCanTx.nTxData[2] = 0;
+                  stMsgCanTx.nTxData[3] = 0;
+                  stMsgCanTx.nTxData[4] = 0;
+                  stMsgCanTx.nTxData[5] = 0;
+                  stMsgCanTx.nTxData[6] = 0;
+                  stMsgCanTx.nTxData[7] = 0;
 
                   stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
 
-                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
                   osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
                 }
               }
             break;
-
-           //Set Mode
-           // 'M'
-           case MSG_RX_SET_MODE:
-             if(stMsgRx.nRxLen == 2){
-               switch(eDevMode){
-               case DEVICE_AUTO:
-                 if(GET_BIT_AT(stMsgRx.nRxData[1],0)){ //Manual sent
-                   for(int i=0; i<12; i++) nManualOutputs[i] = 0;
-                   eDevMode = DEVICE_MANUAL;
-                 }
-                 break;
-
-               case DEVICE_MANUAL:
-                 if(!GET_BIT_AT(stMsgRx.nRxData[1], 0)){ //Auto sent
-                   for(int i=0; i<12; i++) nManualOutputs[i] = 0;
-                   eDevMode = DEVICE_AUTO;
-                 }
-                 break;
-               }
-               nSend = 1;
-             }
-
-             if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 2;
-               stMsgCanTx.stTxHeader.DLC = 2;
-
-               stMsgUsbTx.nTxData[0] = MSG_TX_SET_MODE;
-               stMsgUsbTx.nTxData[1] = (uint8_t)eDevMode;
-               stMsgUsbTx.nTxData[2] = 0;
-               stMsgUsbTx.nTxData[3] = 0;
-               stMsgUsbTx.nTxData[4] = 0;
-               stMsgUsbTx.nTxData[5] = 0;
-               stMsgUsbTx.nTxData[6] = 0;
-               stMsgUsbTx.nTxData[7] = 0;
-
-               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-           break;
-
-
-           //Force Outputs
-           // 'Q'
-           case MSG_RX_FORCE_OUTPUTS:
-             if(stMsgRx.nRxLen == 3){
-               if(eDevMode == DEVICE_MANUAL){
-                 nManualOutputs[0] = (stMsgRx.nRxData[1] & 0x01);
-                 nManualOutputs[1] = (stMsgRx.nRxData[1] & 0x02) >> 1;
-                 nManualOutputs[2] = (stMsgRx.nRxData[1] & 0x04) >> 2;
-                 nManualOutputs[3] = (stMsgRx.nRxData[1] & 0x08) >> 3;
-                 nManualOutputs[4] = (stMsgRx.nRxData[1] & 0x10) >> 4;
-                 nManualOutputs[5] = (stMsgRx.nRxData[1] & 0x20) >> 5;
-                 nManualOutputs[6] = (stMsgRx.nRxData[1] & 0x40) >> 6;
-                 nManualOutputs[7] = (stMsgRx.nRxData[1] & 0x80) >> 7;
-                 nManualOutputs[8] = (stMsgRx.nRxData[2] & 0x01);
-                 nManualOutputs[9] = (stMsgRx.nRxData[2] & 0x02) >> 1;
-                 nManualOutputs[10] = (stMsgRx.nRxData[2] & 0x04) >> 2;
-                 nManualOutputs[11] = (stMsgRx.nRxData[2] & 0x08) >> 3;
-                 nSend = 1;
-               }
-             }
-             if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 3;
-               stMsgCanTx.stTxHeader.DLC = 3;
-
-               stMsgUsbTx.nTxData[0] = MSG_TX_FORCE_OUTPUTS;
-               stMsgUsbTx.nTxData[1] = ((nManualOutputs[7] & 0x01) << 7) + ((nManualOutputs[6] & 0x01) << 6) +
-                                       ((nManualOutputs[5] & 0x01) << 5) + ((nManualOutputs[4] & 0x01) << 4) +
-                                       ((nManualOutputs[3] & 0x01) << 3) + ((nManualOutputs[2] & 0x01) << 2) +
-                                       ((nManualOutputs[1] & 0x01) << 1) + (nManualOutputs[0] & 0x01);
-               stMsgUsbTx.nTxData[2] = ((nManualOutputs[11] & 0x01) << 3) + ((nManualOutputs[10] & 0x01) << 2) +
-                                       ((nManualOutputs[9] & 0x01) << 1) + (nManualOutputs[8] & 0x01);
-
-               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-           break;
 
            //Set Reporting
            // 'R'
@@ -719,119 +319,51 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
                nSend = 1;
              }
              if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgUsbTx.nTxLen = 3;
                stMsgCanTx.stTxHeader.DLC = 3;
 
-               stMsgUsbTx.nTxData[0] = MSG_TX_SET_REPORTING;
-               stMsgUsbTx.nTxData[1] = (nReportingOn & 0x01);
-               stMsgUsbTx.nTxData[2] = (uint8_t)(nReportingDelay / 100);
-               stMsgUsbTx.nTxData[3] = 0;
-               stMsgUsbTx.nTxData[4] = 0;
-               stMsgUsbTx.nTxData[5] = 0;
-               stMsgUsbTx.nTxData[6] = 0;
-               stMsgUsbTx.nTxData[7] = 0;
+               stMsgCanTx.nTxData[0] = MSG_TX_SET_REPORTING;
+               stMsgCanTx.nTxData[1] = (nReportingOn & 0x01);
+               stMsgCanTx.nTxData[2] = (uint8_t)(nReportingDelay / 100);
+               stMsgCanTx.nTxData[3] = 0;
+               stMsgCanTx.nTxData[4] = 0;
+               stMsgCanTx.nTxData[5] = 0;
+               stMsgCanTx.nTxData[6] = 0;
+               stMsgCanTx.nTxData[7] = 0;
 
                stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
 
-               memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-               osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
                osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
              }
            break;
-
-           //Set Time
-           // 'T'
-           case MSG_RX_SET_TIME:
-             if(stMsgRx.nRxLen == 7){
-               stTime.Hours = stMsgRx.nRxData[1];
-               stTime.Minutes = stMsgRx.nRxData[2];
-               stTime.Seconds = stMsgRx.nRxData[3];
-               stTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
-               stTime.StoreOperation = RTC_STOREOPERATION_RESET;
-
-               stDate.Year = stMsgRx.nRxData[4];
-               stDate.Month = stMsgRx.nRxData[5];
-               stDate.Date = stMsgRx.nRxData[6];
-               stDate.WeekDay = RTC_WEEKDAY_MONDAY;
-
-               //HAL_RTC_SetTime(hrtc, &stTime, RTC_FORMAT_BCD);
-               //HAL_RTC_SetDate(hrtc, &stDate, RTC_FORMAT_BCD);
-               //TODO: Use flag to Main task
-               nSend = 1;
-             }
-
-             if((stMsgRx.nRxLen == 1) || nSend){
-                 //HAL_RTC_GetTime(hrtc, &stTime, RTC_FORMAT_BCD);
-                 //HAL_RTC_GetDate(hrtc, &stDate, RTC_FORMAT_BCD);
-                 //TODO: Use flag to Main task
-
-                 stMsgUsbTx.nTxLen = 7;
-                 stMsgCanTx.stTxHeader.DLC = 7;
-
-                 stMsgUsbTx.nTxData[0] = MSG_TX_SET_TIME;
-                 stMsgUsbTx.nTxData[1] = stTime.Hours;
-                 stMsgUsbTx.nTxData[2] = stTime.Minutes;
-                 stMsgUsbTx.nTxData[3] = stTime.Seconds;
-                 stMsgUsbTx.nTxData[4] = stDate.Year;
-                 stMsgUsbTx.nTxData[5] = stDate.Month;
-                 stMsgUsbTx.nTxData[6] = stDate.Date;
-                 stMsgUsbTx.nTxData[7] = 0;
-
-                 stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-                 memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-                 osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
-                 osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-
-
-             break;
 
            //Get Temperature
            // 'F'
            case MSG_RX_GET_TEMP:
              if((stMsgRx.nRxLen == 1) || nSend){
-                  stMsgUsbTx.nTxLen = 7;
                   stMsgCanTx.stTxHeader.DLC = 7;
 
-                  stMsgUsbTx.nTxData[0] = MSG_TX_GET_TEMP;
-                  stMsgUsbTx.nTxData[1] = nBoardTempC >> 8;
-                  stMsgUsbTx.nTxData[2] = nBoardTempC;
-                  stMsgUsbTx.nTxData[3] = nStmTemp >> 8;
-                  stMsgUsbTx.nTxData[4] = nStmTemp;
-                  stMsgUsbTx.nTxData[5] = 0;
-                  stMsgUsbTx.nTxData[6] = 0;
-                  stMsgUsbTx.nTxData[7] = 0;
+                  stMsgCanTx.nTxData[0] = MSG_TX_GET_TEMP;
+                  stMsgCanTx.nTxData[1] = nBoardTempC >> 8;
+                  stMsgCanTx.nTxData[2] = nBoardTempC;
+                  stMsgCanTx.nTxData[3] = nStmTemp >> 8;
+                  stMsgCanTx.nTxData[4] = nStmTemp;
+                  stMsgCanTx.nTxData[5] = 0;
+                  stMsgCanTx.nTxData[6] = 0;
+                  stMsgCanTx.nTxData[7] = 0;
 
                   stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
 
-                  memcpy(&stMsgCanTx.nTxData, &stMsgUsbTx.nTxData, sizeof(stMsgCanTx.nTxData));
-
-                  osMessageQueuePut(qMsgQueueUsbTx, &stMsgUsbTx, 0U, 0U);
                   osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
              }
              break;
 
            //All other message types
            default:
-             PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueUsbTx, &qMsgQueueCanTx);
+             PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueCanTx);
              break;
         }
       }
-    }
-
-    MsgQueueUsbTx_t stMsgTx;
-    if(osMessageQueueGet(qMsgQueueUsbTx, &stMsgTx, NULL, 0U) == osOK){
-      if(bUsbConnected){
-        if(USBD_CDC_Transmit((uint8_t*)stMsgTx.nTxData, stMsgTx.nTxLen) != USBD_OK){
-
-          //TODO: bUsbConnected is physical connection - CAN RX commands get queued up and not dumped
-          //Send failed - add back to queue
-          //osMessageQueuePut(qMsgQueueUsbTx, &stMsgTx, 0U, 0U);
-        }
-      }
+      */
     }
 
 #ifdef MEAS_HEAP_USE
@@ -983,7 +515,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
      //860 SPS = 1.16ms per conversion - delay 2ms
      HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
      osDelay(ADS1015_CONVERSIONDELAY);
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
+     //HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
 
      //Read channel value
      if(ADS1x15_ReadADC(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, &nPfISBank1Raw[i]) != HAL_OK)
@@ -1044,17 +576,6 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
    if(MCP9808_GetOvertemp()) printf("*******MCP9808 Overtemp Detected*******\n");
    if(MCP9808_GetCriticalTemp()) printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
-
-   //=====================================================================================================
-   // Burn Settings to FRAM
-   //=====================================================================================================
-   //TODO: replace with something task safe
-   if(nBurn == 1)
-   {
-     uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
-     PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
-     nBurn = 0;
-   }
 
    //=====================================================================================================
    // Set Profet
@@ -1171,7 +692,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
        SetPfStatusLed(&eStatusLeds[i], &pf[i]);
      }
      eStatusLeds[12] = (eDevMode == DEVICE_AUTO) + ((eDevMode == DEVICE_MANUAL) * LED_FLASH);              //State
-     eStatusLeds[13] = bUsbConnected;   //USB
+     eStatusLeds[13] = 0;
      eStatusLeds[14] = (HAL_GetTick() - nLastCanUpdate) < 1000;              //CAN
      eStatusLeds[15] = (eDevState == DEVICE_ERROR);   //Fault
      PCA9635_SetAll(hi2c2, PCA9635_ADDRESS, eStatusLeds);
@@ -1441,12 +962,7 @@ void OutputLogic(){
   //Copy output logic to profet requested state
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    if(eDevMode == DEVICE_AUTO){
-      pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
-    }
-    if(eDevMode == DEVICE_MANUAL){
-      pf[i].eReqState = (ProfetStateTypeDef)nManualOutputs[i];
-    }
+    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
   }
 }
 
@@ -1559,7 +1075,7 @@ int _write(int file, char *ptr, int len){
 
 uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
 {
-  if(WRITE_DEFAULT_CONFIG == 1)
+ /* if(WRITE_DEFAULT_CONFIG == 1)
   {
     PdmConfig_SetDefault(&stPdmConfig);
     PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
@@ -1574,9 +1090,10 @@ uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
       }
     }
     else{
+    */
       PdmConfig_SetDefault(&stPdmConfig);
-    }
-  }
+   // }
+  //}
 
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)

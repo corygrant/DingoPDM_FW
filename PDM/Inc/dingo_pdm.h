@@ -13,11 +13,6 @@
 #include "stdio.h"
 #include "cmsis_os.h"
 
-#include "usbd_core.h"
-#include "usbd_def.h"
-#include "usbd_cdc.h"
-#include "usbd_desc.h"
-
 #include "msg_queue.h"
 #include "logger.h"
 #include "pdm_input.h"
@@ -81,10 +76,7 @@ extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueUsbTx;
 extern osMessageQueueId_t qMsgQueueCanTx;
 
-extern USBD_CDC_ItfTypeDef USBD_Interface_PDM;
-uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len);
-
-void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4, RTC_HandleTypeDef* hrtc, CRC_HandleTypeDef* hcrc);
+void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4);
 void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTypeDef* hi2c2);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);
 uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2);

@@ -51,12 +51,9 @@
 ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc4;
 CAN_HandleTypeDef hcan;
-CRC_HandleTypeDef hcrc;
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
 IWDG_HandleTypeDef hiwdg;
-RTC_HandleTypeDef hrtc;
-SPI_HandleTypeDef hspi1;
 
 #if( configGENERATE_RUN_TIME_STATS == 1)
   PRIVILEGED_DATA volatile static uint32_t nRunTimeCount = 0UL;
@@ -144,12 +141,6 @@ void MX_FREERTOS_Init(void) {
     Error_Handler();
   }
 
-  qMsgQueueUsbTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueUsbTx_t), NULL);
-  if(qMsgQueueUsbTx == NULL){
-    //TODO: Message queue not created
-    Error_Handler();
-  }
-
   qMsgQueueCanTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
   if(qMsgQueueCanTx == NULL){
     //TODO: Message queue not created
@@ -196,7 +187,7 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-  PdmMainTask(&defaultTaskHandle, &hadc1, &hadc4, &hrtc, &hcrc);
+  PdmMainTask(&defaultTaskHandle, &hadc1, &hadc4);
   /* USER CODE END StartDefaultTask */
 }
 
