@@ -18,7 +18,12 @@ void PCA9635_Init(I2C_HandleTypeDef* hi2c, uint16_t addr, uint8_t blinking)
 
   if(blinking > 0){
     writeVals[0] = PCA9635_REG_MODE2;
-    writeVals[1] = (PCA9635_MODE2_OUTNE | PCA9635_MODE2_OUTDRV | PCA9635_MODE2_DMBLNK);
+    writeVals[1] = (PCA9635_MODE2_OUTNE | PCA9635_MODE2_DMBLNK);
+    HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 2, 100);
+  }
+  else{
+    writeVals[0] = PCA9635_REG_MODE2;
+    writeVals[1] = (PCA9635_MODE2_OUTNE);
     HAL_I2C_Master_Transmit(hi2c, addr << 1, writeVals, 2, 100);
   }
 }

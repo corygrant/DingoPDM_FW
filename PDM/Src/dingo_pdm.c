@@ -1048,9 +1048,11 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    //=====================================================================================================
    // Burn Settings to FRAM
    //=====================================================================================================
+   //TODO: replace with something task safe
    if(nBurn == 1)
    {
      uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+     PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
      nBurn = 0;
    }
 
