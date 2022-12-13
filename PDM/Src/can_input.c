@@ -44,14 +44,14 @@ uint8_t EvaluateCANInput(CAN_RxHeaderTypeDef* stRxHeader, uint8_t nRxData[8], Pd
     if (in->eMode == MODE_NUM)
       *nResult = (nSelected & in->nOnVal);
     else
-      CheckPushbutton(&in->ePbConfig, in->eMode, ((nSelected & in->nOnVal) > 0), nResult, NO_DEBOUNCE);
+      CheckInput(&in->ePbConfig, in->eMode, ((nSelected & in->nOnVal) > 0), nResult, NO_DEBOUNCE);
     return 1;
 
   case OPER_BITWISE_NAND:
     if (in->eMode == MODE_NUM)
       *nResult = (nSelected & !in->nOnVal);
     else
-      CheckPushbutton(&in->ePbConfig, in->eMode, !((nSelected & in->nOnVal) > 0), nResult, NO_DEBOUNCE);
+      CheckInput(&in->ePbConfig, in->eMode, !((nSelected & in->nOnVal) > 0), nResult, NO_DEBOUNCE);
     return 1;
   }
 

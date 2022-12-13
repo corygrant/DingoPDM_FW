@@ -5,9 +5,9 @@
  *      Author: coryg
  */
 
-#include "pushbutton.h"
+#include <input.h>
 
-void CheckPushbutton(PushbuttonConfig_t* pb, PushbuttonMode_t mode, uint16_t nInput, uint16_t* nOutput, uint16_t nDebounceTime)
+void CheckInput(PushbuttonConfig_t* pb, PushbuttonMode_t mode, uint16_t nInput, uint16_t* nOutput, uint16_t nDebounceTime)
 {
   //=======================================================
   //Debounce and latch logic

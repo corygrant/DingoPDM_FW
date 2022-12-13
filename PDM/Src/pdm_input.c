@@ -16,5 +16,5 @@ void EvaluateInput(PdmConfig_Input_t *pIn, uint16_t* pResult)
 
   nLogicResult = *pIn->pInput > pIn->nOnLevel;
 
-  CheckPushbutton(&pIn->ePbConfig, pIn->eMode, nLogicResult, pResult, pIn->nDebounceTime);
+  CheckInput(&pIn->ePbConfig, pIn->eMode, nLogicResult, pResult, pIn->nDebounceTime);
 }

@@ -14,7 +14,10 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
   if((pIn->pVar0 == 0) || (pIn->pVar1 == 0))
     return;
 
-  uint8_t nResult0, nResult1, nResult2, nResultSec0;
+  uint8_t nResult0 = 0;
+  uint8_t nResult1 = 0;
+  uint8_t nResult2 = 0;
+  uint8_t nResultSec0 = 0;
 
   nResult0 = *pIn->pVar0;
   if(pIn->nNot0)
@@ -40,7 +43,7 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
   //Only 2 conditions
   if(pIn->nVar2 == 0)
   {
-    CheckPushbutton(&pIn->ePbConfig, pIn->eMode, nResultSec0, pResult, NO_DEBOUNCE);
+    CheckInput(&pIn->ePbConfig, pIn->eMode, nResultSec0, pResult, NO_DEBOUNCE);
     return;
   }
   else
@@ -52,13 +55,13 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
     switch(pIn->eCond0)
     {
     case COND_AND:
-      CheckPushbutton(&pIn->ePbConfig, pIn->eMode, nResultSec0 && nResult2, pResult, NO_DEBOUNCE);
+      CheckInput(&pIn->ePbConfig, pIn->eMode, nResultSec0 && nResult2, pResult, NO_DEBOUNCE);
       return;
     case COND_OR:
-      CheckPushbutton(&pIn->ePbConfig, pIn->eMode, nResultSec0 || nResult2, pResult, NO_DEBOUNCE);
+      CheckInput(&pIn->ePbConfig, pIn->eMode, nResultSec0 || nResult2, pResult, NO_DEBOUNCE);
       return;
     case COND_NOR:
-      CheckPushbutton(&pIn->ePbConfig, pIn->eMode, !nResultSec0 || !nResult2, pResult, NO_DEBOUNCE);
+      CheckInput(&pIn->ePbConfig, pIn->eMode, !nResultSec0 || !nResult2, pResult, NO_DEBOUNCE);
       return;
     }
   }

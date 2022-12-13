@@ -7,6 +7,8 @@
 
 #include "profet.h"
 
+uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL);
+
 //Transient state
 static void TurningOff(volatile ProfetTypeDef *profet)
 {
@@ -345,4 +347,88 @@ uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL)
 
   return nTripTime;
 
+}
+
+void Profet_Default_Init(volatile ProfetTypeDef pf[], uint16_t *pfGpioBank1, uint16_t *pfGpioBank2){
+
+  pf[0].eModel = BTS7002_1EPP;
+  pf[0].nNum = 0;
+  pf[0].nIN_Port = pfGpioBank1;
+  pf[0].nIN_Pin = 0x0080;
+  pf[0].fKilis = 2.286;
+
+  pf[1].eModel = BTS7002_1EPP;
+  pf[1].nNum = 1;
+  pf[1].nIN_Port = pfGpioBank1;
+  pf[1].nIN_Pin = 0x0002;
+  pf[1].fKilis = 2.286;
+
+  pf[2].eModel = BTS7008_2EPA_CH1;
+  pf[2].nNum = 2;
+  pf[2].nIN_Port = pfGpioBank1;
+  pf[2].nIN_Pin = 0x8000;
+  pf[2].fKilis = 0.554;
+
+  pf[3].eModel = BTS7008_2EPA_CH2;
+  pf[3].eState = OFF;
+  pf[3].nNum = 3;
+  pf[3].nIN_Port = pfGpioBank1;
+  pf[3].nIN_Pin = 0x1000;
+  pf[3].fKilis = 0.554;
+
+  pf[4].eModel = BTS7008_2EPA_CH1;
+  pf[4].eState = OFF;
+  pf[4].nNum = 4;
+  pf[4].nIN_Port = pfGpioBank1;
+  pf[4].nIN_Pin = 0x0800;
+  pf[4].fKilis = 0.554;
+
+  pf[5].eModel = BTS7008_2EPA_CH2;
+  pf[5].eState = OFF;
+  pf[5].nNum = 5;
+  pf[5].nIN_Port = pfGpioBank1;
+  pf[5].nIN_Pin = 0x0100;
+  pf[5].fKilis = 0.554;
+
+  pf[6].eModel = BTS7002_1EPP;
+  pf[6].eState = OFF;
+  pf[6].nNum = 6;
+  pf[6].nIN_Port = pfGpioBank2;
+  pf[6].nIN_Pin = 0x0002;
+  pf[6].fKilis = 2.286;
+
+  pf[7].eModel = BTS7002_1EPP;
+  pf[7].eState = OFF;
+  pf[7].nNum = 7;
+  pf[7].nIN_Port = pfGpioBank2;
+  pf[7].nIN_Pin = 0x0008;
+  pf[7].fKilis = 2.286;
+
+  pf[8].eModel = BTS7008_2EPA_CH1;
+  pf[8].eState = OFF;
+  pf[8].nNum = 8;
+  pf[8].nIN_Port = pfGpioBank2;
+  pf[8].nIN_Pin = 0x0010;
+  pf[8].fKilis = 0.554;
+
+  pf[9].eModel = BTS7008_2EPA_CH2;
+  pf[9].eState = OFF;
+  pf[9].nNum = 9;
+  pf[9].nIN_Port = pfGpioBank2;
+  pf[9].nIN_Pin = 0x0080;
+  pf[9].fKilis = 0.554;
+
+  pf[10].eModel = BTS7008_2EPA_CH1;
+  pf[10].eState = OFF;
+  pf[10].nNum = 10;
+  pf[10].nIN_Port = pfGpioBank2;
+  pf[10].nIN_Pin = 0x0100;
+  pf[10].fKilis = 0.554;
+
+  pf[11].eModel = BTS7008_2EPA_CH2;
+  pf[11].eState = OFF;
+  pf[11].nNum = 11;
+  pf[11].nIN_Port = pfGpioBank2;
+  pf[11].nIN_Pin = 0x0800;
+  pf[11].fKilis = 0.554;
 }

@@ -10,7 +10,6 @@
 #include "main.h"
 
 //TODO V3 Add PCA9539 Profet GPIO reset pin logic
-//TODO Remove mode? No MANUAL
 
 //========================================================================
 // Task Delays
@@ -81,14 +80,16 @@
 #define LED_TEST_SEQ_DELAY 50
 
 //==============================================================================================================================================
-
+//========================================================================
+// PDM Config
+//========================================================================
 PdmConfig_t stPdmConfig;
 
 //========================================================================
 // Message Queues
 //========================================================================
 osMessageQueueId_t qMsgQueueRx;
-osMessageQueueId_t qMsgQueueCanTx;
+osMessageQueueId_t qMsgQueueTx;
 
 //========================================================================
 // Mode/State Enums
@@ -108,7 +109,7 @@ uint16_t nPfISBank1Raw[4], nPfISBank2Raw[4];
 ads1x15Settings_t stAdcPfBank1, stAdcPfBank2;
 
 //========================================================================
-// PCAL9554B User Digital Inputs
+// User Digital Inputs
 //========================================================================
 uint8_t nUserDigInputRaw;
 uint8_t nUserDigInput[PDM_NUM_INPUTS];
@@ -119,7 +120,7 @@ uint8_t nUserDigInput[PDM_NUM_INPUTS];
 uint8_t nOutputLogic[PDM_NUM_OUTPUTS];
 
 //========================================================================
-// MCP9808 PCB Temperature
+// PCB Temperature
 //========================================================================
 int16_t nBoardTempC;
 
@@ -175,21 +176,11 @@ uint16_t nOutputs[PDM_NUM_OUTPUTS];
 uint16_t nStarterDisable[PDM_NUM_OUTPUTS];
 uint16_t nOutputFlasher[PDM_NUM_OUTPUTS];
 
-//TODO: Replace with RTOS safe version
-uint8_t nBurn;
-
 uint32_t nMsgCnt;
 
-uint8_t nReportingOn;
-uint16_t nReportingDelay;
-uint32_t nReportingLastTime;
-
-uint8_t nCanEnable;
-CAN_BitRate_t eCanBitRate;
 
 void InputLogic();
 void OutputLogic();
-void Profet_Init();
 void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *profet);
 
 //========================================================================
@@ -226,11 +217,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
   HAL_ADC_Start_DMA(hadc1, (uint32_t*) nAdc1Data, ADC_1_COUNT);
   HAL_ADC_Start_DMA(hadc4, (uint32_t*) nAdc4Data, ADC_4_COUNT);
 
-  Profet_Init();
-
-  //MsgQueueCanTx_t stMsgCanTx;
-
-  //uint8_t nSend;
+  Profet_Default_Init(pf, &pfGpioBank1, &pfGpioBank2);
 
   /* Infinite loop */
   for(;;)
@@ -257,16 +244,24 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     for(int i=0;i<PDM_NUM_OUTPUTS;i++)
       nILTotal += pf[i].nIL;
 
-
+    //=====================================================================================================
+    // Profet State Machine
+    //=====================================================================================================
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       Profet_SM(&pf[i]);
     }
+
+    //=====================================================================================================
+    // Wiper logic state machine
+    //=====================================================================================================
     WiperSM(&stWiper);
+
+    //=====================================================================================================
+    // Check for CAN RX messages in queue
+    //=====================================================================================================
     MsgQueueRx_t stMsgRx;
     osStatus_t eStatus;
-
     nMsgCnt = osMessageQueueGetCount(qMsgQueueRx);
-
     eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
     if(eStatus == osOK){
       if(stMsgRx.eMsgSrc == CAN_RX){
@@ -274,96 +269,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
           EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
         }
       }
-
-      /*
-      if(stMsgRx.eMsgSrc == CAN_RX && stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId + 21){
-        nSend = 0;
-
-        switch((MsgQueueRxCmd_t)stMsgRx.nRxData[0]){
-
-            //Burn Settings
-            // 'B'
-            case MSG_RX_BURN_SETTINGS:
-              //Check special number sequence
-              if(stMsgRx.nRxLen == 4){
-                if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 23) && (stMsgRx.nRxData[3] == 20)){
-                  //Write settings to FRAM
-                  //uint8_t nRet = PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
-                  //TODO: Use flag to I2C task
-                  nBurn = 1;
-
-                  stMsgCanTx.stTxHeader.DLC = 2;
-
-                  stMsgCanTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-                  stMsgCanTx.nTxData[1] = 1;// nRet;
-                  stMsgCanTx.nTxData[2] = 0;
-                  stMsgCanTx.nTxData[3] = 0;
-                  stMsgCanTx.nTxData[4] = 0;
-                  stMsgCanTx.nTxData[5] = 0;
-                  stMsgCanTx.nTxData[6] = 0;
-                  stMsgCanTx.nTxData[7] = 0;
-
-                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-                }
-              }
-            break;
-
-           //Set Reporting
-           // 'R'
-           case MSG_RX_SET_REPORTING:
-             if(stMsgRx.nRxLen == 3){
-               nReportingOn = stMsgRx.nRxData[1] & 0x01;
-               nReportingDelay = stMsgRx.nRxData[2] * 100;
-               nSend = 1;
-             }
-             if((stMsgRx.nRxLen == 1) || (nSend)){
-               stMsgCanTx.stTxHeader.DLC = 3;
-
-               stMsgCanTx.nTxData[0] = MSG_TX_SET_REPORTING;
-               stMsgCanTx.nTxData[1] = (nReportingOn & 0x01);
-               stMsgCanTx.nTxData[2] = (uint8_t)(nReportingDelay / 100);
-               stMsgCanTx.nTxData[3] = 0;
-               stMsgCanTx.nTxData[4] = 0;
-               stMsgCanTx.nTxData[5] = 0;
-               stMsgCanTx.nTxData[6] = 0;
-               stMsgCanTx.nTxData[7] = 0;
-
-               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-               osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-           break;
-
-           //Get Temperature
-           // 'F'
-           case MSG_RX_GET_TEMP:
-             if((stMsgRx.nRxLen == 1) || nSend){
-                  stMsgCanTx.stTxHeader.DLC = 7;
-
-                  stMsgCanTx.nTxData[0] = MSG_TX_GET_TEMP;
-                  stMsgCanTx.nTxData[1] = nBoardTempC >> 8;
-                  stMsgCanTx.nTxData[2] = nBoardTempC;
-                  stMsgCanTx.nTxData[3] = nStmTemp >> 8;
-                  stMsgCanTx.nTxData[4] = nStmTemp;
-                  stMsgCanTx.nTxData[5] = 0;
-                  stMsgCanTx.nTxData[6] = 0;
-                  stMsgCanTx.nTxData[7] = 0;
-
-                  stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 20;
-
-                  osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-             }
-             break;
-
-           //All other message types
-           default:
-             PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueCanTx);
-             break;
-        }
-      }
-      */
     }
 
 #ifdef MEAS_HEAP_USE
@@ -373,7 +278,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     osDelay(MAIN_TASK_DELAY);
 
     //Debug GPIO
-    //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
+    EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
   }
 }
 
@@ -763,7 +668,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osStatus_t stStatus;
       //Keep sending queued messages until empty
       do{
-        stStatus = osMessageQueueGet(qMsgQueueCanTx, &stMsgTx, NULL, 0U);
+        stStatus = osMessageQueueGet(qMsgQueueTx, &stMsgTx, NULL, 0U);
         if(stStatus == osOK){
           stMsgTx.stTxHeader.ExtId = 0;
           stMsgTx.stTxHeader.IDE = CAN_ID_STD;
@@ -772,9 +677,11 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 
           if(HAL_CAN_AddTxMessage(hcan, &stMsgTx.stTxHeader, stMsgTx.nTxData, &nCanTxMailbox) != HAL_OK){
             //Send failed - add back to queue
-            osMessageQueuePut(qMsgQueueCanTx, &stMsgTx, 0U, 0U);
+            osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
           }
         }
+        //Pause for preemption - TX is not that important
+        osDelay(CAN_TX_MSG_SPLIT);
       }while(stStatus == osOK);
 
 
@@ -920,16 +827,6 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 
       osDelay(stPdmConfig.stCanOutput.nUpdateTime);
     }
-    else{
-      //Not transmitting
-      //Clear CAN TX reply messages generated by config RX messages
-      if(osMessageQueueGetCount(qMsgQueueCanTx) > 0)
-      {
-        osMessageQueueReset(qMsgQueueCanTx);
-      }
-      osDelay(1000); //Don't need to check for config changes very often
-    }
-
   }
 }
 
@@ -979,91 +876,6 @@ void SetPfStatusLed(PCA9635_LEDOnState_t *ledState, volatile ProfetTypeDef *prof
               (profet->eState == FAULT)         * LED_FLASH;
 }
 
-void Profet_Init(){
-
-  pf[0].eModel = BTS7002_1EPP;
-  pf[0].nNum = 0;
-  pf[0].nIN_Port = &pfGpioBank1;
-  pf[0].nIN_Pin = 0x0080;
-  pf[0].fKilis = 2.286;
-
-  pf[1].eModel = BTS7002_1EPP;
-  pf[1].nNum = 1;
-  pf[1].nIN_Port = &pfGpioBank1;
-  pf[1].nIN_Pin = 0x0002;
-  pf[1].fKilis = 2.286;
-
-  pf[2].eModel = BTS7008_2EPA_CH1;
-  pf[2].nNum = 2;
-  pf[2].nIN_Port = &pfGpioBank1;
-  pf[2].nIN_Pin = 0x8000;
-  pf[2].fKilis = 0.554;
-
-  pf[3].eModel = BTS7008_2EPA_CH2;
-  pf[3].eState = OFF;
-  pf[3].nNum = 3;
-  pf[3].nIN_Port = &pfGpioBank1;
-  pf[3].nIN_Pin = 0x1000;
-  pf[3].fKilis = 0.554;
-
-  pf[4].eModel = BTS7008_2EPA_CH1;
-  pf[4].eState = OFF;
-  pf[4].nNum = 4;
-  pf[4].nIN_Port = &pfGpioBank1;
-  pf[4].nIN_Pin = 0x0800;
-  pf[4].fKilis = 0.554;
-
-  pf[5].eModel = BTS7008_2EPA_CH2;
-  pf[5].eState = OFF;
-  pf[5].nNum = 5;
-  pf[5].nIN_Port = &pfGpioBank1;
-  pf[5].nIN_Pin = 0x0100;
-  pf[5].fKilis = 0.554;
-
-  pf[6].eModel = BTS7002_1EPP;
-  pf[6].eState = OFF;
-  pf[6].nNum = 6;
-  pf[6].nIN_Port = &pfGpioBank2;
-  pf[6].nIN_Pin = 0x0002;
-  pf[6].fKilis = 2.286;
-
-  pf[7].eModel = BTS7002_1EPP;
-  pf[7].eState = OFF;
-  pf[7].nNum = 7;
-  pf[7].nIN_Port = &pfGpioBank2;
-  pf[7].nIN_Pin = 0x0008;
-  pf[7].fKilis = 2.286;
-
-  pf[8].eModel = BTS7008_2EPA_CH1;
-  pf[8].eState = OFF;
-  pf[8].nNum = 8;
-  pf[8].nIN_Port = &pfGpioBank2;
-  pf[8].nIN_Pin = 0x0010;
-  pf[8].fKilis = 0.554;
-
-  pf[9].eModel = BTS7008_2EPA_CH2;
-  pf[9].eState = OFF;
-  pf[9].nNum = 9;
-  pf[9].nIN_Port = &pfGpioBank2;
-  pf[9].nIN_Pin = 0x0080;
-  pf[9].fKilis = 0.554;
-
-  pf[10].eModel = BTS7008_2EPA_CH1;
-  pf[10].eState = OFF;
-  pf[10].nNum = 10;
-  pf[10].nIN_Port = &pfGpioBank2;
-  pf[10].nIN_Pin = 0x0100;
-  pf[10].fKilis = 0.554;
-
-  pf[11].eModel = BTS7008_2EPA_CH2;
-  pf[11].eState = OFF;
-  pf[11].nNum = 11;
-  pf[11].nIN_Port = &pfGpioBank2;
-  pf[11].nIN_Pin = 0x0800;
-  pf[11].fKilis = 0.554;
-}
-
-
 //Overwrite printf _write to send to ITM_SendChar
 int _write(int file, char *ptr, int len){
   int i=0;
@@ -1073,27 +885,12 @@ int _write(int file, char *ptr, int len){
   return len;
 }
 
-uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
+//******************************************************
+//Must be called before any tasks are started
+//******************************************************
+uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c2)
 {
- /* if(WRITE_DEFAULT_CONFIG == 1)
-  {
-    PdmConfig_SetDefault(&stPdmConfig);
-    PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
-  }
-  else
-  {
-    if(PdmConfig_Check(hi2c2, MB85RC_ADDRESS, &stPdmConfig) == 1)
-    {
-      if(PdmConfig_Read(hi2c2, MB85RC_ADDRESS, &stPdmConfig) == 0)
-      {
-        PdmConfig_SetDefault(&stPdmConfig);
-      }
-    }
-    else{
-    */
-      PdmConfig_SetDefault(&stPdmConfig);
-   // }
-  //}
+  PdmConfig_SetDefault(&stPdmConfig);
 
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
@@ -1126,7 +923,6 @@ uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
 
   pVariableMap[71] = &stWiper.nSlowOut;
   pVariableMap[72] = &stWiper.nFastOut;
-
 
   //Assign variable map values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
@@ -1168,7 +964,5 @@ uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2)
   for(int i=0; i<PDM_NUM_FLASHERS; i++)
     stPdmConfig.stFlasher[i].pInput = pVariableMap[stPdmConfig.stFlasher[i].nInput];
 
-
   return PDM_OK;
-
 }

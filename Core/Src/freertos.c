@@ -141,8 +141,8 @@ void MX_FREERTOS_Init(void) {
     Error_Handler();
   }
 
-  qMsgQueueCanTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
-  if(qMsgQueueCanTx == NULL){
+  qMsgQueueTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
+  if(qMsgQueueTx == NULL){
     //TODO: Message queue not created
     Error_Handler();
   }
@@ -171,7 +171,7 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  if(ReadPdmConfig(&hi2c2) != PDM_OK)
+  if(InitPdmConfig(&hi2c2) != PDM_OK)
     Error_Handler();
   /* USER CODE END RTOS_THREADS */
 

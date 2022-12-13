@@ -71,5 +71,5 @@ typedef struct {
 
 void Profet_SM(volatile ProfetTypeDef *profet);
 void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal);
-uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL);
+void Profet_Default_Init(volatile ProfetTypeDef pf[], uint16_t *pfGpioBank1, uint16_t *pfGpioBank2);
 #endif /* COMPONENTS_INC_PROFET_H_ */

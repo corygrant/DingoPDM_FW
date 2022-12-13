@@ -9,6 +9,7 @@
 #define INC_DINGO_PDM_H_
 
 #include <can_input.h>
+#include <input.h>
 #include <stdbool.h>
 #include "stdio.h"
 #include "cmsis_os.h"
@@ -26,7 +27,6 @@
 #include "pca9635.h"
 #include "pcal9554b.h"
 #include "profet.h"
-#include "pushbutton.h"
 #include "virtual_input.h"
 #include "wipers.h"
 
@@ -74,10 +74,10 @@ typedef enum{
 
 extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueUsbTx;
-extern osMessageQueueId_t qMsgQueueCanTx;
+extern osMessageQueueId_t qMsgQueueTx;
 
 void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4);
 void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTypeDef* hi2c2);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);
-uint8_t ReadPdmConfig(I2C_HandleTypeDef* hi2c2);
+uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c2);
 #endif /* INC_DINGO_PDM_H_ */

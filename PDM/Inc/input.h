@@ -31,6 +31,6 @@ typedef struct
   uint8_t nCheckTime;
 } PushbuttonConfig_t;
 
-void CheckPushbutton(PushbuttonConfig_t* pb, PushbuttonMode_t mode, uint16_t nInput, uint16_t* nOutput, uint16_t nDebounceTime);
+void CheckInput(PushbuttonConfig_t* pb, PushbuttonMode_t mode, uint16_t nInput, uint16_t* nOutput, uint16_t nDebounceTime);
 
 #endif /* COMPONENTS_INC_PUSHBUTTON_H_ */

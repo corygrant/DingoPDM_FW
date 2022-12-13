@@ -8,12 +8,12 @@
 #ifndef INC_PDM_CONFIG_H_
 #define INC_PDM_CONFIG_H_
 
+#include <input.h>
 #include "msg_queue.h"
 #include "stdint.h"
 #include "cmsis_os.h"
 #include "string.h"
 #include "mb85rc.h"
-#include "pushbutton.h"
 
 #define PDM_MAJOR_VERSION 3
 #define PDM_MINOR_VERSION 0

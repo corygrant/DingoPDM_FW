@@ -1,5 +1,5 @@
 #include "pdm_config.h"
-
+/*
 static MsgQueueUsbTx_t stMsgUsbTx;
 static MsgQueueCanTx_t stMsgCanTx;
 static uint8_t nSend;
@@ -9,7 +9,7 @@ static uint8_t nOutNum;
 static uint8_t nVirtInNum;
 static uint8_t nFlasherNum;
 static uint8_t nCanInputNum;
-
+*/
 /*
 uint8_t PdmConfig_Check(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig)
 {
