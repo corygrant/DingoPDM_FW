@@ -19,7 +19,7 @@
 #include "pdm_input.h"
 #include "starter.h"
 #include "flasher.h"
-#include "ads1x15.h"
+#include "max1161x.h"
 #include "canboard.h"
 #include "mb85rc.h"
 #include "mcp9808.h"

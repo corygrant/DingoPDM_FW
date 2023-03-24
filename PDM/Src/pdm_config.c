@@ -1200,7 +1200,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stCanInput[29].eMode = MODE_MOMENTARY;
 
   //CAN Output
-  pConfig->stCanOutput.nEnabled = 0;
+  pConfig->stCanOutput.nEnabled = 1;
   pConfig->stCanOutput.nBaseId = 2000;
   pConfig->stCanOutput.nUpdateTime = 50;
 }

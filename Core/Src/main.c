@@ -212,7 +212,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
-  HAL_GPIO_WritePin(PF_RESET_GPIO_Port, PF_RESET_Pin, GPIO_PIN_RESET);
+  //HAL_GPIO_WritePin(PF_RESET_GPIO_Port, PF_RESET_Pin, GPIO_PIN_RESET);
   /* USER CODE END Error_Handler_Debug */
 }
 

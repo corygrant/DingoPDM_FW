@@ -14,8 +14,8 @@
 //========================================================================
 // Task Delays
 //========================================================================
-#define MAIN_TASK_DELAY 5
-#define I2C_TASK_DELAY 5
+#define MAIN_TASK_DELAY 10
+#define I2C_TASK_DELAY 6
 #define CAN_TX_DELAY 50
 
 //========================================================================
@@ -25,8 +25,8 @@
 #define MCP9808_ADDRESS 0x18
 #define PCA9539_ADDRESS_BANK1 0x74
 #define PCA9539_ADDRESS_BANK2 0x74
-#define ADS1015_ADDRESS_PF_BANK1 0x48
-#define ADS1015_ADDRESS_PF_BANK2 0x48
+#define MAX11613_ADDRESS_PF_BANK1 0x34
+#define MAX11613_ADDRESS_PF_BANK2 0x34
 #define PCAL9554B_ADDRESS 0x20
 #define MB85RC_ADDRESS 0x50
 
@@ -66,7 +66,7 @@
 // CAN
 //========================================================================
 #define CAN_TX_BASE_ID 2000
-#define CAN_TX_MSG_SPLIT 5 //ms
+#define CAN_TX_MSG_SPLIT 1 //ms
 
 //========================================================================
 // STM Internal Calibration Voltages
@@ -106,7 +106,6 @@ volatile ProfetTypeDef pf[PDM_NUM_OUTPUTS];
 volatile uint16_t nILTotal;
 uint16_t pfGpioBank1, pfGpioBank2;
 uint16_t nPfISBank1Raw[4], nPfISBank2Raw[4];
-ads1x15Settings_t stAdcPfBank1, stAdcPfBank2;
 
 //========================================================================
 // User Digital Inputs
@@ -222,7 +221,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
   /* Infinite loop */
   for(;;)
   {
-
+    HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
     //=====================================================================================================
     // ADC channels
     // ADC1 = Vbat and device temperature
@@ -278,7 +277,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     osDelay(MAIN_TASK_DELAY);
 
     //Debug GPIO
-    EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
+    //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
+    HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
   }
 }
 
@@ -334,12 +334,12 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_PU_PD_SELECT_PORT0, 0x0000);
 
   //=====================================================================================================
-  // ADS1x15 Analog In Configuration
+  // MAX11613 Analog In Configuration
   //=====================================================================================================
-  stAdcPfBank1.deviceType = ADS1015;
-  stAdcPfBank1.bitShift = 0;
-  stAdcPfBank1.gain = GAIN_ONE;
-  stAdcPfBank1.dataRate = ADS1015_DATARATE_3300SPS;
+  if(MAX1161x_SendSetup(hi2c1, MAX11613_ADDRESS_PF_BANK1) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   //=====================================================================================================
   // PCA9539 Profet GPIO Configuration
@@ -354,12 +354,12 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_PU_PD_SELECT_PORT0, 0x0000);
 
   //=====================================================================================================
-  // ADS1x15 Analog In Configuration
+  // MAX11613 Analog In Configuration
   //=====================================================================================================
-  stAdcPfBank2.deviceType = ADS1015;
-  stAdcPfBank2.bitShift = 0;
-  stAdcPfBank2.gain = GAIN_ONE;
-  stAdcPfBank2.dataRate = ADS1015_DATARATE_3300SPS;
+  if(MAX1161x_SendSetup(hi2c2, MAX11613_ADDRESS_PF_BANK2) != HAL_OK)
+  {
+    Error_Handler();
+  }
 
   //=====================================================================================================
   // PCA9635 LED Configuration
@@ -385,6 +385,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   /* Infinite loop */
   for(;;)
   {
+    HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_SET);
    //=====================================================================================================
    // PCAL9554B User Input
    //=====================================================================================================
@@ -409,21 +410,11 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
    //=====================================================================================================
-   // ADS1x15 Analog Input
+   // MAX11613 Analog Input
    //=====================================================================================================
    for(int i = 0; i < 4; i++){
-     //Send channel register
-     //Sets ADC multiplexer - must delay after for conversion
-     ADS1x15_SendRegs(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
-
-     //Delay for conversion
-     //860 SPS = 1.16ms per conversion - delay 2ms
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
-     osDelay(ADS1015_CONVERSIONDELAY);
-     //HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
-
      //Read channel value
-     if(ADS1x15_ReadADC(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, &nPfISBank1Raw[i]) != HAL_OK)
+     if(MAX1161x_ReadADC(hi2c1, MAX11613_ADDRESS_PF_BANK1, i, &nPfISBank1Raw[i]) != HAL_OK)
      {
        Error_Handler();
      }
@@ -442,20 +433,10 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
    for(int i = 0; i < 2; i++){
-     //Send channel register
-     //Sets ADC multiplexer - must delay after for conversion
-     ADS1x15_SendRegs(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, i);
-
-     //Delay for conversion
-     //860 SPS = 1.16ms per conversion - delay 2ms
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
-     osDelay(ADS1015_CONVERSIONDELAY);
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
-
      //Read channel value
-     if(ADS1x15_ReadADC(hi2c1, ADS1015_ADDRESS_PF_BANK1, &stAdcPfBank1, &nPfISBank1Raw[i]) != HAL_OK)
+     if(MAX1161x_ReadADC(hi2c1, MAX11613_ADDRESS_PF_BANK1, i, &nPfISBank1Raw[i]) != HAL_OK)
      {
-        Error_Handler();
+       Error_Handler();
      }
    }
 
@@ -506,21 +487,11 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
    //=====================================================================================================
-   // ADS1115 Analog Input
+   // MAX11613 Analog Input
    //=====================================================================================================
    for(int i = 0; i < 4; i++){
-     //Send channel register
-     //Sets ADC multiplexer - must delay after for conversion
-     ADS1x15_SendRegs(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i);
-
-     //Delay for conversion
-     //860 SPS = 1.16ms per conversion - delay 2ms
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
-     osDelay(ADS1015_CONVERSIONDELAY);
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
-
      //Read channel value
-     if(ADS1x15_ReadADC(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, &nPfISBank2Raw[i]) != HAL_OK)
+     if(MAX1161x_ReadADC(hi2c2, MAX11613_ADDRESS_PF_BANK2, i, &nPfISBank2Raw[i]) != HAL_OK)
      {
        Error_Handler();
      }
@@ -539,18 +510,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
    for(int i = 0; i < 2; i++){
-     //Send channel register
-     //Sets ADC multiplexer - must delay after for conversion
-     ADS1x15_SendRegs(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, i+2);
-
-     //Delay for conversion
-     //860 SPS = 1.16ms per conversion - delay 2ms
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
-     osDelay(ADS1015_CONVERSIONDELAY);
-     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
-
-     //Read channel value
-     if(ADS1x15_ReadADC(hi2c2, ADS1015_ADDRESS_PF_BANK2, &stAdcPfBank2, &nPfISBank2Raw[i+2]) != HAL_OK)
+     if(MAX1161x_ReadADC(hi2c2, MAX11613_ADDRESS_PF_BANK2, i, &nPfISBank2Raw[i]) != HAL_OK)
      {
        Error_Handler();
      }
@@ -604,7 +564,8 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
    }
 
    //Debug GPIO
-   HAL_GPIO_TogglePin(EXTRA1_GPIO_Port, EXTRA1_Pin);
+   //HAL_GPIO_TogglePin(EXTRA1_GPIO_Port, EXTRA1_Pin);
+   HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
    //EXTRA1_GPIO_Port->ODR ^= EXTRA1_Pin;
 
 #ifdef MEAS_HEAP_USE
@@ -659,6 +620,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
   stCanTxHeader.TransmitGlobalTime = DISABLE;
 
   for(;;){
+    HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
     if(stPdmConfig.stCanOutput.nEnabled &&
         (stPdmConfig.stCanOutput.nUpdateTime > 0) &&
         stPdmConfig.stCanOutput.nBaseId > 0 &&
@@ -706,7 +668,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
-      osDelay(CAN_TX_MSG_SPLIT);
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
 
       //=======================================================
       //Build Msg 1 (Device status)
@@ -729,7 +692,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
-      osDelay(CAN_TX_MSG_SPLIT);
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
 
       //=======================================================
       //Build Msg 2 (Out 1-4 Current)
@@ -752,7 +716,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
-      osDelay(CAN_TX_MSG_SPLIT);
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
 
       //=======================================================
       //Build Msg 3 (Out 5-8 Current)
@@ -775,7 +740,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
-      osDelay(CAN_TX_MSG_SPLIT);
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
 
       //=======================================================
       //Build Msg 4 (Out 9-12 Current)
@@ -798,7 +764,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
-      osDelay(CAN_TX_MSG_SPLIT);
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
 
       //=======================================================
       //Build Msg 5 (Out 1-12 Status)
@@ -821,12 +788,17 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
+
+    }
+
 #ifdef MEAS_HEAP_USE
       __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
 #endif
 
-      osDelay(stPdmConfig.stCanOutput.nUpdateTime);
-    }
+    //Debug GPIO
+    //HAL_GPIO_TogglePin(EXTRA2_GPIO_Port, EXTRA2_Pin);
+    HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
+    osDelay(stPdmConfig.stCanOutput.nUpdateTime);
   }
 }
 
