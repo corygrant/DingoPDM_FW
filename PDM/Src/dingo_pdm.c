@@ -788,6 +788,125 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         Error_Handler();
       }
 
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
+
+      //=======================================================
+      //Build Msg 6 (Out 1-4 Current Limit)
+      //=======================================================
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 6;
+      stCanTxHeader.DLC = 8; //Bytes to send
+      nCanTxData[0] = pf[0].nIL_Limit >> 8;
+      nCanTxData[1] = pf[0].nIL_Limit;
+      nCanTxData[2] = pf[1].nIL_Limit >> 8;
+      nCanTxData[3] = pf[1].nIL_Limit;
+      nCanTxData[4] = pf[2].nIL_Limit >> 8;
+      nCanTxData[5] = pf[2].nIL_Limit;
+      nCanTxData[6] = pf[3].nIL_Limit >> 8;
+      nCanTxData[7] = pf[3].nIL_Limit;
+
+      //=======================================================
+      //Send CAN msg
+      //=======================================================
+      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
+        Error_Handler();
+      }
+
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
+
+      //=======================================================
+      //Build Msg 7 (Out 5-8 Current Limit)
+      //=======================================================
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 7;
+      stCanTxHeader.DLC = 8; //Bytes to send
+      nCanTxData[0] = pf[4].nIL_Limit >> 8;
+      nCanTxData[1] = pf[4].nIL_Limit;
+      nCanTxData[2] = pf[5].nIL_Limit >> 8;
+      nCanTxData[3] = pf[5].nIL_Limit;
+      nCanTxData[4] = pf[6].nIL_Limit >> 8;
+      nCanTxData[5] = pf[6].nIL_Limit;
+      nCanTxData[6] = pf[7].nIL_Limit >> 8;
+      nCanTxData[7] = pf[7].nIL_Limit;
+
+      //=======================================================
+      //Send CAN msg
+      //=======================================================
+      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
+        Error_Handler();
+      }
+
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
+
+      //=======================================================
+      //Build Msg 8 (Out 9-12 Current Limit)
+      //=======================================================
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 8;
+      stCanTxHeader.DLC = 8; //Bytes to send
+      nCanTxData[0] = pf[8].nIL_Limit >> 8;
+      nCanTxData[1] = pf[8].nIL_Limit;
+      nCanTxData[2] = pf[9].nIL_Limit >> 8;
+      nCanTxData[3] = pf[9].nIL_Limit;
+      nCanTxData[4] = pf[10].nIL_Limit >> 8;
+      nCanTxData[5] = pf[10].nIL_Limit;
+      nCanTxData[6] = pf[11].nIL_Limit >> 8;
+      nCanTxData[7] = pf[11].nIL_Limit;
+
+      //=======================================================
+      //Send CAN msg
+      //=======================================================
+      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
+        Error_Handler();
+      }
+
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
+
+      //=======================================================
+      //Build Msg 9 (Out 1-8 Reset Count)
+      //=======================================================
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 9;
+      stCanTxHeader.DLC = 8; //Bytes to send
+      nCanTxData[0] = pf[0].nOC_ResetCount;
+      nCanTxData[1] = pf[1].nOC_ResetCount;
+      nCanTxData[2] = pf[2].nOC_ResetCount;
+      nCanTxData[3] = pf[3].nOC_ResetCount;
+      nCanTxData[4] = pf[4].nOC_ResetCount;
+      nCanTxData[5] = pf[5].nOC_ResetCount;
+      nCanTxData[6] = pf[6].nOC_ResetCount;
+      nCanTxData[7] = pf[7].nOC_ResetCount;
+
+      //=======================================================
+      //Send CAN msg
+      //=======================================================
+      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
+        Error_Handler();
+      }
+
+      //osDelay(CAN_TX_MSG_SPLIT);
+      for(int p=0; p<600; p++)
+
+      //=======================================================
+      //Build Msg 10 (Out 9-12 Reset Count)
+      //=======================================================
+      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 10;
+      stCanTxHeader.DLC = 8; //Bytes to send
+      nCanTxData[0] = pf[8].nOC_ResetCount;
+      nCanTxData[1] = pf[9].nOC_ResetCount;
+      nCanTxData[2] = pf[10].nOC_ResetCount;
+      nCanTxData[3] = pf[11].nOC_ResetCount;
+      nCanTxData[4] = 0;
+      nCanTxData[5] = 0;
+      nCanTxData[6] = 0;
+      nCanTxData[7] = 0;
+
+      //=======================================================
+      //Send CAN msg
+      //=======================================================
+      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
+        Error_Handler();
+      }
 
     }
 
