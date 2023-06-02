@@ -251,7 +251,7 @@ void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal)
   profet->nIS_Sum -= profet->nIS_Avg;
 
   //Convert IS to IL (actual current)
-  profet->nIL = (uint16_t)(((float)profet->nIS_Avg * profet->fKilis) / 100.0);
+  profet->nIL = (uint16_t)(((float)profet->nIS_Avg * profet->fKilis) / 10.0);
 }
 
 uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL)

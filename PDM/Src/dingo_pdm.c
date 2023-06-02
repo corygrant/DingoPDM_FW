@@ -432,7 +432,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
    PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
-   for(int i = 0; i < 2; i++){
+   for(int i = 0; i < 4; i++){
      //Read channel value
      if(MAX1161x_ReadADC(hi2c1, MAX11613_ADDRESS_PF_BANK1, i, &nPfISBank1Raw[i]) != HAL_OK)
      {
@@ -509,7 +509,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
    PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_PORT0, pfGpioBank2);
 
-   for(int i = 0; i < 2; i++){
+   for(int i = 0; i < 4; i++){
      if(MAX1161x_ReadADC(hi2c2, MAX11613_ADDRESS_PF_BANK2, i, &nPfISBank2Raw[i]) != HAL_OK)
      {
        Error_Handler();
