@@ -222,6 +222,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
   for(;;)
   {
     HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
+
     //=====================================================================================================
     // ADC channels
     // ADC1 = Vbat and device temperature
@@ -270,15 +271,18 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
       }
     }
 
+
 #ifdef MEAS_HEAP_USE
     __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
 #endif
 
-    osDelay(MAIN_TASK_DELAY);
+
 
     //Debug GPIO
     //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
     HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
+
+    osDelay(MAIN_TASK_DELAY);
   }
 }
 
@@ -329,9 +333,11 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   //Set configuration registers (all to output)
   PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_CONFIG_PORT0, 0x0000);
   //Enable all pullup/pulldown
-  PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_PU_PD_ENABLE_PORT0, 0x0000);
+  PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_PU_PD_ENABLE_PORT0, 0xFFFF);
   //Set all outputs to pulldown
   PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_PU_PD_SELECT_PORT0, 0x0000);
+  //Set to highest output drive strength
+  PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_DRIVE_STRENGTH_PORT0, 0xFFFF);
 
   //=====================================================================================================
   // MAX11613 Analog In Configuration
@@ -349,9 +355,11 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
   //Set configuration registers (all to output)
   PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_CONFIG_PORT0, 0x0000);
   //Enable all pullup/pulldown
-  PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_PU_PD_ENABLE_PORT0, 0x0000);
+  PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_PU_PD_ENABLE_PORT0, 0xFFFF);
   //Set all outputs to pulldown
   PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_PU_PD_SELECT_PORT0, 0x0000);
+  //Set to highest output drive strength
+  PCA9539_WriteReg16(hi2c2, PCA9539_ADDRESS_BANK2, PCA9539_CMD_OUT_DRIVE_STRENGTH_PORT0, 0xFFFF);
 
   //=====================================================================================================
   // MAX11613 Analog In Configuration
@@ -432,7 +440,7 @@ void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTyp
 
    PCA9539_WriteReg16(hi2c1, PCA9539_ADDRESS_BANK1, PCA9539_CMD_OUT_PORT0, pfGpioBank1);
 
-   for(int i = 0; i < 4; i++){
+   for(int i = 0; i < 2; i++){
      //Read channel value
      if(MAX1161x_ReadADC(hi2c1, MAX11613_ADDRESS_PF_BANK1, i, &nPfISBank1Raw[i]) != HAL_OK)
      {
