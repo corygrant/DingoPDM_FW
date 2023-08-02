@@ -100,7 +100,6 @@ int main(void)
   MX_DMA_Init();
   MX_ADC4_Init();
   MX_CAN_Init();
-  MX_I2C2_Init();
   MX_I2C1_Init();
   MX_ADC1_Init();
   //MX_IWDG_Init();
@@ -166,9 +165,8 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1|RCC_PERIPHCLK_I2C2;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_SYSCLK;
-  PeriphClkInit.I2c2ClockSelection = RCC_I2C2CLKSOURCE_SYSCLK;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();
