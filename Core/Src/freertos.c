@@ -52,7 +52,6 @@ ADC_HandleTypeDef hadc1;
 ADC_HandleTypeDef hadc4;
 CAN_HandleTypeDef hcan;
 I2C_HandleTypeDef hi2c1;
-I2C_HandleTypeDef hi2c2;
 IWDG_HandleTypeDef hiwdg;
 
 #if( configGENERATE_RUN_TIME_STATS == 1)
@@ -64,21 +63,14 @@ IWDG_HandleTypeDef hiwdg;
 osThreadId_t defaultTaskHandle;
 const osThreadAttr_t defaultTask_attributes = {
   .name = "defaultTask",
-  .stack_size = 256 * 4,
+  .stack_size = 320 * 4,
   .priority = (osPriority_t) osPriorityNormal,
-};
-/* Definitions for i2cTask */
-osThreadId_t i2cTaskHandle;
-const osThreadAttr_t i2cTask_attributes = {
-  .name = "i2cTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityAboveNormal,
 };
 /* Definitions for canTxTask */
 osThreadId_t canTxTaskHandle;
 const osThreadAttr_t canTxTask_attributes = {
   .name = "canTxTask",
-  .stack_size = 256 * 4,
+  .stack_size = 320 * 4,
   .priority = (osPriority_t) osPriorityNormal1,
 };
 /* Definitions for KickIWDG */
@@ -93,7 +85,6 @@ void IncrementRuntimeStats(void);
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-void StartI2CTask(void *argument);
 void StartCanTxTask(void *argument);
 //void KickIWDGCallback(void *argument);
 
@@ -152,9 +143,6 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of i2cTask */
-  i2cTaskHandle = osThreadNew(StartI2CTask, NULL, &i2cTask_attributes);
-
   /* creation of canTxTask */
   canTxTaskHandle = osThreadNew(StartCanTxTask, NULL, &canTxTask_attributes);
 
@@ -163,15 +151,12 @@ void MX_FREERTOS_Init(void) {
   if(defaultTaskHandle == 0x0)
     Error_Handler();
 
-  if(i2cTaskHandle == 0x0)
-    Error_Handler();
-
   if(canTxTaskHandle == 0x0)
     Error_Handler();
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
-  if(InitPdmConfig(&hi2c2) != PDM_OK)
+  if(InitPdmConfig(&hi2c1) != PDM_OK)
     Error_Handler();
   /* USER CODE END RTOS_THREADS */
 
@@ -187,22 +172,8 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-  PdmMainTask(&defaultTaskHandle, &hadc1, &hadc4);
+  PdmMainTask(&defaultTaskHandle, &hadc1, &hadc4, &hi2c1);
   /* USER CODE END StartDefaultTask */
-}
-
-/* USER CODE BEGIN Header_StartI2CTask */
-/**
-* @brief Function implementing the i2cTask thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartI2CTask */
-void StartI2CTask(void *argument)
-{
-  /* USER CODE BEGIN StartI2CTask */
-  I2CTask(&i2cTaskHandle, &hi2c1, &hi2c2);
-  /* USER CODE END StartI2CTask */
 }
 
 /* USER CODE BEGIN Header_StartCanTxTask */

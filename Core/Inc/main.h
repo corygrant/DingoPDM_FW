@@ -114,8 +114,7 @@ void Error_Handler(void);
 #define PF_IN2_GPIO_Port GPIOB
 
 /* USER CODE BEGIN Private defines */
-#define STANDBY_Pin GPIO_PIN_13
-#define STANDBY_GPIO_Port GPIOC
+
 /* USER CODE END Private defines */
 
 #ifdef __cplusplus

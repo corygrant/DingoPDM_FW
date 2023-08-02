@@ -19,8 +19,8 @@
 #define PDM_MINOR_VERSION 0
 #define PDM_BUILD 1
 
-#define PDM_NUM_OUTPUTS 12
-#define PDM_NUM_INPUTS 8
+#define PDM_NUM_OUTPUTS 8
+#define PDM_NUM_INPUTS 2
 #define PDM_NUM_VIRT_INPUTS 20
 #define PDM_NUM_CAN_INPUTS 30
 #define PDM_NUM_FLASHERS 4
@@ -28,8 +28,6 @@
 #define PDM_NUM_WIPER_SPEED_MAP 8
 
 #define PDM_VAR_MAP_SIZE 73
-
-#define PDM_NUM_LEDS 16
 
 typedef enum{
   OPER_EQUAL,

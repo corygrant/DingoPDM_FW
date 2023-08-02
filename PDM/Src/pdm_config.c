@@ -525,36 +525,6 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stInput[1].nOnLevel = 0;
   pConfig->stInput[1].nDebounceTime = 20;
 
-  pConfig->stInput[2].nEnabled = 1;
-  pConfig->stInput[2].eMode = MODE_MOMENTARY;
-  pConfig->stInput[2].nOnLevel = 0;
-  pConfig->stInput[2].nDebounceTime = 20;
-
-  pConfig->stInput[3].nEnabled = 1;
-  pConfig->stInput[3].eMode = MODE_MOMENTARY;
-  pConfig->stInput[3].nOnLevel = 0;
-  pConfig->stInput[3].nDebounceTime = 20;
-
-  pConfig->stInput[4].nEnabled = 1;
-  pConfig->stInput[4].eMode = MODE_MOMENTARY;
-  pConfig->stInput[4].nOnLevel = 0;
-  pConfig->stInput[4].nDebounceTime = 20;
-
-  pConfig->stInput[5].nEnabled = 1;
-  pConfig->stInput[5].eMode = MODE_MOMENTARY;
-  pConfig->stInput[5].nOnLevel = 0;
-  pConfig->stInput[5].nDebounceTime = 20;
-
-  pConfig->stInput[6].nEnabled = 1;
-  pConfig->stInput[6].eMode = MODE_MOMENTARY;
-  pConfig->stInput[6].nOnLevel = 0;
-  pConfig->stInput[6].nDebounceTime = 20;
-
-  pConfig->stInput[7].nEnabled = 1;
-  pConfig->stInput[7].eMode = MODE_MOMENTARY;
-  pConfig->stInput[7].nOnLevel = 0;
-  pConfig->stInput[7].nDebounceTime = 20;
-
   //Outputs
   pConfig->stOutput[0].nEnabled = 1;
   pConfig->stOutput[0].nInput = 1;
@@ -627,42 +597,6 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[7].eResetMode = RESET_ENDLESS;
   pConfig->stOutput[7].nResetTime = 1000;
   pConfig->stOutput[7].nResetLimit = 2;
-
-  pConfig->stOutput[8].nEnabled = 1;
-  pConfig->stOutput[8].nInput = 1;
-  pConfig->stOutput[8].nCurrentLimit = 80;
-  pConfig->stOutput[8].nInrushLimit = 160;
-  pConfig->stOutput[8].nInrushTime = 2000;
-  pConfig->stOutput[8].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[8].nResetTime = 1000;
-  pConfig->stOutput[8].nResetLimit = 2;
-
-  pConfig->stOutput[9].nEnabled = 1;
-  pConfig->stOutput[9].nInput = 2;
-  pConfig->stOutput[9].nCurrentLimit = 80;
-  pConfig->stOutput[9].nInrushLimit = 160;
-  pConfig->stOutput[9].nInrushTime = 2000;
-  pConfig->stOutput[9].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[9].nResetTime = 1000;
-  pConfig->stOutput[9].nResetLimit = 2;
-
-  pConfig->stOutput[10].nEnabled = 1;
-  pConfig->stOutput[10].nInput = 7;
-  pConfig->stOutput[10].nCurrentLimit = 80;
-  pConfig->stOutput[10].nInrushLimit = 160;
-  pConfig->stOutput[10].nInrushTime = 2000;
-  pConfig->stOutput[10].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[10].nResetTime = 1000;
-  pConfig->stOutput[10].nResetLimit = 2;
-
-  pConfig->stOutput[11].nEnabled = 1;
-  pConfig->stOutput[11].nInput = 8;
-  pConfig->stOutput[11].nCurrentLimit = 80;
-  pConfig->stOutput[11].nInrushLimit = 160;
-  pConfig->stOutput[11].nInrushTime = 2000;
-  pConfig->stOutput[11].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[11].nResetTime = 1000;
-  pConfig->stOutput[11].nResetLimit = 2;
 
   //Virtual Inputs
   pConfig->stVirtualInput[0].nEnabled = 0;

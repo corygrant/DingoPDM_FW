@@ -14,24 +14,19 @@
 typedef enum{
   BTS7002_1EPP,
   BTS7008_2EPA_CH1,
-  BTS7008_2EPA_CH2
+  BTS7008_2EPA_CH2,
+  BTS724_CH1,
+  BTS724_CH2,
+  BTS724_CH3,
+  BTS724_CH4
 } ProfetModelTypeDef;
 
 typedef enum {
   OFF = 0,
   ON,
-  IN_RUSH,
-  SHORT_CIRCUIT,
   OVERCURRENT,
   FAULT,
-  SUSPENDED,
-  TURNING_OFF,
-  TURNING_ON,
-  IN_RUSHING,
-  SHORT_CIRCUITING,
-  OVERCURRENTING,
-  FAULTING,
-  SUSPENDING
+  SUSPENDED
 } ProfetStateTypeDef;
 
 typedef struct {
@@ -61,15 +56,6 @@ typedef struct {
 
 } ProfetTypeDef;
 
-typedef struct {
-  uint32_t nStartTime;
-  uint32_t nDelayTime;
-  //bool bActive;
-  //bool bDone;
-  //bool bLastVal;
-} ProfetDelayTypeDef;
-
 void Profet_SM(volatile ProfetTypeDef *profet);
 void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal);
-void Profet_Default_Init(volatile ProfetTypeDef pf[], uint16_t *pfGpioBank1, uint16_t *pfGpioBank2);
 #endif /* COMPONENTS_INC_PROFET_H_ */

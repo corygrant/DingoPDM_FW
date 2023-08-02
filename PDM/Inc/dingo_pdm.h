@@ -15,49 +15,20 @@
 #include "cmsis_os.h"
 
 #include "msg_queue.h"
-#include "logger.h"
 #include "pdm_input.h"
 #include "starter.h"
 #include "flasher.h"
-#include "max1161x.h"
 #include "canboard.h"
 #include "mb85rc.h"
 #include "mcp9808.h"
-#include "pca9539.h"
-#include "pca9635.h"
-#include "pcal9554b.h"
 #include "profet.h"
 #include "virtual_input.h"
 #include "wipers.h"
 
 //#define MEAS_HEAP_USE
 
-#define USBD_RX_DATA_SIZE  2048
-#define USBD_TX_DATA_SIZE  2048
-
 #define PDM_NOK 0
 #define PDM_OK 1
-
-typedef enum
-{
-  DEVICE_AUTO,
-  DEVICE_MANUAL
-} DeviceMode_t;
-
-
-typedef enum
-{
-  DEVICE_INIT,
-  DEVICE_RUN,
-  DEVICE_CONFIG,
-  DEVICE_ERROR
-} DeviceState_t;
-
-
-typedef enum{
-  FORCE_STEADY,
-  FORCE_INTER,
-} IOForceMode_t;
 
 typedef enum{
     CAN_BITRATE_10K = 0,
@@ -73,11 +44,9 @@ typedef enum{
 } CAN_BitRate_t;
 
 extern osMessageQueueId_t qMsgQueueRx;
-extern osMessageQueueId_t qMsgQueueUsbTx;
 extern osMessageQueueId_t qMsgQueueTx;
 
-void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4);
-void I2CTask(osThreadId_t* thisThreadId, I2C_HandleTypeDef* hi2c1, I2C_HandleTypeDef* hi2c2);
+void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_HandleTypeDef* hadc4, I2C_HandleTypeDef* hi2c1);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);
-uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c2);
+uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1);
 #endif /* INC_DINGO_PDM_H_ */
