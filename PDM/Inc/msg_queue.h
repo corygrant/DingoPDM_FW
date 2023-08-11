@@ -13,12 +13,6 @@
 
 typedef enum
 {
-  CAN_RX,
-  USB_RX
-} MsgQueueRxSrc_t;
-
-typedef enum
-{
   MSG_RX_BURN_SETTINGS = 'B',
   MSG_RX_SET_MODE = 'M',
   MSG_RX_FORCE_OUTPUTS = 'Q',
@@ -63,7 +57,6 @@ typedef enum
 
 typedef struct
 {
-  MsgQueueRxSrc_t eMsgSrc;
   CAN_RxHeaderTypeDef stCanRxHeader;
   uint8_t nRxData[8];
   uint8_t nRxLen;
@@ -71,13 +64,8 @@ typedef struct
 } MsgQueueRx_t;
 
 typedef struct{
-  uint8_t nTxData[8];
-  uint8_t nTxLen;
-} MsgQueueUsbTx_t;
-
-typedef struct{
   CAN_TxHeaderTypeDef stTxHeader;
   uint8_t nTxData[8];
-} MsgQueueCanTx_t;
+} MsgQueueTx_t;
 
 #endif /* INC_MSG_QUEUE_H_ */

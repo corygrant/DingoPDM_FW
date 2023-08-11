@@ -775,50 +775,6 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stVirtualInput[15].nVar2 = 0;
   pConfig->stVirtualInput[15].eMode = MODE_MOMENTARY;
 
-  pConfig->stVirtualInput[16].nEnabled = 0;
-  pConfig->stVirtualInput[16].nNot0 = 0;
-  pConfig->stVirtualInput[16].nVar0 = 0;
-  pConfig->stVirtualInput[16].eCond0 = COND_AND;
-  pConfig->stVirtualInput[16].nNot1 = 0;
-  pConfig->stVirtualInput[16].nVar1 = 0;
-  pConfig->stVirtualInput[16].eCond1 = COND_OR;
-  pConfig->stVirtualInput[16].nNot2 = 0;
-  pConfig->stVirtualInput[16].nVar2 = 0;
-  pConfig->stVirtualInput[16].eMode = MODE_MOMENTARY;
-
-  pConfig->stVirtualInput[17].nEnabled = 0;
-  pConfig->stVirtualInput[17].nNot0 = 0;
-  pConfig->stVirtualInput[17].nVar0 = 0;
-  pConfig->stVirtualInput[17].eCond0 = COND_AND;
-  pConfig->stVirtualInput[17].nNot1 = 0;
-  pConfig->stVirtualInput[17].nVar1 = 0;
-  pConfig->stVirtualInput[17].eCond1 = COND_OR;
-  pConfig->stVirtualInput[17].nNot2 = 0;
-  pConfig->stVirtualInput[17].nVar2 = 0;
-  pConfig->stVirtualInput[17].eMode = MODE_MOMENTARY;
-
-  pConfig->stVirtualInput[18].nEnabled = 0;
-  pConfig->stVirtualInput[18].nNot0 = 0;
-  pConfig->stVirtualInput[18].nVar0 = 0;
-  pConfig->stVirtualInput[18].eCond0 = COND_AND;
-  pConfig->stVirtualInput[18].nNot1 = 0;
-  pConfig->stVirtualInput[18].nVar1 = 0;
-  pConfig->stVirtualInput[18].eCond1 = COND_OR;
-  pConfig->stVirtualInput[18].nNot2 = 0;
-  pConfig->stVirtualInput[18].nVar2 = 0;
-  pConfig->stVirtualInput[18].eMode = MODE_MOMENTARY;
-
-  pConfig->stVirtualInput[19].nEnabled = 0;
-  pConfig->stVirtualInput[19].nNot0 = 0;
-  pConfig->stVirtualInput[19].nVar0 = 0;
-  pConfig->stVirtualInput[19].eCond0 = COND_AND;
-  pConfig->stVirtualInput[19].nNot1 = 0;
-  pConfig->stVirtualInput[19].nVar1 = 0;
-  pConfig->stVirtualInput[19].eCond1 = COND_OR;
-  pConfig->stVirtualInput[19].nNot2 = 0;
-  pConfig->stVirtualInput[19].nVar2 = 0;
-  pConfig->stVirtualInput[19].eMode = MODE_MOMENTARY;
-
   //Wiper
   pConfig->stWiper.nEnabled = 0;
   pConfig->stWiper.nMode = 2;
@@ -1132,6 +1088,22 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stCanInput[29].eOperator = OPER_EQUAL;
   pConfig->stCanInput[29].nOnVal = 0;
   pConfig->stCanInput[29].eMode = MODE_MOMENTARY;
+
+  pConfig->stCanInput[30].nEnabled = 0;
+  pConfig->stCanInput[30].nId = 0;
+  pConfig->stCanInput[30].nLowByte = 0;
+  pConfig->stCanInput[30].nHighByte = 0;
+  pConfig->stCanInput[30].eOperator = OPER_EQUAL;
+  pConfig->stCanInput[30].nOnVal = 0;
+  pConfig->stCanInput[30].eMode = MODE_MOMENTARY;
+
+  pConfig->stCanInput[31].nEnabled = 0;
+  pConfig->stCanInput[31].nId = 0;
+  pConfig->stCanInput[31].nLowByte = 0;
+  pConfig->stCanInput[31].nHighByte = 0;
+  pConfig->stCanInput[31].eOperator = OPER_EQUAL;
+  pConfig->stCanInput[31].nOnVal = 0;
+  pConfig->stCanInput[31].eMode = MODE_MOMENTARY;
 
   //CAN Output
   pConfig->stCanOutput.nEnabled = 1;

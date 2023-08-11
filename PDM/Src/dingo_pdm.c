@@ -146,7 +146,6 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   nLastCanUpdate = HAL_GetTick();
 
   MsgQueueRx_t stMsg;
-  stMsg.eMsgSrc = CAN_RX;
   stMsg.nRxLen = (uint8_t)stCanRxHeader.DLC;
   memcpy(&stMsg.stCanRxHeader, &stCanRxHeader, sizeof(stCanRxHeader));
   memcpy(&stMsg.nRxData, &nCanRxData, sizeof(nCanRxData));
@@ -197,7 +196,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
   /* Infinite loop */
   for(;;)
   {
-    HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_SET);
 
 
     //=====================================================================================================
@@ -288,23 +287,19 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     nMsgCnt = osMessageQueueGetCount(qMsgQueueRx);
     eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
     if(eStatus == osOK){
-      if(stMsgRx.eMsgSrc == CAN_RX){
-        for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
-          EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
-        }
+      for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
+        EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
       }
+      //Check for settings change messages
     }
-
 
 #ifdef MEAS_HEAP_USE
     __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);
 #endif
 
-
-
     //Debug GPIO
     //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
-    HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
 
     osDelay(MAIN_TASK_DELAY);
   }
@@ -355,12 +350,13 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 
   for(;;){
     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
+
     if(stPdmConfig.stCanOutput.nEnabled &&
         (stPdmConfig.stCanOutput.nUpdateTime > 0) &&
         stPdmConfig.stCanOutput.nBaseId > 0 &&
         stPdmConfig.stCanOutput.nBaseId < 2048){
 
-      MsgQueueCanTx_t stMsgTx;
+      MsgQueueTx_t stMsgTx;
       osStatus_t stStatus;
       //Keep sending queued messages until empty
       do{

@@ -132,7 +132,7 @@ void MX_FREERTOS_Init(void) {
     Error_Handler();
   }
 
-  qMsgQueueTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
+  qMsgQueueTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueTx_t), NULL);
   if(qMsgQueueTx == NULL){
     //TODO: Message queue not created
     Error_Handler();
