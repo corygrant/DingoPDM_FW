@@ -35,7 +35,7 @@ typedef struct {
   volatile ProfetStateTypeDef eReqState;
   volatile char cState;
   uint16_t nNum;
-  uint16_t *nIN_Port;
+  GPIO_TypeDef* nIN_Port;
   uint16_t nIN_Pin;
   volatile uint16_t nIS_Avg;
   volatile uint32_t nIS_Sum;

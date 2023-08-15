@@ -163,16 +163,20 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
   //=====================================================================================================
   // MCP9808 Temperature Sensor Configuration
   //=====================================================================================================
-  if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
+  MCP9808_Init(hi2c1, MCP9808_ADDRESS);
+  //if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
     //printf("MCP9808 Init FAIL\n");
 
   MCP9808_SetResolution(hi2c1, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
 
-  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
+  MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX);
+  //if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
     //printf("MCP9808 Set Upper Limit Failed\n");
-  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
+  MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN);
+  //if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
     //printf("MCP9808 Set Lower Limit Failed\n");
-  if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
+  MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT);
+  //if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
     //printf("MCP9808 Set Critical Limit Failed\n");
 
   //Setup configuration
@@ -223,17 +227,18 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     //=====================================================================================================
     Profet_UpdateIS(&pf[0], nAdc1Data[2]);
     Profet_UpdateIS(&pf[1], nAdc1Data[0]);
-    Profet_UpdateIS(&pf[2], nAdc1Data[1]);
+    Profet_UpdateIS(&pf[3], nAdc1Data[1]);
 
     //=====================================================================================================
     //Flip Profet DSEL to channel 2
     //=====================================================================================================
     HAL_GPIO_WritePin(PF_DSEL3_4_GPIO_Port, PF_DSEL3_4_Pin, GPIO_PIN_RESET);
+    osDelay(100);
 
     //=====================================================================================================
     // Update output current
     //=====================================================================================================
-    Profet_UpdateIS(&pf[3], nAdc1Data[1]);
+    Profet_UpdateIS(&pf[2], nAdc1Data[1]);
 
     //=====================================================================================================
     // Update digital inputs
@@ -680,6 +685,7 @@ void OutputLogic(){
   //Copy output logic to profet requested state
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
+    //pf[i].eReqState = 1;
     pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
   }
 }
@@ -698,55 +704,55 @@ void Profet_Default_Init(){
 
   pf[0].eModel = BTS7002_1EPP;
   pf[0].nNum = 0;
-  pf[0].nIN_Port = 0;
-  pf[0].nIN_Pin = 0x0080;
+  pf[0].nIN_Port = PF_IN1_GPIO_Port;
+  pf[0].nIN_Pin = PF_IN1_Pin;
   pf[0].fKilis = 0.640;
 
   pf[1].eModel = BTS7002_1EPP;
   pf[1].nNum = 1;
-  pf[1].nIN_Port = 0;
-  pf[1].nIN_Pin = 0x0002;
+  pf[1].nIN_Port = PF_IN2_GPIO_Port;
+  pf[1].nIN_Pin = PF_IN2_Pin;
   pf[1].fKilis = 0.640;
 
   pf[2].eModel = BTS7008_2EPA_CH1;
   pf[2].nNum = 2;
-  pf[2].nIN_Port = 0;
-  pf[2].nIN_Pin = 0x8000;
+  pf[2].nIN_Port = PF_IN3_GPIO_Port;
+  pf[2].nIN_Pin = PF_IN3_Pin;
   pf[2].fKilis = 0.2;
 
   pf[3].eModel = BTS7008_2EPA_CH2;
   pf[3].eState = OFF;
   pf[3].nNum = 3;
-  pf[3].nIN_Port = 0;
-  pf[3].nIN_Pin = 0x1000;
+  pf[3].nIN_Port = PF_IN4_GPIO_Port;
+  pf[3].nIN_Pin = PF_IN4_Pin;
   pf[3].fKilis = 0.2;
 
-  pf[4].eModel = BTS7008_2EPA_CH1;
+  pf[4].eModel = BTS724_CH1;
   pf[4].eState = OFF;
   pf[4].nNum = 4;
-  pf[4].nIN_Port = 0;
-  pf[4].nIN_Pin = 0x0800;
+  pf[4].nIN_Port = PF_IN5_GPIO_Port;
+  pf[4].nIN_Pin = PF_IN5_Pin;
   pf[4].fKilis = 0.2;
 
-  pf[5].eModel = BTS7008_2EPA_CH2;
+  pf[5].eModel = BTS724_CH2;
   pf[5].eState = OFF;
   pf[5].nNum = 5;
-  pf[5].nIN_Port = 0;
-  pf[5].nIN_Pin = 0x0100;
+  pf[5].nIN_Port = PF_IN6_GPIO_Port;
+  pf[5].nIN_Pin = PF_IN6_Pin;
   pf[5].fKilis = 0.2;
 
-  pf[6].eModel = BTS7002_1EPP;
+  pf[6].eModel = BTS724_CH3;
   pf[6].eState = OFF;
   pf[6].nNum = 6;
-  pf[6].nIN_Port = 0;
-  pf[6].nIN_Pin = 0x0002;
+  pf[6].nIN_Port = PF_IN7_GPIO_Port;
+  pf[6].nIN_Pin = PF_IN7_Pin;
   pf[6].fKilis = 0.640;
 
-  pf[7].eModel = BTS7002_1EPP;
+  pf[7].eModel = BTS724_CH4;
   pf[7].eState = OFF;
   pf[7].nNum = 7;
-  pf[7].nIN_Port = 0;
-  pf[7].nIN_Pin = 0x0008;
+  pf[7].nIN_Port = PF_IN8_GPIO_Port;
+  pf[7].nIN_Pin = PF_IN8_Pin;
   pf[7].fKilis = 0.640;
 }
 

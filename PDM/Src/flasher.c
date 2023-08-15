@@ -7,7 +7,7 @@
 
 #include "flasher.h"
 
-void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[12])
+void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[8])
 {
   if(!pFlasher->nEnabled){
     pResult[pFlasher->nOutput] = 1;

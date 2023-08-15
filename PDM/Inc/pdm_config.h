@@ -11,6 +11,7 @@
 #include <input.h>
 #include "msg_queue.h"
 #include "stdint.h"
+#include "stdbool.h"
 #include "cmsis_os.h"
 #include "string.h"
 #include "mb85rc.h"
@@ -62,7 +63,7 @@ typedef struct{
 
 typedef struct{
   uint8_t nEnabled;
-  uint8_t* pInput;
+  bool* pInput;
   PushbuttonMode_t eMode;
   PushbuttonConfig_t ePbConfig;
   uint16_t nOnLevel;

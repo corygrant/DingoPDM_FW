@@ -545,7 +545,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[1].nResetLimit = 2;
 
   pConfig->stOutput[2].nEnabled = 1;
-  pConfig->stOutput[2].nInput = 3;
+  pConfig->stOutput[2].nInput = 1;
   pConfig->stOutput[2].nCurrentLimit = 80;
   pConfig->stOutput[2].nInrushLimit = 160;
   pConfig->stOutput[2].nInrushTime = 2000;
@@ -554,7 +554,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[2].nResetLimit = 3;
 
   pConfig->stOutput[3].nEnabled = 1;
-  pConfig->stOutput[3].nInput = 4;
+  pConfig->stOutput[3].nInput = 2;
   pConfig->stOutput[3].nCurrentLimit = 80;
   pConfig->stOutput[3].nInrushLimit = 160;
   pConfig->stOutput[3].nInrushTime = 2000;
@@ -563,7 +563,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[3].nResetLimit = 2;
 
   pConfig->stOutput[4].nEnabled = 1;
-  pConfig->stOutput[4].nInput = 5;
+  pConfig->stOutput[4].nInput = 1;
   pConfig->stOutput[4].nCurrentLimit = 80;
   pConfig->stOutput[4].nInrushLimit = 160;
   pConfig->stOutput[4].nInrushTime = 2000;
@@ -572,7 +572,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[4].nResetLimit = 2;
 
   pConfig->stOutput[5].nEnabled = 1;
-  pConfig->stOutput[5].nInput = 6;
+  pConfig->stOutput[5].nInput = 2;
   pConfig->stOutput[5].nCurrentLimit = 80;
   pConfig->stOutput[5].nInrushLimit = 160;
   pConfig->stOutput[5].nInrushTime = 2000;
@@ -581,7 +581,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[5].nResetLimit = 2;
 
   pConfig->stOutput[6].nEnabled = 1;
-  pConfig->stOutput[6].nInput = 7;
+  pConfig->stOutput[6].nInput = 1;
   pConfig->stOutput[6].nCurrentLimit = 150;
   pConfig->stOutput[6].nInrushLimit = 300;
   pConfig->stOutput[6].nInrushTime = 2000;
@@ -590,7 +590,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[6].nResetLimit = 2;
 
   pConfig->stOutput[7].nEnabled = 1;
-  pConfig->stOutput[7].nInput = 8;
+  pConfig->stOutput[7].nInput = 2;
   pConfig->stOutput[7].nCurrentLimit = 150;
   pConfig->stOutput[7].nInrushLimit = 300;
   pConfig->stOutput[7].nInrushTime = 2000;

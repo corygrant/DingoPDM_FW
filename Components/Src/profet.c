@@ -18,7 +18,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
 
     //Check for turn on
     if (profet->eReqState == ON) {
-      *profet->nIN_Port |= profet->nIN_Pin;
+      HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_SET);
       profet->eState = ON;
     }
     break;
@@ -35,7 +35,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
 
     //Check for turn off
     if (profet->eReqState == OFF) {
-      *profet->nIN_Port &= ~profet->nIN_Pin;
+      HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
       profet->eState = OFF;
     }
 
@@ -51,7 +51,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
     if(profet->nOC_Detected > 0){
       //if((HAL_GetTick() - profet->nIL_On_Time) > GetTripTime(profet->eModel, profet->nIL, profet->nIL_Limit)){
         profet->nValStore = profet->nIL;
-        *profet->nIN_Port &= ~profet->nIN_Pin;
+        HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
         profet->nOC_TriggerTime = HAL_GetTick();
         profet->nOC_ResetCount++;
         profet->eState = OVERCURRENT;
@@ -61,23 +61,23 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
 
   case OVERCURRENT:
     profet->cState = 'C';
-    *profet->nIN_Port &= ~profet->nIN_Pin;
+    HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
     if(profet->nOC_ResetCount > profet->nOC_ResetLimit){
-      *profet->nIN_Port &= ~profet->nIN_Pin;
+      HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
       profet->eState = SUSPENDED;
     }
 
     //Check for turn off
     if (profet->eReqState == OFF) {
       profet->nOC_ResetCount = 0;
-      *profet->nIN_Port &= ~profet->nIN_Pin;
+      HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
       profet->eState = OFF;
     }
     break;
 
   case FAULT:
     profet->cState = 'F';
-    *profet->nIN_Port &= ~profet->nIN_Pin;
+    HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
     //TODO: Reset from fault requires DEN cycle
     break;
 
@@ -86,7 +86,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
     //TODO: replace with a reset
     if (profet->eReqState == OFF){
       profet->nOC_ResetCount = 0;
-      *profet->nIN_Port &= ~profet->nIN_Pin;
+      HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
       profet->eState = OFF;
     }
     break;
