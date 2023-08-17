@@ -524,7 +524,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Outputs
   pConfig->stOutput[0].nEnabled = 1;
   pConfig->stOutput[0].nInput = 1;
-  pConfig->stOutput[0].nCurrentLimit = 150; //Current * 10
+  pConfig->stOutput[0].nCurrentLimit = 250; //Current * 10
   pConfig->stOutput[0].nInrushLimit = 300; //Current * 10
   pConfig->stOutput[0].nInrushTime = 2000; //ms
   pConfig->stOutput[0].eResetMode = RESET_COUNT;
@@ -533,7 +533,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[1].nEnabled = 1;
   pConfig->stOutput[1].nInput = 2;
-  pConfig->stOutput[1].nCurrentLimit = 150;
+  pConfig->stOutput[1].nCurrentLimit = 250;
   pConfig->stOutput[1].nInrushLimit = 300;
   pConfig->stOutput[1].nInrushTime = 2000;
   pConfig->stOutput[1].eResetMode = RESET_ENDLESS;
@@ -542,7 +542,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[2].nEnabled = 1;
   pConfig->stOutput[2].nInput = 1;
-  pConfig->stOutput[2].nCurrentLimit = 80;
+  pConfig->stOutput[2].nCurrentLimit = 130;
   pConfig->stOutput[2].nInrushLimit = 160;
   pConfig->stOutput[2].nInrushTime = 2000;
   pConfig->stOutput[2].eResetMode = RESET_COUNT;
@@ -551,7 +551,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[3].nEnabled = 1;
   pConfig->stOutput[3].nInput = 2;
-  pConfig->stOutput[3].nCurrentLimit = 80;
+  pConfig->stOutput[3].nCurrentLimit = 130;
   pConfig->stOutput[3].nInrushLimit = 160;
   pConfig->stOutput[3].nInrushTime = 2000;
   pConfig->stOutput[3].eResetMode = RESET_ENDLESS;

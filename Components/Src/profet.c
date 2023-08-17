@@ -17,7 +17,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
   //Check for fault (device overcurrent/overtemp/short)
   //IL will be very high
   //TODO: Calculate value from datasheet
-  if ((profet->nIS_Avg > 30000) &&
+  if ((profet->nIS > 30000) &&
       profet->bIS_Active){
     profet->eState = FAULT;
   }
@@ -123,7 +123,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
   }
 }
 
-void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal)
+void Profet_UpdateIS(volatile ProfetTypeDef *profet, volatile uint16_t newVal, volatile float fVDDA)
 {
   //Profet without IS
   if( (profet->eModel == BTS724_CH1) || (profet->eModel == BTS724_CH1) ||
@@ -141,18 +141,11 @@ void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal)
   //Remove the average from the sum, otherwise sum always goes up never down
   //profet->nIS_Sum -= profet->nIS_Avg;
 
-  //Convert IS to IL (actual current)
-  //profet->nIL = (uint16_t)(((float)newVal * profet->fM) + profet->fB);
+  //BTS7002 - IS inaccurate below 4A
+  //BTS7008 - IS fairly accurate across range
 
-  profet->nIL = (uint16_t)((((float)newVal * 0.000805664) / 1200) * profet->fKILIS);
-
-  //Ignore current readings below low threshold
-  //if((profet->eModel == BTS7002_1EPP) && (profet->nIL < 11)){
-  //  profet->nIL = 0;
- // }
-
-  //if(((profet->eModel == BTS7008_2EPA_CH1) || (profet->eModel == BTS7008_2EPA_CH1))
-  //    && (profet->nIL < 1)){
-  //    profet->nIL = 0;
-  //}
+  //Calculate current at ADC, multiply by kILIS ratio to get output current
+  //Use the measured VDDA value to calculate volts/step
+  //IL = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
+  profet->nIL = (uint16_t)((((float)newVal * (fVDDA / 4095)) / 1200) * profet->fKILIS);
 }

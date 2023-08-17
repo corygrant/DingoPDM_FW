@@ -49,8 +49,8 @@ typedef struct {
   GPIO_TypeDef* nDEN_Port;
   uint16_t nDEN_Pin;
 
-  volatile uint16_t nIS_Avg;
-  volatile uint32_t nIS_Sum;
+  //volatile uint16_t nIS_Avg;
+  //volatile uint32_t nIS_Sum;
   uint16_t nIL_Limit; //Current limit (amps)
 
   bool bInRushActive; //Currently in inrush
@@ -68,13 +68,10 @@ typedef struct {
   volatile uint32_t nOC_TriggerTime; //Time of overcurrent
   volatile uint8_t nOC_ResetLimit; //Limit of number of overcurrent resets
 
-  float fM;
-  float fB;
-
   float fKILIS;
 
 } ProfetTypeDef;
 
 void Profet_SM(volatile ProfetTypeDef *profet);
-void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal);
+void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal, volatile float fVDDA);
 #endif /* COMPONENTS_INC_PROFET_H_ */

@@ -31,7 +31,7 @@
 //========================================================================
 // STM ADC Counts
 //========================================================================
-#define ADC_1_COUNT 4
+#define ADC_1_COUNT 5
 #define ADC_4_COUNT 1
 
 //========================================================================
@@ -82,7 +82,7 @@ int16_t nBoardTempC;
 //========================================================================
 // STM ADC
 // STM Interal Temperature
-// Battery Voltage Sense
+// VREFINT
 //========================================================================
 volatile uint16_t nAdc1Data[ADC_1_COUNT];
 volatile uint16_t nAdc4Data[ADC_4_COUNT];
@@ -90,6 +90,10 @@ volatile uint16_t nBattSense;
 volatile uint16_t nStmTemp;
 const uint16_t* const STM32_TEMP_3V3_30C =  (uint16_t*)(0x1FFFF7B8);
 const uint16_t* const STM32_TEMP_3V3_110C =  (uint16_t*)(0x1FFFF7C2);
+volatile float fVDDA;
+volatile uint16_t nVREFINT;
+const uint16_t* const STM32_VREF_INT_CAL = (uint16_t*)(0x1FFFF7BA);
+volatile uint16_t nVREFINTCAL;
 
 //========================================================================
 // CAN
@@ -205,12 +209,15 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
 
     //=====================================================================================================
     // ADC channels
-    // ADC1 = Vbat and device temperature
+    // ADC1 = VREFint and device temperature
     // ADC4 = Battery sense
     //=====================================================================================================
     nBattSense = (uint16_t)(((float)nAdc4Data[0]) * 0.0519 - 11.3);
     nStmTemp = (uint16_t)(80.0 / ((float)(*STM32_TEMP_3V3_110C) - (float)(*STM32_TEMP_3V3_30C)) *
                           (((float)nAdc1Data[3]) - (float)(*STM32_TEMP_3V3_30C)) + 30.0);
+    nVREFINT = nAdc1Data[4];
+    nVREFINTCAL = *STM32_VREF_INT_CAL;
+    fVDDA = (float)((3.3 * (float)(*STM32_VREF_INT_CAL)) / nVREFINT);
 
     //=====================================================================================================
     // Set Profet
@@ -227,9 +234,9 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     //=====================================================================================================
     // Update output current
     //=====================================================================================================
-    Profet_UpdateIS(&pf[0], nAdc1Data[2]);
-    Profet_UpdateIS(&pf[1], nAdc1Data[0]);
-    Profet_UpdateIS(&pf[3], nAdc1Data[1]);
+    Profet_UpdateIS(&pf[0], nAdc1Data[2], fVDDA);
+    Profet_UpdateIS(&pf[1], nAdc1Data[0], fVDDA);
+    Profet_UpdateIS(&pf[3], nAdc1Data[1], fVDDA);
 
     //=====================================================================================================
     //Flip Profet DSEL to channel 2
@@ -241,7 +248,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     //=====================================================================================================
     // Update output current
     //=====================================================================================================
-    Profet_UpdateIS(&pf[2], nAdc1Data[1]);
+    Profet_UpdateIS(&pf[2], nAdc1Data[1], fVDDA);
 
     //=====================================================================================================
     // Update status inputs
@@ -719,9 +726,7 @@ void Profet_Default_Init(){
   pf[0].nIN_Pin = PF_IN1_Pin;
   pf[0].nDEN_Port = PF_DEN1_GPIO_Port;
   pf[0].nDEN_Pin = PF_DEN1_Pin;
-  pf[0].fM = 0.155;
-  pf[0].fB = 10.0;
-  pf[0].fKILIS = 227000;
+  pf[0].fKILIS = 254795;//227000;
 
   pf[1].eModel = BTS7002_1EPP;
   pf[1].nNum = 1;
@@ -729,9 +734,7 @@ void Profet_Default_Init(){
   pf[1].nIN_Pin = PF_IN2_Pin;
   pf[1].nDEN_Port = PF_DEN2_GPIO_Port;
   pf[1].nDEN_Pin = PF_DEN2_Pin;
-  pf[1].fM = 0.155;
-  pf[1].fB = 10.0;
-  pf[1].fKILIS = 227000;
+  pf[1].fKILIS = 254795;//227000;
 
   pf[2].eModel = BTS7008_2EPA_CH1;
   pf[2].nNum = 2;
@@ -739,9 +742,7 @@ void Profet_Default_Init(){
   pf[2].nIN_Pin = PF_IN3_Pin;
   pf[2].nDEN_Port = PF_DEN3_4_GPIO_Port;
   pf[2].nDEN_Pin = PF_DEN3_4_Pin;
-  pf[2].fM = 0.050;
-  pf[2].fB = -7.7;
-  pf[2].fKILIS = 54000;
+  pf[2].fKILIS = 59258;//54000;
 
   pf[3].eModel = BTS7008_2EPA_CH2;
   pf[3].eState = OFF;
@@ -750,9 +751,7 @@ void Profet_Default_Init(){
   pf[3].nIN_Pin = PF_IN4_Pin;
   pf[3].nDEN_Port = PF_DEN3_4_GPIO_Port;
   pf[3].nDEN_Pin = PF_DEN3_4_Pin;
-  pf[3].fM = 0.050;
-  pf[3].fB = -7.7;
-  pf[3].fKILIS = 54000;
+  pf[3].fKILIS = 59258;//54000;
 
   pf[4].eModel = BTS724_CH1;
   pf[4].eState = OFF;
@@ -761,8 +760,6 @@ void Profet_Default_Init(){
   pf[4].nIN_Pin = PF_IN5_Pin;
   pf[4].nDEN_Port = 0;
   pf[4].nDEN_Pin = 0;
-  pf[4].fM = 0.0;
-  pf[4].fB = 0.0;
   pf[4].fKILIS = 0;
 
   pf[5].eModel = BTS724_CH2;
@@ -772,8 +769,6 @@ void Profet_Default_Init(){
   pf[5].nIN_Pin = PF_IN6_Pin;
   pf[5].nDEN_Port = 0;
   pf[5].nDEN_Pin = 0;
-  pf[5].fM = 0.0;
-  pf[5].fB = 0.0;
   pf[5].fKILIS = 0;
 
   pf[6].eModel = BTS724_CH3;
@@ -783,8 +778,6 @@ void Profet_Default_Init(){
   pf[6].nIN_Pin = PF_IN7_Pin;
   pf[6].nDEN_Port = 0;
   pf[6].nDEN_Pin = 0;
-  pf[6].fM = 0.0;
-  pf[6].fB = 0.0;
   pf[6].fKILIS = 0;
 
   pf[7].eModel = BTS724_CH4;
@@ -794,8 +787,6 @@ void Profet_Default_Init(){
   pf[7].nIN_Pin = PF_IN8_Pin;
   pf[7].nDEN_Port = 0;
   pf[7].nDEN_Pin = 0;
-  pf[7].fM = 0.0;
-  pf[7].fB = 0.0;
   pf[7].fKILIS = 0;
 }
 
