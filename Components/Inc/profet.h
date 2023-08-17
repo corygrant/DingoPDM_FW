@@ -9,6 +9,7 @@
 #define COMPONENTS_INC_PROFET_H_
 
 #include "stdint.h"
+#include "stdbool.h"
 #include "stm32f3xx_hal.h"
 
 typedef enum{
@@ -25,34 +26,52 @@ typedef enum {
   OFF = 0,
   ON,
   OVERCURRENT,
-  FAULT,
-  SUSPENDED
+  FAULT
 } ProfetStateTypeDef;
+
+typedef enum{
+  RESET_NONE,
+  RESET_COUNT,
+  RESET_ENDLESS
+} ProfetResetMode_t;
 
 typedef struct {
   ProfetModelTypeDef eModel;
   volatile ProfetStateTypeDef eState;
   volatile ProfetStateTypeDef eReqState;
+  volatile ProfetResetMode_t eResetMode;
   volatile char cState;
+
   uint16_t nNum;
+
   GPIO_TypeDef* nIN_Port;
   uint16_t nIN_Pin;
+  GPIO_TypeDef* nDEN_Port;
+  uint16_t nDEN_Pin;
+
   volatile uint16_t nIS_Avg;
   volatile uint32_t nIS_Sum;
-  uint16_t nIL_Limit;
-  uint16_t nIL_InRush_Limit;
-  volatile uint16_t nIL_InRush_Time;
-  volatile uint32_t nIL_On_Time;
-  volatile uint16_t nIL;
-  volatile uint16_t nIS;
-  volatile uint16_t nValStore;
-  volatile uint16_t nOvercurrentCnt;
-  volatile uint16_t nOC_ResetTime;
-  volatile uint32_t nOC_TriggerTime;
-  volatile uint8_t nOC_ResetCount;
-  volatile uint8_t nOC_ResetLimit;
-  volatile uint8_t nOC_Detected;
-  float fKilis;
+  uint16_t nIL_Limit; //Current limit (amps)
+
+  bool bInRushActive; //Currently in inrush
+  uint16_t nIL_InRushLimit; //Current limit during inrush
+  volatile uint16_t nIL_InRushTime; //Inrush time limit
+  volatile uint32_t nInRushOnTime; //ms
+
+  volatile uint16_t nIL; //Scaled current value (amps)
+  volatile uint16_t nIS; //Raw analog current value
+  volatile bool bIS_Active; //IS used
+  volatile bool bST; //Status input, non-IS
+
+  volatile uint16_t nOC_Count; //Number of overcurrents
+  volatile uint16_t nOC_ResetTime; //Time after overcurrent before reset
+  volatile uint32_t nOC_TriggerTime; //Time of overcurrent
+  volatile uint8_t nOC_ResetLimit; //Limit of number of overcurrent resets
+
+  float fM;
+  float fB;
+
+  float fKILIS;
 
 } ProfetTypeDef;
 

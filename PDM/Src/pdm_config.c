@@ -508,11 +508,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Device Configuration
   pConfig->stDevConfig.nVersion = 3;
   pConfig->stDevConfig.nCanEnabled = 1;
-  pConfig->stDevConfig.nCanTerm = 1;
   pConfig->stDevConfig.nCanSpeed = 6;
-
-  //Logging
-  pConfig->stLogging.nUpdateTime = 1000;
 
   //Inputs
   pConfig->stInput[0].nEnabled = 1;
@@ -528,12 +524,12 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Outputs
   pConfig->stOutput[0].nEnabled = 1;
   pConfig->stOutput[0].nInput = 1;
-  pConfig->stOutput[0].nCurrentLimit = 250;
-  pConfig->stOutput[0].nInrushLimit = 300;
-  pConfig->stOutput[0].nInrushTime = 2000;
-  pConfig->stOutput[0].eResetMode = RESET_ENDLESS;
-  pConfig->stOutput[0].nResetTime = 1000;
-  pConfig->stOutput[0].nResetLimit = 1;
+  pConfig->stOutput[0].nCurrentLimit = 150; //Current * 10
+  pConfig->stOutput[0].nInrushLimit = 300; //Current * 10
+  pConfig->stOutput[0].nInrushTime = 2000; //ms
+  pConfig->stOutput[0].eResetMode = RESET_COUNT;
+  pConfig->stOutput[0].nResetTime = 1000; //ms
+  pConfig->stOutput[0].nResetLimit = 3; //count
 
   pConfig->stOutput[1].nEnabled = 1;
   pConfig->stOutput[1].nInput = 2;
@@ -549,7 +545,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[2].nCurrentLimit = 80;
   pConfig->stOutput[2].nInrushLimit = 160;
   pConfig->stOutput[2].nInrushTime = 2000;
-  pConfig->stOutput[2].eResetMode = RESET_ENDLESS;
+  pConfig->stOutput[2].eResetMode = RESET_COUNT;
   pConfig->stOutput[2].nResetTime = 1000;
   pConfig->stOutput[2].nResetLimit = 3;
 

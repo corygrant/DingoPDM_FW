@@ -15,6 +15,7 @@
 #include "cmsis_os.h"
 #include "string.h"
 #include "mb85rc.h"
+#include "profet.h"
 
 #define PDM_MAJOR_VERSION 3
 #define PDM_MINOR_VERSION 0
@@ -38,11 +39,7 @@ typedef enum{
   OPER_BITWISE_NAND
 } PdmConfig_Operator_t;
 
-typedef enum{
-  RESET_NONE,
-  RESET_COUNT,
-  RESET_ENDLESS
-} PdmConfig_ResetMode_t;
+
 
 typedef enum{
   COND_AND,
@@ -53,13 +50,8 @@ typedef enum{
 typedef struct{
   uint8_t nVersion;
   uint8_t nCanEnabled;
-  uint8_t nCanTerm;
   uint8_t nCanSpeed;
 } PdmConfig_DeviceConfig_t;
-
-typedef struct{
-  uint16_t nUpdateTime;
-} PdmConfig_Logging_t;
 
 typedef struct{
   uint8_t nEnabled;
@@ -94,7 +86,7 @@ typedef struct{
   uint16_t nCurrentLimit;
   uint16_t nInrushLimit;
   uint16_t nInrushTime;
-  PdmConfig_ResetMode_t eResetMode;
+  ProfetResetMode_t eResetMode;
   uint16_t nResetTime;
   uint8_t nResetLimit;
 } PdmConfig_Output_t;
@@ -154,7 +146,6 @@ typedef struct{
 
 typedef struct{
   PdmConfig_DeviceConfig_t stDevConfig;
-  PdmConfig_Logging_t stLogging;
   PdmConfig_Input_t stInput[PDM_NUM_INPUTS];
   PdmConfig_VirtualInput_t stVirtualInput[PDM_NUM_VIRT_INPUTS];
   PdmConfig_Output_t stOutput[PDM_NUM_OUTPUTS];

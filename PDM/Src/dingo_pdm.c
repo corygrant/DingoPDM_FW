@@ -221,6 +221,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     HAL_GPIO_WritePin(PF_DEN2_GPIO_Port, PF_DEN2_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(PF_DEN3_4_GPIO_Port, PF_DEN3_4_Pin, GPIO_PIN_SET);
     HAL_GPIO_WritePin(PF_DSEL3_4_GPIO_Port, PF_DSEL3_4_Pin, GPIO_PIN_SET);
+    //Wait for DSEL changeover (up to 60us)
+    osDelay(1);
 
     //=====================================================================================================
     // Update output current
@@ -233,12 +235,21 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, ADC_Handl
     //Flip Profet DSEL to channel 2
     //=====================================================================================================
     HAL_GPIO_WritePin(PF_DSEL3_4_GPIO_Port, PF_DSEL3_4_Pin, GPIO_PIN_RESET);
-    osDelay(100);
+    //Wait for DSEL changeover (up to 60us)
+    osDelay(1);
 
     //=====================================================================================================
     // Update output current
     //=====================================================================================================
     Profet_UpdateIS(&pf[2], nAdc1Data[1]);
+
+    //=====================================================================================================
+    // Update status inputs
+    //=====================================================================================================
+    pf[4].bST = HAL_GPIO_ReadPin(PF_ST5_6_GPIO_Port, PF_ST5_6_Pin) == GPIO_PIN_SET;
+    pf[5].bST = HAL_GPIO_ReadPin(PF_ST5_6_GPIO_Port, PF_ST5_6_Pin) == GPIO_PIN_SET;
+    pf[6].bST = HAL_GPIO_ReadPin(PF_ST7_8_GPIO_Port, PF_ST7_8_Pin) == GPIO_PIN_SET;
+    pf[7].bST = HAL_GPIO_ReadPin(PF_ST7_8_GPIO_Port, PF_ST7_8_Pin) == GPIO_PIN_SET;
 
     //=====================================================================================================
     // Update digital inputs
@@ -603,14 +614,14 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 9;
       stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = pf[0].nOC_ResetCount;
-      nCanTxData[1] = pf[1].nOC_ResetCount;
-      nCanTxData[2] = pf[2].nOC_ResetCount;
-      nCanTxData[3] = pf[3].nOC_ResetCount;
-      nCanTxData[4] = pf[4].nOC_ResetCount;
-      nCanTxData[5] = pf[5].nOC_ResetCount;
-      nCanTxData[6] = pf[6].nOC_ResetCount;
-      nCanTxData[7] = pf[7].nOC_ResetCount;
+      nCanTxData[0] = pf[0].nOC_Count;
+      nCanTxData[1] = pf[1].nOC_Count;
+      nCanTxData[2] = pf[2].nOC_Count;
+      nCanTxData[3] = pf[3].nOC_Count;
+      nCanTxData[4] = pf[4].nOC_Count;
+      nCanTxData[5] = pf[5].nOC_Count;
+      nCanTxData[6] = pf[6].nOC_Count;
+      nCanTxData[7] = pf[7].nOC_Count;
 
       //=======================================================
       //Send CAN msg
@@ -706,54 +717,86 @@ void Profet_Default_Init(){
   pf[0].nNum = 0;
   pf[0].nIN_Port = PF_IN1_GPIO_Port;
   pf[0].nIN_Pin = PF_IN1_Pin;
-  pf[0].fKilis = 0.640;
+  pf[0].nDEN_Port = PF_DEN1_GPIO_Port;
+  pf[0].nDEN_Pin = PF_DEN1_Pin;
+  pf[0].fM = 0.155;
+  pf[0].fB = 10.0;
+  pf[0].fKILIS = 227000;
 
   pf[1].eModel = BTS7002_1EPP;
   pf[1].nNum = 1;
   pf[1].nIN_Port = PF_IN2_GPIO_Port;
   pf[1].nIN_Pin = PF_IN2_Pin;
-  pf[1].fKilis = 0.640;
+  pf[1].nDEN_Port = PF_DEN2_GPIO_Port;
+  pf[1].nDEN_Pin = PF_DEN2_Pin;
+  pf[1].fM = 0.155;
+  pf[1].fB = 10.0;
+  pf[1].fKILIS = 227000;
 
   pf[2].eModel = BTS7008_2EPA_CH1;
   pf[2].nNum = 2;
   pf[2].nIN_Port = PF_IN3_GPIO_Port;
   pf[2].nIN_Pin = PF_IN3_Pin;
-  pf[2].fKilis = 0.2;
+  pf[2].nDEN_Port = PF_DEN3_4_GPIO_Port;
+  pf[2].nDEN_Pin = PF_DEN3_4_Pin;
+  pf[2].fM = 0.050;
+  pf[2].fB = -7.7;
+  pf[2].fKILIS = 54000;
 
   pf[3].eModel = BTS7008_2EPA_CH2;
   pf[3].eState = OFF;
   pf[3].nNum = 3;
   pf[3].nIN_Port = PF_IN4_GPIO_Port;
   pf[3].nIN_Pin = PF_IN4_Pin;
-  pf[3].fKilis = 0.2;
+  pf[3].nDEN_Port = PF_DEN3_4_GPIO_Port;
+  pf[3].nDEN_Pin = PF_DEN3_4_Pin;
+  pf[3].fM = 0.050;
+  pf[3].fB = -7.7;
+  pf[3].fKILIS = 54000;
 
   pf[4].eModel = BTS724_CH1;
   pf[4].eState = OFF;
   pf[4].nNum = 4;
   pf[4].nIN_Port = PF_IN5_GPIO_Port;
   pf[4].nIN_Pin = PF_IN5_Pin;
-  pf[4].fKilis = 0.2;
+  pf[4].nDEN_Port = 0;
+  pf[4].nDEN_Pin = 0;
+  pf[4].fM = 0.0;
+  pf[4].fB = 0.0;
+  pf[4].fKILIS = 0;
 
   pf[5].eModel = BTS724_CH2;
   pf[5].eState = OFF;
   pf[5].nNum = 5;
   pf[5].nIN_Port = PF_IN6_GPIO_Port;
   pf[5].nIN_Pin = PF_IN6_Pin;
-  pf[5].fKilis = 0.2;
+  pf[5].nDEN_Port = 0;
+  pf[5].nDEN_Pin = 0;
+  pf[5].fM = 0.0;
+  pf[5].fB = 0.0;
+  pf[5].fKILIS = 0;
 
   pf[6].eModel = BTS724_CH3;
   pf[6].eState = OFF;
   pf[6].nNum = 6;
   pf[6].nIN_Port = PF_IN7_GPIO_Port;
   pf[6].nIN_Pin = PF_IN7_Pin;
-  pf[6].fKilis = 0.640;
+  pf[6].nDEN_Port = 0;
+  pf[6].nDEN_Pin = 0;
+  pf[6].fM = 0.0;
+  pf[6].fB = 0.0;
+  pf[6].fKILIS = 0;
 
   pf[7].eModel = BTS724_CH4;
   pf[7].eState = OFF;
   pf[7].nNum = 7;
   pf[7].nIN_Port = PF_IN8_GPIO_Port;
   pf[7].nIN_Pin = PF_IN8_Pin;
-  pf[7].fKilis = 0.640;
+  pf[7].nDEN_Port = 0;
+  pf[7].nDEN_Pin = 0;
+  pf[7].fM = 0.0;
+  pf[7].fB = 0.0;
+  pf[7].fKILIS = 0;
 }
 
 //******************************************************
@@ -767,12 +810,11 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
     pf[i].nIL_Limit = stPdmConfig.stOutput[i].nCurrentLimit;
-    pf[i].nIL_InRush_Limit = stPdmConfig.stOutput[i].nInrushLimit;
-    pf[i].nIL_InRush_Time = stPdmConfig.stOutput[i].nInrushTime;
-    //pf[i]. = stPdmConfig.stOutput[i].eResetMode;
-    //pf[i] = stPdmConfig.stOutput[i].nResetTime;
+    pf[i].nIL_InRushLimit = stPdmConfig.stOutput[i].nInrushLimit;
+    pf[i].nIL_InRushTime = stPdmConfig.stOutput[i].nInrushTime;
     pf[i].nOC_ResetLimit = stPdmConfig.stOutput[i].nResetLimit;
-
+    pf[i].nOC_ResetTime = stPdmConfig.stOutput[i].nResetTime;
+    pf[i].eResetMode = stPdmConfig.stOutput[i].eResetMode;
   }
 
   //Map the variable map first before using
