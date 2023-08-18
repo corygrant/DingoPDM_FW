@@ -560,7 +560,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[4].nEnabled = 1;
   pConfig->stOutput[4].nInput = 1;
-  pConfig->stOutput[4].nCurrentLimit = 80;
+  pConfig->stOutput[4].nCurrentLimit = 30;
   pConfig->stOutput[4].nInrushLimit = 160;
   pConfig->stOutput[4].nInrushTime = 2000;
   pConfig->stOutput[4].eResetMode = RESET_ENDLESS;
@@ -569,7 +569,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[5].nEnabled = 1;
   pConfig->stOutput[5].nInput = 2;
-  pConfig->stOutput[5].nCurrentLimit = 80;
+  pConfig->stOutput[5].nCurrentLimit = 30;
   pConfig->stOutput[5].nInrushLimit = 160;
   pConfig->stOutput[5].nInrushTime = 2000;
   pConfig->stOutput[5].eResetMode = RESET_ENDLESS;
@@ -578,7 +578,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[6].nEnabled = 1;
   pConfig->stOutput[6].nInput = 1;
-  pConfig->stOutput[6].nCurrentLimit = 150;
+  pConfig->stOutput[6].nCurrentLimit = 30;
   pConfig->stOutput[6].nInrushLimit = 300;
   pConfig->stOutput[6].nInrushTime = 2000;
   pConfig->stOutput[6].eResetMode = RESET_ENDLESS;
@@ -587,7 +587,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   pConfig->stOutput[7].nEnabled = 1;
   pConfig->stOutput[7].nInput = 2;
-  pConfig->stOutput[7].nCurrentLimit = 150;
+  pConfig->stOutput[7].nCurrentLimit = 30;
   pConfig->stOutput[7].nInrushLimit = 300;
   pConfig->stOutput[7].nInrushTime = 2000;
   pConfig->stOutput[7].eResetMode = RESET_ENDLESS;
@@ -801,18 +801,18 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 
   //Flasher
   pConfig->stFlasher[0].nEnabled = 1;
-  pConfig->stFlasher[0].nInput = 7;
+  pConfig->stFlasher[0].nInput = 2;
   pConfig->stFlasher[0].nFlashOnTime = 500;
   pConfig->stFlasher[0].nFlashOffTime = 500;
   pConfig->stFlasher[0].nSingleCycle = 0;
-  pConfig->stFlasher[0].nOutput = 10;
+  pConfig->stFlasher[0].nOutput = 1;
 
-  pConfig->stFlasher[1].nEnabled = 1;
-  pConfig->stFlasher[1].nInput = 8;
-  pConfig->stFlasher[1].nFlashOnTime = 250;
-  pConfig->stFlasher[1].nFlashOffTime = 250;
+  pConfig->stFlasher[1].nEnabled = 0;
+  pConfig->stFlasher[1].nInput = 0;
+  pConfig->stFlasher[1].nFlashOnTime = 0;
+  pConfig->stFlasher[1].nFlashOffTime = 0;
   pConfig->stFlasher[1].nSingleCycle = 0;
-  pConfig->stFlasher[1].nOutput = 11;
+  pConfig->stFlasher[1].nOutput = 0;
 
   pConfig->stFlasher[2].nEnabled = 0;
   pConfig->stFlasher[2].nInput = 0;
@@ -1111,74 +1111,62 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 0   None
 1   PDM In 1
 2   PDM In 2
-3   PDM In 3
-4   PDM In 4
-5   PDM In 5
-6   PDM In 6
-7   PDM In 7
-8   PDM In 8
-9   CAN In 1
-10  CAN In 2
-11  CAN In 3
-12  CAN In 4
-13  CAN In 5
-14  CAN In 6
-15  CAN In 7
-16  CAN In 8
-17  CAN In 9
-18  CAN In 10
-19  CAN In 11
-20  CAN In 12
-21  CAN In 13
-22  CAN In 14
-23  CAN In 15
-24  CAN In 16
-25  CAN In 17
-26  CAN In 18
-27  CAN In 19
-28  CAN In 20
-29  CAN In 21
-30  CAN In 22
-31  CAN In 23
-32  CAN In 24
-33  CAN In 25
-34  CAN In 26
-35  CAN In 27
-36  CAN In 28
-37  CAN In 29
-38  CAN In 30
-39  Virtual In 1
-40  Virtual In 2
-41  Virtual In 3
-42  Virtual In 4
-43  Virtual In 5
-44  Virtual In 6
-45  Virtual In 7
-46  Virtual In 8
-47  Virtual In 9
-48  Virtual In 10
-49  Virtual In 11
-50  Virtual In 12
-51  Virtual In 13
-52  Virtual In 14
-53  Virtual In 15
-54  Virtual In 16
-55  Virtual In 17
-56  Virtual In 18
-57  Virtual In 19
-58  Virtual In 20
-59  Output 1
-60  Output 2
-61  Output 3
-62  Output 4
-63  Output 5
-64  Output 6
-65  Output 7
-66  Output 8
-67  Output 9
-68  Output 10
-69  Output 11
-70  Output 12
-71  Wiper Slow Out
-72  Wiper Fast Out
+3   CAN In 1
+4   CAN In 2
+5   CAN In 3
+6   CAN In 4
+7   CAN In 5
+8   CAN In 6
+9   CAN In 7
+10  CAN In 8
+11  CAN In 9
+12  CAN In 10
+13  CAN In 11
+14  CAN In 12
+15  CAN In 13
+16  CAN In 14
+17  CAN In 15
+18  CAN In 16
+19  CAN In 17
+20  CAN In 18
+21  CAN In 19
+22  CAN In 20
+23  CAN In 21
+24  CAN In 22
+25  CAN In 23
+26  CAN In 24
+27  CAN In 25
+28  CAN In 26
+29  CAN In 27
+30  CAN In 28
+31  CAN In 29
+32  CAN In 30
+33  CAN In 31
+34  CAN In 32
+35  Virtual In 1
+36  Virtual In 2
+37  Virtual In 3
+38  Virtual In 4
+39  Virtual In 5
+40  Virtual In 6
+41  Virtual In 7
+42  Virtual In 8
+43  Virtual In 9
+44  Virtual In 10
+45  Virtual In 11
+46  Virtual In 12
+47  Virtual In 13
+48  Virtual In 14
+49  Virtual In 15
+50  Virtual In 16
+51  Output 1
+52  Output 2
+53  Output 3
+54  Output 4
+55  Output 5
+56  Output 6
+57  Output 7
+58  Output 8
+59  Wiper Slow Out
+60  Wiper Fast Out
  */

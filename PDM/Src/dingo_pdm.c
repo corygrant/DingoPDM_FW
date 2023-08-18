@@ -569,18 +569,18 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       for(int p=0; p<600; p++)
 
       //=======================================================
-      //Build Msg 7 (Unused)
+      //Build Msg 7 (Out 5-8 Current Limit)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 7;
       stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = 0;
-      nCanTxData[1] = 0;
-      nCanTxData[2] = 0;
-      nCanTxData[3] = 0;
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
+      nCanTxData[0] = pf[4].nIL_Limit >> 8;
+      nCanTxData[1] = pf[4].nIL_Limit;
+      nCanTxData[2] = pf[5].nIL_Limit >> 8;
+      nCanTxData[3] = pf[5].nIL_Limit;
+      nCanTxData[4] = pf[6].nIL_Limit >> 8;
+      nCanTxData[5] = pf[6].nIL_Limit;
+      nCanTxData[6] = pf[7].nIL_Limit >> 8;
+      nCanTxData[7] = pf[7].nIL_Limit;
 
       //=======================================================
       //Send CAN msg
@@ -795,6 +795,12 @@ void Profet_Default_Init(){
 //******************************************************
 uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 {
+
+  //if(MB85RC_CheckId(hi2c1, MB85RC_ADDRESS) != HAL_OK)
+  //{
+    //return PDM_NOK;
+  //}
+
   PdmConfig_SetDefault(&stPdmConfig);
 
   //Map config to profet values
@@ -815,18 +821,18 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 
   //CAN inputs
   for(int i=0; i<PDM_NUM_CAN_INPUTS; i++)
-    pVariableMap[i + 9] = &nCanInputs[i];
+    pVariableMap[i + 3] = &nCanInputs[i];
 
   for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
-    pVariableMap[i + 39] = &nVirtInputs[i];
+    pVariableMap[i + 35] = &nVirtInputs[i];
 
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    pVariableMap[i + 59] = &nOutputs[i];
+    pVariableMap[i + 51] = &nOutputs[i];
   }
 
-  pVariableMap[71] = &stWiper.nSlowOut;
-  pVariableMap[72] = &stWiper.nFastOut;
+  pVariableMap[59] = &stWiper.nSlowOut;
+  pVariableMap[60] = &stWiper.nFastOut;
 
   //Assign variable map values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
