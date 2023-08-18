@@ -25,7 +25,6 @@
 /* USER CODE END 0 */
 
 
-
 /* IWDG init function */
 void MX_IWDG_Init(void)
 {

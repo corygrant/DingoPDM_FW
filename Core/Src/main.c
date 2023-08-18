@@ -22,9 +22,11 @@
 #include "cmsis_os.h"
 #include "adc.h"
 #include "can.h"
+#include "crc.h"
 #include "dma.h"
 #include "i2c.h"
 #include "iwdg.h"
+#include "usb_device.h"
 #include "gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -102,7 +104,8 @@ int main(void)
   MX_CAN_Init();
   MX_I2C1_Init();
   MX_ADC1_Init();
-  //MX_IWDG_Init();
+  MX_ADC2_Init();
+  MX_CRC_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -165,8 +168,9 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
-  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_I2C1;
+  PeriphClkInit.PeriphClockSelection = RCC_PERIPHCLK_USB|RCC_PERIPHCLK_I2C1;
   PeriphClkInit.I2c1ClockSelection = RCC_I2C1CLKSOURCE_SYSCLK;
+  PeriphClkInit.USBClockSelection = RCC_USBCLKSOURCE_PLL_DIV1_5;
   if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInit) != HAL_OK)
   {
     Error_Handler();

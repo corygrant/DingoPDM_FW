@@ -1,13 +1,13 @@
 /* USER CODE BEGIN Header */
 /**
   ******************************************************************************
-  * @file    adc.h
+  * @file    crc.h
   * @brief   This file contains all the function prototypes for
-  *          the adc.c file
+  *          the crc.c file
   ******************************************************************************
   * @attention
   *
-  * Copyright (c) 2022 STMicroelectronics.
+  * Copyright (c) 2023 STMicroelectronics.
   * All rights reserved.
   *
   * This software is licensed under terms that can be found in the LICENSE file
@@ -18,8 +18,8 @@
   */
 /* USER CODE END Header */
 /* Define to prevent recursive inclusion -------------------------------------*/
-#ifndef __ADC_H__
-#define __ADC_H__
+#ifndef __CRC_H__
+#define __CRC_H__
 
 #ifdef __cplusplus
 extern "C" {
@@ -32,19 +32,13 @@ extern "C" {
 
 /* USER CODE END Includes */
 
-extern ADC_HandleTypeDef hadc1;
-
-extern ADC_HandleTypeDef hadc2;
-
-extern ADC_HandleTypeDef hadc4;
+extern CRC_HandleTypeDef hcrc;
 
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */
 
-void MX_ADC1_Init(void);
-void MX_ADC2_Init(void);
-void MX_ADC4_Init(void);
+void MX_CRC_Init(void);
 
 /* USER CODE BEGIN Prototypes */
 
@@ -54,5 +48,5 @@ void MX_ADC4_Init(void);
 }
 #endif
 
-#endif /* __ADC_H__ */
+#endif /* __CRC_H__ */
 
