@@ -56,9 +56,9 @@ typedef struct{
 typedef struct{
   uint8_t nEnabled;
   bool* pInput;
-  PushbuttonMode_t eMode;
-  PushbuttonConfig_t ePbConfig;
-  uint16_t nOnLevel;
+  InputMode_t eMode;
+  InputVars_t stInVars;
+  bool bInvert;
   uint16_t nDebounceTime;
 } PdmConfig_Input_t;
 
@@ -75,8 +75,8 @@ typedef struct{
   uint8_t nNot2;
   uint8_t nVar2;
   uint16_t* pVar2;
-  PushbuttonMode_t eMode;
-  PushbuttonConfig_t ePbConfig;
+  InputMode_t eMode;
+  InputVars_t stInVars;
 } PdmConfig_VirtualInput_t;
 
 typedef struct{
@@ -134,8 +134,8 @@ typedef struct{
   uint16_t nHighByte;
   PdmConfig_Operator_t eOperator;
   uint16_t nOnVal;
-  PushbuttonMode_t eMode;
-  PushbuttonConfig_t ePbConfig;
+  InputMode_t eMode;
+  InputVars_t stInVars;
 } PdmConfig_CanInput_t;
 
 typedef struct{

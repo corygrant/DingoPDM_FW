@@ -43,7 +43,7 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
   //Only 2 conditions
   if(pIn->nVar2 == 0)
   {
-    CheckInput(&pIn->ePbConfig, pIn->eMode, nResultSec0, pResult, NO_DEBOUNCE);
+    CheckInput(&pIn->stInVars, pIn->eMode, false, nResultSec0, pResult, NO_DEBOUNCE);
     return;
   }
   else
@@ -55,13 +55,13 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
     switch(pIn->eCond0)
     {
     case COND_AND:
-      CheckInput(&pIn->ePbConfig, pIn->eMode, nResultSec0 && nResult2, pResult, NO_DEBOUNCE);
+      CheckInput(&pIn->stInVars, pIn->eMode, false, nResultSec0 && nResult2, pResult, NO_DEBOUNCE);
       return;
     case COND_OR:
-      CheckInput(&pIn->ePbConfig, pIn->eMode, nResultSec0 || nResult2, pResult, NO_DEBOUNCE);
+      CheckInput(&pIn->stInVars, pIn->eMode, false, nResultSec0 || nResult2, pResult, NO_DEBOUNCE);
       return;
     case COND_NOR:
-      CheckInput(&pIn->ePbConfig, pIn->eMode, !nResultSec0 || !nResult2, pResult, NO_DEBOUNCE);
+      CheckInput(&pIn->stInVars, pIn->eMode, false, !nResultSec0 || !nResult2, pResult, NO_DEBOUNCE);
       return;
     }
   }

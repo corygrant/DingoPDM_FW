@@ -513,17 +513,17 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Inputs
   pConfig->stInput[0].nEnabled = 1;
   pConfig->stInput[0].eMode = MODE_MOMENTARY;
-  pConfig->stInput[0].nOnLevel = 0;
+  pConfig->stInput[0].bInvert = true;
   pConfig->stInput[0].nDebounceTime = 20;
 
   pConfig->stInput[1].nEnabled = 1;
   pConfig->stInput[1].eMode = MODE_MOMENTARY;
-  pConfig->stInput[1].nOnLevel = 0;
+  pConfig->stInput[1].bInvert = true;
   pConfig->stInput[1].nDebounceTime = 20;
 
   //Outputs
   pConfig->stOutput[0].nEnabled = 1;
-  pConfig->stOutput[0].nInput = 1;
+  pConfig->stOutput[0].nInput = 35;
   pConfig->stOutput[0].nCurrentLimit = 250; //Current * 10
   pConfig->stOutput[0].nInrushLimit = 300; //Current * 10
   pConfig->stOutput[0].nInrushTime = 2000; //ms
@@ -532,7 +532,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[0].nResetLimit = 3; //count
 
   pConfig->stOutput[1].nEnabled = 1;
-  pConfig->stOutput[1].nInput = 2;
+  pConfig->stOutput[1].nInput = 35;
   pConfig->stOutput[1].nCurrentLimit = 250;
   pConfig->stOutput[1].nInrushLimit = 300;
   pConfig->stOutput[1].nInrushTime = 2000;
@@ -541,7 +541,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[1].nResetLimit = 2;
 
   pConfig->stOutput[2].nEnabled = 1;
-  pConfig->stOutput[2].nInput = 1;
+  pConfig->stOutput[2].nInput = 35;
   pConfig->stOutput[2].nCurrentLimit = 130;
   pConfig->stOutput[2].nInrushLimit = 160;
   pConfig->stOutput[2].nInrushTime = 2000;
@@ -550,7 +550,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[2].nResetLimit = 3;
 
   pConfig->stOutput[3].nEnabled = 1;
-  pConfig->stOutput[3].nInput = 2;
+  pConfig->stOutput[3].nInput = 35;
   pConfig->stOutput[3].nCurrentLimit = 130;
   pConfig->stOutput[3].nInrushLimit = 160;
   pConfig->stOutput[3].nInrushTime = 2000;
@@ -559,7 +559,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[3].nResetLimit = 2;
 
   pConfig->stOutput[4].nEnabled = 1;
-  pConfig->stOutput[4].nInput = 1;
+  pConfig->stOutput[4].nInput = 35;
   pConfig->stOutput[4].nCurrentLimit = 30;
   pConfig->stOutput[4].nInrushLimit = 160;
   pConfig->stOutput[4].nInrushTime = 2000;
@@ -568,7 +568,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[4].nResetLimit = 2;
 
   pConfig->stOutput[5].nEnabled = 1;
-  pConfig->stOutput[5].nInput = 2;
+  pConfig->stOutput[5].nInput = 35;
   pConfig->stOutput[5].nCurrentLimit = 30;
   pConfig->stOutput[5].nInrushLimit = 160;
   pConfig->stOutput[5].nInrushTime = 2000;
@@ -577,7 +577,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[5].nResetLimit = 2;
 
   pConfig->stOutput[6].nEnabled = 1;
-  pConfig->stOutput[6].nInput = 1;
+  pConfig->stOutput[6].nInput = 35;
   pConfig->stOutput[6].nCurrentLimit = 30;
   pConfig->stOutput[6].nInrushLimit = 300;
   pConfig->stOutput[6].nInrushTime = 2000;
@@ -586,7 +586,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[6].nResetLimit = 2;
 
   pConfig->stOutput[7].nEnabled = 1;
-  pConfig->stOutput[7].nInput = 2;
+  pConfig->stOutput[7].nInput = 35;
   pConfig->stOutput[7].nCurrentLimit = 30;
   pConfig->stOutput[7].nInrushLimit = 300;
   pConfig->stOutput[7].nInrushTime = 2000;
@@ -595,16 +595,16 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stOutput[7].nResetLimit = 2;
 
   //Virtual Inputs
-  pConfig->stVirtualInput[0].nEnabled = 0;
+  pConfig->stVirtualInput[0].nEnabled = 1;
   pConfig->stVirtualInput[0].nNot0 = 0;
-  pConfig->stVirtualInput[0].nVar0 = 10;
+  pConfig->stVirtualInput[0].nVar0 = 1;
   pConfig->stVirtualInput[0].eCond0 = COND_AND;
-  pConfig->stVirtualInput[0].nNot1 = 1;
-  pConfig->stVirtualInput[0].nVar1 = 63;
+  pConfig->stVirtualInput[0].nNot1 = 0;
+  pConfig->stVirtualInput[0].nVar1 = 2;
   pConfig->stVirtualInput[0].eCond1 = COND_OR;
   pConfig->stVirtualInput[0].nNot2 = 0;
   pConfig->stVirtualInput[0].nVar2 = 0;
-  pConfig->stVirtualInput[0].eMode = MODE_LATCHING;
+  pConfig->stVirtualInput[0].eMode = MODE_MOMENTARY;
 
   pConfig->stVirtualInput[1].nEnabled = 0;
   pConfig->stVirtualInput[1].nNot0 = 0;

@@ -405,8 +405,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 0;
       stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = bUserDigInput[0];
-      nCanTxData[1] = bUserDigInput[1];
+      nCanTxData[0] = nPdmInputs[0];
+      nCanTxData[1] = nPdmInputs[1];
       nCanTxData[2] = 0;
       nCanTxData[3] = 0;
       nCanTxData[4] = 0;

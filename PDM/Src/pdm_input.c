@@ -12,9 +12,5 @@ void EvaluateInput(PdmConfig_Input_t *pIn, uint16_t* pResult)
   if(!pIn->nEnabled)
     return;
 
-  uint16_t nLogicResult;
-
-  nLogicResult = *pIn->pInput > pIn->nOnLevel;
-
-  CheckInput(&pIn->ePbConfig, pIn->eMode, nLogicResult, pResult, pIn->nDebounceTime);
+  CheckInput(&pIn->stInVars, pIn->eMode, pIn->bInvert, *pIn->pInput, pResult, pIn->nDebounceTime);
 }
