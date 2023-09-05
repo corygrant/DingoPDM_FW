@@ -193,7 +193,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
   }
   /* USER CODE BEGIN Callback 1 */
 #if( configGENERATE_RUN_TIME_STATS == 1)
-    if (htim->Instance == TIM6) {
+    if (htim->Instance == TIM1) {
       IncrementRuntimeStats();
     }
 #endif
