@@ -14,6 +14,11 @@
 #include "stdio.h"
 #include "cmsis_os.h"
 
+#include "usbd_core.h"
+#include "usbd_def.h"
+#include "usbd_cdc.h"
+#include "usbd_desc.h"
+
 #include "msg_queue.h"
 #include "pdm_input.h"
 #include "starter.h"
@@ -26,6 +31,9 @@
 #include "wipers.h"
 
 //#define MEAS_HEAP_USE
+
+#define USBD_RX_DATA_SIZE  2048
+#define USBD_TX_DATA_SIZE  2048
 
 #define PDM_NOK 0
 #define PDM_OK 1
@@ -44,7 +52,12 @@ typedef enum{
 } CAN_BitRate_t;
 
 extern osMessageQueueId_t qMsgQueueRx;
-extern osMessageQueueId_t qMsgQueueTx;
+extern osMessageQueueId_t qMsgQueueUsbTx;
+extern osMessageQueueId_t qMsgQueueCanTx;
+
+extern USBD_CDC_ItfTypeDef USBD_Interface_PDM;
+uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len);
+uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[]);
 
 void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_HandleTypeDef* hi2c1);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);

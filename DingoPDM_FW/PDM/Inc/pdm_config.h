@@ -31,6 +31,8 @@
 
 #define PDM_VAR_MAP_SIZE 60
 
+#define CAN_TX_SETTING_ID_OFFSET 30
+
 typedef enum{
   OPER_EQUAL,
   OPER_GREATER_THAN,
@@ -159,7 +161,7 @@ typedef struct{
 uint8_t PdmConfig_Check(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig);
 uint8_t PdmConfig_Read(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig);
 uint8_t PdmConfig_Write(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pConfig);
-uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx, osMessageQueueId_t* qMsgQueueCanTx);
+uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
 void PdmConfig_SetDefault(PdmConfig_t* pConfig);
 
 #endif /* INC_PDM_CONFIG_H_ */

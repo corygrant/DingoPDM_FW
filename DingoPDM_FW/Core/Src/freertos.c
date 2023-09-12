@@ -85,7 +85,6 @@ void StartDefaultTask(void *argument);
 void StartCanTxTask(void *argument);
 //void KickIWDGCallback(void *argument);
 
-extern void MX_USB_DEVICE_Init(void);
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
 /**
@@ -121,10 +120,16 @@ void MX_FREERTOS_Init(void) {
     Error_Handler();
   }
 
-  qMsgQueueTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueTx_t), NULL);
-  if(qMsgQueueTx == NULL){
-    //TODO: Message queue not created
+  qMsgQueueUsbTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueUsbTx_t), NULL);
+  if(qMsgQueueUsbTx == NULL){
+   //TODO: Message queue not created
     Error_Handler();
+  }
+
+  qMsgQueueCanTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
+  if(qMsgQueueCanTx == NULL){
+    //TODO: Message queue not created
+	Error_Handler();
   }
   /* USER CODE END RTOS_QUEUES */
 
@@ -159,8 +164,6 @@ void MX_FREERTOS_Init(void) {
 /* USER CODE END Header_StartDefaultTask */
 void StartDefaultTask(void *argument)
 {
-  /* init code for USB_DEVICE */
-  MX_USB_DEVICE_Init();
   /* USER CODE BEGIN StartDefaultTask */
   PdmMainTask(&defaultTaskHandle, &hadc1, &hi2c1);
   /* USER CODE END StartDefaultTask */
