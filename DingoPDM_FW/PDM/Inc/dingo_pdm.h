@@ -32,6 +32,8 @@
 
 //#define MEAS_HEAP_USE
 
+#define SEND_ALL_USB
+
 #define USBD_RX_DATA_SIZE  2048
 #define USBD_TX_DATA_SIZE  2048
 

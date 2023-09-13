@@ -75,7 +75,7 @@ volatile uint16_t nILTotal;
 //========================================================================
 // User Digital Inputs
 //========================================================================
-bool bUserDigInput[PDM_NUM_INPUTS];
+bool bRawUserInput[PDM_NUM_INPUTS];
 
 //========================================================================
 // Output Logic
@@ -352,8 +352,11 @@ uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[])
 	nUsbData[20] = (aData[7] & 0x0F);
 	nUsbData[21] = '\r';
 
+	//Shift the data to ASCII, except the first 't'
 	for(uint8_t j = 1; j <= 20; j++){
 		if(nUsbData[j] < 0xA){
+		  //Less than 0xA is a number
+		  //Shift up to ASCII numbers
 			nUsbData[j] += 0x30;
 		}
 		else{
@@ -509,8 +512,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     //=====================================================================================================
     // Update digital inputs
     //=====================================================================================================
-    bUserDigInput[0] = HAL_GPIO_ReadPin(DIG_IN1_GPIO_Port, DIG_IN1_Pin) == GPIO_PIN_SET;
-    bUserDigInput[1] = HAL_GPIO_ReadPin(DIG_IN2_GPIO_Port, DIG_IN2_Pin) == GPIO_PIN_SET;
+    bRawUserInput[0] = HAL_GPIO_ReadPin(DIG_IN1_GPIO_Port, DIG_IN1_Pin) == GPIO_PIN_SET;
+    bRawUserInput[1] = HAL_GPIO_ReadPin(DIG_IN2_GPIO_Port, DIG_IN2_Pin) == GPIO_PIN_SET;
 
     //=====================================================================================================
     // Compound Input/Output Logic
@@ -659,7 +662,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
     if(stPdmConfig.stCanOutput.nEnabled &&
         (stPdmConfig.stCanOutput.nUpdateTime > 0) &&
         stPdmConfig.stCanOutput.nBaseId > 0 &&
-        stPdmConfig.stCanOutput.nBaseId < 2048){
+        stPdmConfig.stCanOutput.nBaseId < 2048){ //2047 = max 11bit ID
 
       MsgQueueCanTx_t stMsgCanTx;
 
@@ -701,7 +704,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -726,7 +731,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -751,7 +758,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -776,7 +785,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -801,7 +812,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -826,7 +839,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -851,7 +866,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -876,7 +893,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -901,7 +920,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -926,7 +947,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -951,7 +974,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //=======================================================
       //Send CAN msg
       //=======================================================
+#ifdef SEND_ALL_USB
       USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
@@ -977,7 +1002,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1002,7 +1029,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1027,7 +1056,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1052,7 +1083,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1077,7 +1110,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1102,7 +1137,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1127,7 +1164,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           //=======================================================
           //Send CAN msg
           //=======================================================
+#ifdef SEND_ALL_USB
           USBD_CDC_Transmit_SLCAN(&stCanTxHeader, nCanTxData);
+#endif
           if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
             Error_Handler();
           }
@@ -1287,14 +1326,23 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   //Map the variable map first before using
   //User inputs
   for(int i=0; i<PDM_NUM_INPUTS; i++)
+  {
+    nPdmInputs[i] = 0;
     pVariableMap[i+1] = &nPdmInputs[i];
+  }
 
   //CAN inputs
   for(int i=0; i<PDM_NUM_CAN_INPUTS; i++)
+  {
+    nCanInputs[i] = 0;
     pVariableMap[i + 3] = &nCanInputs[i];
+  }
 
   for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
+  {
+    nVirtInputs[i] = 0;
     pVariableMap[i + 35] = &nVirtInputs[i];
+  }
 
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
@@ -1313,7 +1361,12 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   //Map input values to config structure
   for(int i=0; i<PDM_NUM_INPUTS; i++)
   {
-    stPdmConfig.stInput[i].pInput = &bUserDigInput[i];
+    stPdmConfig.stInput[i].pInput = &bRawUserInput[i];
+
+    //If inverted, set last state to true to detect starting as false
+    if(stPdmConfig.stInput[i].bInvert){
+      stPdmConfig.stInput[i].stInVars.bLastState = true;
+    }
   }
 
   for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
