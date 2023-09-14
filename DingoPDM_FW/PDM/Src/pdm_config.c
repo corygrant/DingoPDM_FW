@@ -114,14 +114,14 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 						pConfig->stInput[nIndex].nEnabled = (stMsgRx->nRxData[1] & 0x01);
 						pConfig->stInput[nIndex].eMode = (stMsgRx->nRxData[1] & 0x06) >> 1;
 						pConfig->stInput[nIndex].bInvert = (stMsgRx->nRxData[1] & 0x08) >> 3;
-						pConfig->stInput[nIndex].nDebounceTime = stMsgRx->nRxData[2] * 100;
+						pConfig->stInput[nIndex].nDebounceTime = stMsgRx->nRxData[2] * 10;
         	}
 
         	stMsgCanTx.stTxHeader.DLC = 3;
 
 					stMsgCanTx.nTxData[0] = MSG_TX_SET_INPUTS;
-					stMsgCanTx.nTxData[1] = ((nIndex & 0x0F) << 4) + ((pConfig->stInput[nIndex].eMode & 0x03) << 2) + (pConfig->stInput[nIndex].nEnabled & 0x01);
-					stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stInput[nIndex].nDebounceTime / 100);
+					stMsgCanTx.nTxData[1] = ((nIndex & 0x0F) << 4) + ((pConfig->stInput[nIndex].bInvert & 0x01) << 3) + ((pConfig->stInput[nIndex].eMode & 0x03) << 1) + (pConfig->stInput[nIndex].nEnabled & 0x01);
+					stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stInput[nIndex].nDebounceTime / 10);
 					stMsgCanTx.nTxData[3] = 0;
 					stMsgCanTx.nTxData[4] = 0;
 					stMsgCanTx.nTxData[5] = 0;
@@ -148,9 +148,9 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 						pConfig->stOutput[nIndex].nCurrentLimit = stMsgRx->nRxData[3] / 10;
 						pConfig->stOutput[nIndex].eResetMode = (stMsgRx->nRxData[4] & 0x0F);
 						pConfig->stOutput[nIndex].nResetLimit = (stMsgRx->nRxData[4] & 0xF0) >> 4;
-						pConfig->stOutput[nIndex].nResetTime = stMsgRx->nRxData[5] * 100;
+						pConfig->stOutput[nIndex].nResetTime = stMsgRx->nRxData[5] * 10;
 						pConfig->stOutput[nIndex].nInrushLimit = stMsgRx->nRxData[6] / 10;
-						pConfig->stOutput[nIndex].nInrushTime = stMsgRx->nRxData[7] * 100;
+						pConfig->stOutput[nIndex].nInrushTime = stMsgRx->nRxData[7] * 10;
         	}
 
         	stMsgCanTx.stTxHeader.DLC = 8;
@@ -160,9 +160,9 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 					stMsgCanTx.nTxData[2] = pConfig->stOutput[nIndex].nInput;
 					stMsgCanTx.nTxData[3] = (uint8_t)(pConfig->stOutput[nIndex].nCurrentLimit * 10);
 					stMsgCanTx.nTxData[4] = ((pConfig->stOutput[nIndex].nResetLimit & 0x0F) << 4) + (pConfig->stOutput[nIndex].eResetMode & 0x0F);
-					stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stOutput[nIndex].nResetTime / 100);
+					stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stOutput[nIndex].nResetTime / 10);
 					stMsgCanTx.nTxData[6] = (uint8_t)(pConfig->stOutput[nIndex].nInrushLimit * 10);
-					stMsgCanTx.nTxData[7] = (uint8_t)(pConfig->stOutput[nIndex].nInrushTime / 100);
+					stMsgCanTx.nTxData[7] = (uint8_t)(pConfig->stOutput[nIndex].nInrushTime / 10);
 
 					stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 					osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
@@ -201,7 +201,7 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
           stMsgCanTx.nTxData[3] = pConfig->stVirtualInput[nIndex].nVar0;
           stMsgCanTx.nTxData[4] = pConfig->stVirtualInput[nIndex].nVar1;
           stMsgCanTx.nTxData[5] = pConfig->stVirtualInput[nIndex].nVar2;
-          stMsgCanTx.nTxData[6] = ((pConfig->stVirtualInput[nIndex].eMode & 0x0F) << 4) + ((pConfig->stVirtualInput[nIndex].eCond0 & 0x03) << 2) +
+          stMsgCanTx.nTxData[6] = ((pConfig->stVirtualInput[nIndex].eMode & 0x0F) << 6) + ((pConfig->stVirtualInput[nIndex].eCond0 & 0x03) << 2) +
                                   (pConfig->stVirtualInput[nIndex].eCond1 & 0x03);
           stMsgCanTx.nTxData[7] = 0;
 
@@ -299,22 +299,22 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
       if( (stMsgRx->nRxLen == 7) ||
       		(stMsgRx->nRxLen == 1)){
       	if(stMsgRx->nRxLen == 7){
-					pConfig->stWiper.nIntermitTime[0] = stMsgRx->nRxData[1] * 100;
-					pConfig->stWiper.nIntermitTime[1] = stMsgRx->nRxData[2] * 100;
-					pConfig->stWiper.nIntermitTime[2] = stMsgRx->nRxData[3] * 100;
-					pConfig->stWiper.nIntermitTime[3] = stMsgRx->nRxData[4] * 100;
-					pConfig->stWiper.nIntermitTime[4] = stMsgRx->nRxData[5] * 100;
-					pConfig->stWiper.nIntermitTime[5] = stMsgRx->nRxData[6] * 100;
+					pConfig->stWiper.nIntermitTime[0] = stMsgRx->nRxData[1] * 10;
+					pConfig->stWiper.nIntermitTime[1] = stMsgRx->nRxData[2] * 10;
+					pConfig->stWiper.nIntermitTime[2] = stMsgRx->nRxData[3] * 10;
+					pConfig->stWiper.nIntermitTime[3] = stMsgRx->nRxData[4] * 10;
+					pConfig->stWiper.nIntermitTime[4] = stMsgRx->nRxData[5] * 10;
+					pConfig->stWiper.nIntermitTime[5] = stMsgRx->nRxData[6] * 10;
       	}
         stMsgCanTx.stTxHeader.DLC = 7;
 
         stMsgCanTx.nTxData[0] = MSG_TX_SET_WIPER_DELAYS;
-        stMsgCanTx.nTxData[1] = (uint8_t)(pConfig->stWiper.nIntermitTime[0] / 100);
-        stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stWiper.nIntermitTime[1] / 100);
-        stMsgCanTx.nTxData[3] = (uint8_t)(pConfig->stWiper.nIntermitTime[2] / 100);
-        stMsgCanTx.nTxData[4] = (uint8_t)(pConfig->stWiper.nIntermitTime[3] / 100);
-        stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stWiper.nIntermitTime[4] / 100);
-        stMsgCanTx.nTxData[6] = (uint8_t)(pConfig->stWiper.nIntermitTime[5] / 100);
+        stMsgCanTx.nTxData[1] = (uint8_t)(pConfig->stWiper.nIntermitTime[0] / 10);
+        stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stWiper.nIntermitTime[1] / 10);
+        stMsgCanTx.nTxData[3] = (uint8_t)(pConfig->stWiper.nIntermitTime[2] / 10);
+        stMsgCanTx.nTxData[4] = (uint8_t)(pConfig->stWiper.nIntermitTime[3] / 10);
+        stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stWiper.nIntermitTime[4] / 10);
+        stMsgCanTx.nTxData[6] = (uint8_t)(pConfig->stWiper.nIntermitTime[5] / 10);
         stMsgCanTx.nTxData[7] = 0;
 
         stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
@@ -338,9 +338,9 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 
 						pConfig->stFlasher[nIndex].nOutput = stMsgRx->nRxData[3];
 
-						pConfig->stFlasher[nIndex].nFlashOnTime = stMsgRx->nRxData[4] * 100;
+						pConfig->stFlasher[nIndex].nFlashOnTime = stMsgRx->nRxData[4] * 10;
 
-						pConfig->stFlasher[nIndex].nFlashOffTime = stMsgRx->nRxData[5] * 100;
+						pConfig->stFlasher[nIndex].nFlashOffTime = stMsgRx->nRxData[5] * 10;
         	}
         	stMsgCanTx.stTxHeader.DLC = 6;
 
@@ -349,8 +349,8 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueu
 																	(pConfig->stFlasher[nIndex].nEnabled & 0x01);
 					stMsgCanTx.nTxData[2] = pConfig->stFlasher[nIndex].nInput;
 					stMsgCanTx.nTxData[3] = pConfig->stFlasher[nIndex].nOutput;
-					stMsgCanTx.nTxData[4] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOnTime / 100);
-					stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOffTime / 100);
+					stMsgCanTx.nTxData[4] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOnTime / 10);
+					stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOffTime / 10);
 					stMsgCanTx.nTxData[6] = 0;
 					stMsgCanTx.nTxData[7] = 0;
 
