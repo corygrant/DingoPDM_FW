@@ -36,8 +36,8 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define MSGQUEUE_RX_SIZE 16
-#define MSGQUEUE_TX_SIZE 16
+#define MSGQUEUE_RX_SIZE 64
+#define MSGQUEUE_TX_SIZE 64
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/

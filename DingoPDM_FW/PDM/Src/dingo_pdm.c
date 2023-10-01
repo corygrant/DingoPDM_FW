@@ -45,7 +45,7 @@
 // CAN
 //========================================================================
 #define CAN_TX_BASE_ID 2000
-#define CAN_TX_MSG_SPLIT 1 //ms
+#define CAN_TX_MSG_SPLIT 2 //ms
 
 //========================================================================
 // STM Internal Calibration Voltages
@@ -571,9 +571,9 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 
     	  //Check special number sequence
     	  if(stMsgRx.nRxLen == 4){
-					if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 23) && (stMsgRx.nRxData[3] == 20)){
+					if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 3) && (stMsgRx.nRxData[3] == 8)){
 						//Write settings to FRAM
-						uint8_t nRet = 0;// PdmConfig_Write(hi2c2, MB85RC_ADDRESS, &stPdmConfig);
+						uint8_t nRet = PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
 
 						MsgQueueCanTx_t stMsgCanTx;
 
@@ -595,8 +595,10 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     	  }
     	}
 
-			//Check for settings change messages
-			PdmConfig_Set(&stPdmConfig, &stMsgRx, &qMsgQueueCanTx);
+			//Check for settings change or request message
+      if(stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId - 1){
+        PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueCanTx);
+      }
     }
 
 #ifdef MEAS_HEAP_USE
@@ -1213,7 +1215,6 @@ void OutputLogic(){
   //Copy output logic to profet requested state
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    //pf[i].eReqState = 1;
     pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
   }
 }
@@ -1236,7 +1237,7 @@ void Profet_Default_Init(){
   pf[0].nIN_Pin = PF_IN1_Pin;
   pf[0].nDEN_Port = PF_DEN1_GPIO_Port;
   pf[0].nDEN_Pin = PF_DEN1_Pin;
-  pf[0].fKILIS = 254795;//227000;
+  pf[0].fKILIS = 254795;
 
   pf[1].eModel = BTS7002_1EPP;
   pf[1].nNum = 1;
@@ -1244,7 +1245,7 @@ void Profet_Default_Init(){
   pf[1].nIN_Pin = PF_IN2_Pin;
   pf[1].nDEN_Port = PF_DEN2_GPIO_Port;
   pf[1].nDEN_Pin = PF_DEN2_Pin;
-  pf[1].fKILIS = 254795;//227000;
+  pf[1].fKILIS = 254795;
 
   pf[2].eModel = BTS7008_2EPA_CH1;
   pf[2].nNum = 2;
@@ -1252,7 +1253,7 @@ void Profet_Default_Init(){
   pf[2].nIN_Pin = PF_IN3_Pin;
   pf[2].nDEN_Port = PF_DEN3_4_GPIO_Port;
   pf[2].nDEN_Pin = PF_DEN3_4_Pin;
-  pf[2].fKILIS = 59258;//54000;
+  pf[2].fKILIS = 59258;
 
   pf[3].eModel = BTS7008_2EPA_CH2;
   pf[3].eState = OFF;
@@ -1261,7 +1262,7 @@ void Profet_Default_Init(){
   pf[3].nIN_Pin = PF_IN4_Pin;
   pf[3].nDEN_Port = PF_DEN3_4_GPIO_Port;
   pf[3].nDEN_Pin = PF_DEN3_4_Pin;
-  pf[3].fKILIS = 59258;//54000;
+  pf[3].fKILIS = 59258;
 
   pf[4].eModel = BTS7008_2EPA_CH1;
   pf[4].eState = OFF;
@@ -1305,12 +1306,21 @@ void Profet_Default_Init(){
 //******************************************************
 uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 {
-  if(MB85RC_CheckId(hi2c1, MB85RC_ADDRESS) != HAL_OK)
-  {
-    return PDM_NOK;
-  }
-
   PdmConfig_SetDefault(&stPdmConfig);
+  PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
+
+   //Check that the data is correct, comms are OK, and FRAM device is the right ID
+  if(PdmConfig_Check(hi2c1, MB85RC_ADDRESS, &stPdmConfig) == PDM_OK)
+  {
+    if(PdmConfig_Read(hi2c1, MB85RC_ADDRESS, &stPdmConfig) != PDM_OK)
+    {
+      return PDM_NOK;
+    }
+  }
+  else
+  {
+    PdmConfig_SetDefault(&stPdmConfig);
+  }
 
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
@@ -1378,6 +1388,8 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 
   stWiper.nEnabled = stPdmConfig.stWiper.nEnabled;
   stWiper.eMode = stPdmConfig.stWiper.nMode;
+  //stPdmConfig.stWiper.nParkStopLevel;
+  stWiper.nWashWipeCycles = stPdmConfig.stWiper.nWashWipeCycles;
   stWiper.pSlowInput = pVariableMap[stPdmConfig.stWiper.nSlowInput];
   stWiper.pFastInput = pVariableMap[stPdmConfig.stWiper.nFastInput];
   stWiper.pInterInput = pVariableMap[stPdmConfig.stWiper.nInterInput];
