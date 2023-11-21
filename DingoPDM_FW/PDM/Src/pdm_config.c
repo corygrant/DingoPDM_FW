@@ -251,6 +251,7 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_S
 					pWiper->nEnabled = pConfig->stWiper.nEnabled;
 					pWiper->eMode = pConfig->stWiper.nMode;
 					//pConfig->stWiper.nWashWipeCycles;
+					pWiper->nParkStopLevel = pConfig->stWiper.nParkStopLevel;
 					pWiper->nWashWipeCycles = pConfig->stWiper.nWashWipeCycles;
 					pWiper->pSlowInput = pVariableMap[pConfig->stWiper.nSlowInput];
 					pWiper->pFastInput = pVariableMap[pConfig->stWiper.nFastInput];

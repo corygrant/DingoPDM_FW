@@ -122,5 +122,14 @@ void Profet_UpdateIS(volatile ProfetTypeDef *profet, volatile uint16_t newVal, v
   //Calculate current at ADC, multiply by kILIS ratio to get output current
   //Use the measured VDDA value to calculate volts/step
   //IL = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
-  profet->nIL = (uint16_t)((((float)newVal * (fVDDA / 4095)) / 1200) * profet->fKILIS);
+  uint16_t nNewIL = (uint16_t)((((float)newVal * (fVDDA / 4095)) / 1200) * profet->fKILIS);
+
+  //Ignore current less than or equal to 0.2A
+  //Not capable of measuring that low
+  //Noise causes small blips in current when output is off
+  if(nNewIL <= 2){
+    profet->nIL = 0;
+  }else{
+    profet->nIL = nNewIL;
+  }
 }

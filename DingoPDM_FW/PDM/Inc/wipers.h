@@ -71,6 +71,7 @@ typedef struct
   uint16_t nSlowOut;
   uint16_t nFastOut;
   uint16_t* pParkSw;
+  uint8_t nParkStopLevel;
   uint16_t nInterDelays[6];
   uint16_t* pSwipeInput;
   uint16_t* pWashInput;

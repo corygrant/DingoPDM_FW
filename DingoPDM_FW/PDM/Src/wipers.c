@@ -12,6 +12,7 @@ static void Parked(Wiper_t* wiper)
   //Set motor to off
   wiper->nSlowOut = 0;
   wiper->nFastOut = 0;
+  wiper->eSelectedSpeed = PARK;
 
   switch(wiper->eMode){
   case MODE_DIG_IN:
@@ -19,18 +20,21 @@ static void Parked(Wiper_t* wiper)
       wiper->nSlowOut = 1;
       wiper->nFastOut = 0;
       wiper->eState = INTER_ON;
+      wiper->eSelectedSpeed = INTER_1;
     }
 
     if(*wiper->pSlowInput){
       wiper->nSlowOut = 1;
       wiper->nFastOut = 0;
       wiper->eState = SLOW_ON;
+      wiper->eSelectedSpeed = SLOW;
     }
 
     if(*wiper->pFastInput){
       wiper->nSlowOut = 1;
       wiper->nFastOut = 1;
       wiper->eState = FAST_ON;
+      wiper->eSelectedSpeed = FAST;
     }
     break;
 
@@ -142,7 +146,9 @@ static void Parking(Wiper_t* wiper)
   }
 
   //Park detected - stop motor
-  if(!(*wiper->pParkSw))
+  //Park high or low depending on stop level
+  if( (!(*wiper->pParkSw) && !(wiper->nParkStopLevel)) ||
+      ((*wiper->pParkSw) && (wiper->nParkStopLevel == 1)))
   {
     wiper->nSlowOut = 0;
     wiper->nFastOut = 0;
@@ -628,7 +634,10 @@ void WiperSM(Wiper_t* wiper)
 {
   if(!(wiper->nEnabled == 1)) return;
 
-  wiper->eSelectedSpeed = wiper->eSpeedMap[*wiper->pSpeedInput];
+  if((wiper->eMode == MODE_MIX_IN) ||
+      (wiper->eMode == MODE_INT_IN)){
+    wiper->eSelectedSpeed = wiper->eSpeedMap[*wiper->pSpeedInput];
+  }
 
   switch(wiper->eState)
   {

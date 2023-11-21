@@ -960,12 +960,14 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       //for(int p=0; p<600; p++)
 
       //=======================================================
-      //Build Msg 10 (Unused)
+      //Build Msg 10 (Flashers 1-4)
       //=======================================================
       stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 10;
       stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = 0;
-      nCanTxData[1] = 0;
+      nCanTxData[0] = ((nOutputFlasher[stPdmConfig.stFlasher[3].nOutput] & 0x01) << 3) + ((nOutputFlasher[stPdmConfig.stFlasher[2].nOutput] & 0x01) << 2) +
+                      ((nOutputFlasher[stPdmConfig.stFlasher[1].nOutput] & 0x01) << 1) + (nOutputFlasher[stPdmConfig.stFlasher[0].nOutput] & 0x01);
+      nCanTxData[1] = ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 3) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 2) +
+                      ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 1) + (*stPdmConfig.stFlasher[0].pInput & 0x01);
       nCanTxData[2] = 0;
       nCanTxData[3] = 0;
       nCanTxData[4] = 0;
@@ -1155,8 +1157,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 17;
           stCanTxHeader.DLC = 8; //Bytes to send
           nCanTxData[0] = (*pVariableMap[60] << 1) + *pVariableMap[59];
-          nCanTxData[1] = 0;
-          nCanTxData[2] = 0;
+          nCanTxData[1] = stWiper.eState;
+          nCanTxData[2] = stWiper.eSelectedSpeed;
           nCanTxData[3] = 0;
           nCanTxData[4] = 0;
           nCanTxData[5] = 0;
@@ -1199,6 +1201,7 @@ void InputLogic(){
     EvaluateStarter(&stPdmConfig.stStarter, i, &nStarterDisable[i]);
   }
 
+  //Flasher not used - set to 1
   for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       if( (stPdmConfig.stFlasher[0].nOutput != i) &&
           (stPdmConfig.stFlasher[1].nOutput != i) &&
@@ -1206,6 +1209,8 @@ void InputLogic(){
           (stPdmConfig.stFlasher[3].nOutput != i))
         nOutputFlasher[i] = 1;
   }
+
+  //Set flasher outputs
   for(int i=0; i<PDM_NUM_FLASHERS; i++){
     EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
   }
@@ -1306,15 +1311,15 @@ void Profet_Default_Init(){
 //******************************************************
 uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 {
-  PdmConfig_SetDefault(&stPdmConfig);
-  PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
+  //PdmConfig_SetDefault(&stPdmConfig);
+  //PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
 
    //Check that the data is correct, comms are OK, and FRAM device is the right ID
   if(PdmConfig_Check(hi2c1, MB85RC_ADDRESS, &stPdmConfig) == PDM_OK)
   {
     if(PdmConfig_Read(hi2c1, MB85RC_ADDRESS, &stPdmConfig) != PDM_OK)
     {
-      return PDM_NOK;
+      PdmConfig_SetDefault(&stPdmConfig);
     }
   }
   else
