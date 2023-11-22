@@ -11,7 +11,8 @@
 #include "stdint.h"
 #include "stm32f4xx_hal.h"
 #include "pdm_config.h"
+#include "can_input.h"
 
-void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult);
+void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult, CANInput_Rx_t stCanInputsRx[PDM_NUM_CAN_INPUTS]);
 
 #endif /* COMPONENTS_INC_VIRTUAL_INPUT_H_ */

@@ -1170,4 +1170,5 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
 58  Output 8
 59  Wiper Slow Out
 60  Wiper Fast Out
+61  Always On
  */

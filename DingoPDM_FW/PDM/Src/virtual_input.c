@@ -7,7 +7,7 @@
 
 #include "virtual_input.h"
 
-void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
+void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult, CANInput_Rx_t stCanInputsRx[PDM_NUM_CAN_INPUTS])
 {
   if(!pIn->nEnabled)
     return;
@@ -26,6 +26,14 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
   nResult1 = *pIn->pVar1;
   if(pIn->nNot1)
     nResult1 = !nResult1;
+
+  if((pIn->nVar0 >= 3) && (pIn->nVar0 <= 34)){
+    nResult0 = nResult0 && stCanInputsRx[pIn->nVar0 - 3].bRxOk;
+  }
+
+  if((pIn->nVar1 >= 3) && (pIn->nVar1 <= 34)){
+    nResult1 = nResult1 && stCanInputsRx[pIn->nVar1 - 3].bRxOk;
+  }
 
   switch(pIn->eCond0)
   {
@@ -51,6 +59,10 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
     nResult2 = *pIn->pVar2;
     if(pIn->nNot2)
       nResult2 = !nResult2;
+
+    if((pIn->nVar2 >= 3) && (pIn->nVar2 >= 34)){
+      nResult2 = nResult2 && stCanInputsRx[pIn->nVar2 - 3].bRxOk;
+    }
 
     switch(pIn->eCond0)
     {

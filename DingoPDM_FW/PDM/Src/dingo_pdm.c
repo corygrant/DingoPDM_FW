@@ -155,10 +155,12 @@ static Wiper_t stWiper;
 uint16_t* pVariableMap[PDM_VAR_MAP_SIZE];
 uint16_t nPdmInputs[PDM_NUM_INPUTS];
 uint16_t nCanInputs[PDM_NUM_CAN_INPUTS];
+CANInput_Rx_t stCanInputsRx[PDM_NUM_CAN_INPUTS];
 uint16_t nVirtInputs[PDM_NUM_VIRT_INPUTS];
 uint16_t nOutputs[PDM_NUM_OUTPUTS];
 uint16_t nStarterDisable[PDM_NUM_OUTPUTS];
 uint16_t nOutputFlasher[PDM_NUM_OUTPUTS];
+uint16_t nAlwaysTrue;
 
 uint32_t nMsgCnt;
 
@@ -562,7 +564,10 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     eStatus = osMessageQueueGet(qMsgQueueRx, &stMsgRx, NULL, 0U);
     if(eStatus == osOK){
       for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
-        EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]);
+        if(EvaluateCANInput(&stMsgRx.stCanRxHeader, stMsgRx.nRxData, &stPdmConfig.stCanInput[i], &nCanInputs[i]) == 1){
+          //CAN input received
+          stCanInputsRx[i].nLastRxTime = HAL_GetTick();
+        }
       }
 
       //Burn Settings
@@ -599,6 +604,13 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       if(stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId - 1){
         PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueCanTx);
       }
+    }
+
+    //=====================================================================================================
+    // Check CANInput receive time
+    //=====================================================================================================
+    for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
+      stCanInputsRx[i].bRxOk = (HAL_GetTick() - stCanInputsRx[i].nLastRxTime) > stCanInputsRx[i].nRxMaxTime;
     }
 
 #ifdef MEAS_HEAP_USE
@@ -1193,7 +1205,7 @@ void InputLogic(){
     EvaluateInput(&stPdmConfig.stInput[i], &nPdmInputs[i]);
 
   for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
-    EvaluateVirtInput(&stPdmConfig.stVirtualInput[i], &nVirtInputs[i]);
+    EvaluateVirtInput(&stPdmConfig.stVirtualInput[i], &nVirtInputs[i], stCanInputsRx);
 
   //Map profet state to integer for use as virtual input pointer
   for(int i=0; i<PDM_NUM_OUTPUTS; i++){
@@ -1217,10 +1229,20 @@ void InputLogic(){
 }
 
 void OutputLogic(){
+  bool bCanInOk = false;
+
   //Copy output logic to profet requested state
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
+    //Output using CANInput
+    if((stPdmConfig.stOutput[i].nInput >= 3) && (stPdmConfig.stOutput[i].nInput <= 34)){
+      bCanInOk = stCanInputsRx[stPdmConfig.stOutput[i].nInput - 3].bRxOk;
+    }
+    else{
+      bCanInOk = true;
+    }
+
+    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i] && bCanInOk);
   }
 }
 
@@ -1350,6 +1372,7 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   for(int i=0; i<PDM_NUM_CAN_INPUTS; i++)
   {
     nCanInputs[i] = 0;
+    stCanInputsRx[i].nRxMaxTime = 2000; //2 second maximum receive time
     pVariableMap[i + 3] = &nCanInputs[i];
   }
 
@@ -1366,6 +1389,9 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 
   pVariableMap[59] = &stWiper.nSlowOut;
   pVariableMap[60] = &stWiper.nFastOut;
+
+  nAlwaysTrue = 1;
+  pVariableMap[61] = &nAlwaysTrue;
 
   //Assign variable map values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
