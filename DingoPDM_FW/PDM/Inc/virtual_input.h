@@ -13,6 +13,6 @@
 #include "pdm_config.h"
 #include "can_input.h"
 
-void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult, CANInput_Rx_t stCanInputsRx[PDM_NUM_CAN_INPUTS]);
+void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult);
 
 #endif /* COMPONENTS_INC_VIRTUAL_INPUT_H_ */

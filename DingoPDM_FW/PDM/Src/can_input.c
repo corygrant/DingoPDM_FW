@@ -30,24 +30,29 @@ uint8_t EvaluateCANInput(CAN_RxHeaderTypeDef* stRxHeader, uint8_t nRxData[8], Pd
   {
   case OPER_EQUAL:
     *nResult = nSelected & 0xFF;
+    break;
 
   case OPER_GREATER_THAN:
     *nResult = nSelected > stIn->nOnVal;
+    break;
 
   case OPER_LESS_THAN:
     *nResult = nSelected < stIn->nOnVal;
+    break;
 
   case OPER_BITWISE_AND:
     if (stIn->eMode == MODE_NUM)
       *nResult = (nSelected & stIn->nOnVal);
     else
       CheckInput(&stIn->stInVars, stIn->eMode, false, ((nSelected & stIn->nOnVal) > 0), nResult, NO_DEBOUNCE);
+    break;
 
   case OPER_BITWISE_NAND:
     if (stIn->eMode == MODE_NUM)
       *nResult = (nSelected & !stIn->nOnVal);
     else
       CheckInput(&stIn->stInVars, stIn->eMode, false, !((nSelected & stIn->nOnVal) > 0), nResult, NO_DEBOUNCE);
+    break;
   }
 
   return 1;

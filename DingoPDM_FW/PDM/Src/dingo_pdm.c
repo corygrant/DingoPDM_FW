@@ -610,7 +610,11 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // Check CANInput receive time
     //=====================================================================================================
     for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){
-      stCanInputsRx[i].bRxOk = (HAL_GetTick() - stCanInputsRx[i].nLastRxTime) > stCanInputsRx[i].nRxMaxTime;
+      stCanInputsRx[i].bRxOk = (HAL_GetTick() - stCanInputsRx[i].nLastRxTime) < stCanInputsRx[i].nRxMaxTime;
+      //Set CANInput result to 0
+      if(!stCanInputsRx[i].bRxOk){
+        nCanInputs[i] = 0;
+      }
     }
 
 #ifdef MEAS_HEAP_USE
@@ -1205,7 +1209,7 @@ void InputLogic(){
     EvaluateInput(&stPdmConfig.stInput[i], &nPdmInputs[i]);
 
   for(int i=0; i<PDM_NUM_VIRT_INPUTS; i++)
-    EvaluateVirtInput(&stPdmConfig.stVirtualInput[i], &nVirtInputs[i], stCanInputsRx);
+    EvaluateVirtInput(&stPdmConfig.stVirtualInput[i], &nVirtInputs[i]);
 
   //Map profet state to integer for use as virtual input pointer
   for(int i=0; i<PDM_NUM_OUTPUTS; i++){
@@ -1229,20 +1233,10 @@ void InputLogic(){
 }
 
 void OutputLogic(){
-  bool bCanInOk = false;
-
   //Copy output logic to profet requested state
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    //Output using CANInput
-    if((stPdmConfig.stOutput[i].nInput >= 3) && (stPdmConfig.stOutput[i].nInput <= 34)){
-      bCanInOk = stCanInputsRx[stPdmConfig.stOutput[i].nInput - 3].bRxOk;
-    }
-    else{
-      bCanInOk = true;
-    }
-
-    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i] && bCanInOk);
+    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
   }
 }
 
