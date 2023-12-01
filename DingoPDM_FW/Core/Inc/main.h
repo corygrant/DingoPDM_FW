@@ -67,6 +67,10 @@ void Error_Handler(void);
 /* Private defines -----------------------------------------------------------*/
 #define PF_DSEL3_4_Pin GPIO_PIN_13
 #define PF_DSEL3_4_GPIO_Port GPIOC
+#define ErrorLED_Pin GPIO_PIN_0
+#define ErrorLED_GPIO_Port GPIOC
+#define StatusLED_Pin GPIO_PIN_1
+#define StatusLED_GPIO_Port GPIOC
 #define PF_IS2_Pin GPIO_PIN_2
 #define PF_IS2_GPIO_Port GPIOC
 #define PF_IS3_4_Pin GPIO_PIN_3
