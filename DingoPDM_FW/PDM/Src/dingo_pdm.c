@@ -297,6 +297,8 @@ static int8_t USBD_CDC_Receive(uint8_t* Buf, uint32_t *Len)
     }
   }
 
+  stMsg.stCanRxHeader.StdId = stPdmConfig.stCanOutput.nBaseId - 1;
+
   osMessageQueuePut(qMsgQueueRx, &stMsg, 0U, 0U);
 
   USBD_CDC_SetRxBuffer(&hUSBD, &Buf[0]);
@@ -331,7 +333,7 @@ uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len)
 uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[])
 {
 	uint8_t nUsbData[22];
-    nUsbData[0] = 't';
+  nUsbData[0] = 't';
 	nUsbData[1] = (pHeader->StdId >> 8) & 0xF;
 	nUsbData[2] = (pHeader->StdId >> 4) & 0xF;
 	nUsbData[3] = pHeader->StdId & 0xF;
@@ -624,6 +626,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     //Debug GPIO
     //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
     HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
+
+    HAL_GPIO_WritePin(StatusLED_GPIO_Port, StatusLED_Pin, GPIO_PIN_SET);
 
     osDelay(MAIN_TASK_DELAY);
   }
@@ -1336,11 +1340,13 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
     if(PdmConfig_Read(hi2c1, MB85RC_ADDRESS, &stPdmConfig) != PDM_OK)
     {
       PdmConfig_SetDefault(&stPdmConfig);
+      //ErrorState(PDM_ERROR_FRAM_READ);
     }
   }
   else
   {
     PdmConfig_SetDefault(&stPdmConfig);
+    //ErrorState(PDM_ERROR_FRAM_READ);
   }
 
   //Map config to profet values
@@ -1435,4 +1441,9 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
     stPdmConfig.stFlasher[i].pInput = pVariableMap[stPdmConfig.stFlasher[i].nInput];
 
   return PDM_OK;
+}
+
+void ErrorState(uint8_t nErrorId)
+{
+  HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_SET);
 }

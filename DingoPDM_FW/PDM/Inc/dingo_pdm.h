@@ -53,6 +53,11 @@ typedef enum{
     CAN_BITRATE_INVALID
 } CAN_BitRate_t;
 
+typedef enum{
+  PDM_ERROR_FRAM_READ = 1,
+  PDM_ERROR_FRAM_WRITE
+} PdmErrorState_t;
+
 extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueUsbTx;
 extern osMessageQueueId_t qMsgQueueCanTx;
@@ -64,4 +69,5 @@ uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[]);
 void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_HandleTypeDef* hi2c1);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);
 uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1);
+void ErrorState(uint8_t nErrorId);
 #endif /* INC_DINGO_PDM_H_ */
