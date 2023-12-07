@@ -62,10 +62,8 @@ void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOB, PF_DEN5_6_Pin|PF_IN5_Pin|PF_DEN1_Pin|PF_IN1_Pin
                           |PF_IN4_Pin|PF_DSEL3_4_Pin|PF_DEN3_4_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : PCPin PCPin PCPin PCPin
-                           PCPin PCPin PCPin */
-  GPIO_InitStruct.Pin = ErrorLED_Pin|StatusLED_Pin|PF_IN3_Pin|PF_DEN2_Pin
-                          |PF_IN2_Pin|EXTRA1_Pin|EXTRA2_Pin;
+  /*Configure GPIO pins : PCPin PCPin PCPin PCPin */
+  GPIO_InitStruct.Pin = ErrorLED_Pin|StatusLED_Pin|EXTRA1_Pin|EXTRA2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
@@ -78,33 +76,28 @@ void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PCPin PCPin */
-  GPIO_InitStruct.Pin = PF_IN6_Pin|PF_DSEL5_6_Pin;
+  /*Configure GPIO pins : PCPin PCPin PCPin PCPin
+                           PCPin */
+  GPIO_InitStruct.Pin = PF_IN6_Pin|PF_DSEL5_6_Pin|PF_IN3_Pin|PF_DEN2_Pin
+                          |PF_IN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
   /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin */
+                           PBPin PBPin PBPin */
   GPIO_InitStruct.Pin = PF_DEN5_6_Pin|PF_IN5_Pin|PF_DEN1_Pin|PF_IN1_Pin
-                          |PF_IN4_Pin;
+                          |PF_IN4_Pin|PF_DSEL3_4_Pin|PF_DEN3_4_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_PULLDOWN;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PBPin PBPin */
-  GPIO_InitStruct.Pin = PF_DSEL3_4_Pin|PF_DEN3_4_Pin;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
   GPIO_InitStruct.Pin = DIG_IN2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(DIG_IN2_GPIO_Port, &GPIO_InitStruct);
 
   /*Configure GPIO pin : PtPin */
