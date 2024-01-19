@@ -1,4 +1,4 @@
-set(WINDOWS_ST_CLT_PATH "C:/ST/STM32CubeCLT/STM32CubeCLT/GNU-tools-for-STM32/bin/")
+set(WINDOWS_ST_CLT_PATH "C:/ST/STM32CubeCLT/GNU-tools-for-STM32/bin/")
 set(MAC_ST_CLT_PATH "/opt/ST/STM32CubeCLT/GNU-tools-for-STM32/bin/")
 if(EXISTS "${WINDOWS_ST_CLT_PATH}")
     set(TOOLCHAIN_DIRECTORIES ${WINDOWS_ST_CLT_PATH})
@@ -13,7 +13,7 @@ else()
     )
 endif()
 list(LENGTH TOOLCHAIN_DIRECTORIES TOOLCHAIN_DIRECTORIES_COUNT)
-
+ 
 if(TOOLCHAIN_DIRECTORIES_COUNT LESS 1)
     message(WARNING "Could not find an STM32CubeIDE installation. Falling back to tools available on PATH.")
 else()
