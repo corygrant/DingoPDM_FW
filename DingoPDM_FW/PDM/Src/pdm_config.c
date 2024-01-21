@@ -104,29 +104,31 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_S
     //Set Input Settings
     // 'I'
     case MSG_RX_SET_INPUTS:
-      if( (stMsgRx->nRxLen == 3) ||
+      if( (stMsgRx->nRxLen == 4) ||
       		(stMsgRx->nRxLen == 2)){
         nIndex = (stMsgRx->nRxData[1] & 0xF0) >> 4;
         if(nIndex < PDM_NUM_INPUTS){
 
-        	if(stMsgRx->nRxLen == 3)
+        	if(stMsgRx->nRxLen == 4)
         	{
 						pConfig->stInput[nIndex].nEnabled = (stMsgRx->nRxData[1] & 0x01);
 						pConfig->stInput[nIndex].eMode = (stMsgRx->nRxData[1] & 0x06) >> 1;
 						pConfig->stInput[nIndex].bInvert = (stMsgRx->nRxData[1] & 0x08) >> 3;
 						pConfig->stInput[nIndex].nDebounceTime = stMsgRx->nRxData[2] * 10;
+            pConfig->stInput[nIndex].ePull = (stMsgRx->nRxData[3] & 0x03);
 
 						//Set the last state
 						pConfig->stInput[nIndex].stInVars.bLastState = pConfig->stInput[nIndex].bInvert;
 
+            SetInputPull(pConfig->stInput[nIndex].GPIOx, pConfig->stInput[nIndex].nPin, pConfig->stInput[nIndex].ePull);
         	}
 
-        	stMsgCanTx.stTxHeader.DLC = 3;
+        	stMsgCanTx.stTxHeader.DLC = 4;
 
 					stMsgCanTx.nTxData[0] = MSG_TX_SET_INPUTS;
 					stMsgCanTx.nTxData[1] = ((nIndex & 0x0F) << 4) + ((pConfig->stInput[nIndex].bInvert & 0x01) << 3) + ((pConfig->stInput[nIndex].eMode & 0x03) << 1) + (pConfig->stInput[nIndex].nEnabled & 0x01);
 					stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stInput[nIndex].nDebounceTime / 10);
-					stMsgCanTx.nTxData[3] = 0;
+					stMsgCanTx.nTxData[3] = pConfig->stInput[nIndex].ePull;
 					stMsgCanTx.nTxData[4] = 0;
 					stMsgCanTx.nTxData[5] = 0;
 					stMsgCanTx.nTxData[6] = 0;
@@ -516,11 +518,13 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stInput[0].eMode = MODE_MOMENTARY;
   pConfig->stInput[0].bInvert = true;
   pConfig->stInput[0].nDebounceTime = 20;
+  pConfig->stInput[0].ePull = PULLUP;
 
   pConfig->stInput[1].nEnabled = 1;
   pConfig->stInput[1].eMode = MODE_MOMENTARY;
   pConfig->stInput[1].bInvert = true;
   pConfig->stInput[1].nDebounceTime = 20;
+  pConfig->stInput[1].ePull = PULLUP;
 
   //Outputs
   pConfig->stOutput[0].nEnabled = 1;

@@ -29,6 +29,7 @@ typedef struct
   bool bCheckTime;
 } InputVars_t;
 
+void SetInputPull(GPIO_TypeDef  *GPIOx, uint16_t nPin, uint8_t nPull);
 void CheckInput(InputVars_t* stInVars, InputMode_t eMode, bool bInvertInput, bool bInput, uint16_t* nOutput, uint16_t nDebounceTime);
 
 #endif /* COMPONENTS_INC_PUSHBUTTON_H_ */

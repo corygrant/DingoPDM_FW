@@ -9,6 +9,30 @@
 
 #include <input.h>
 
+void SetInputPull(GPIO_TypeDef  *GPIOx, uint16_t nPin, uint8_t nPull){
+  uint32_t position;
+  uint32_t ioposition = 0x00U;
+  uint32_t iocurrent = 0x00U;
+  uint32_t temp = 0x00U;
+
+  /* Configure the port pins */
+  for(position = 0U; position < 16; position++)
+  {
+    /* Get the IO position */
+    ioposition = 0x01U << position;
+    /* Get the current IO position */
+    iocurrent = (uint32_t)(nPin & ioposition);
+
+    if(iocurrent == ioposition)
+    {
+      temp = GPIOx->PUPDR;
+      temp &= ~(GPIO_PUPDR_PUPDR0 << (position * 2U));
+      temp |= ((nPull) << (position * 2U));
+      GPIOx->PUPDR = temp;
+    }
+  }
+}
+
 void CheckInput(InputVars_t* stInVars, InputMode_t eMode, bool bInvertInput, bool bInput, uint16_t* nOutput, uint16_t nDebounceTime)
 {
   bool bInputResult;

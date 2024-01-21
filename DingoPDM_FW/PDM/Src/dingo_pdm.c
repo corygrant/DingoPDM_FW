@@ -1004,7 +1004,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
         Error_Handler();
       }
-
+      
       osDelay(CAN_TX_MSG_SPLIT);
       //for(int p=0; p<600; p++)
 
@@ -1361,11 +1361,20 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   }
 
   //Map the variable map first before using
+
+  //Set the physical IO
+  stPdmConfig.stInput[0].GPIOx = DIG_IN1_GPIO_Port;
+  stPdmConfig.stInput[0].nPin = DIG_IN1_Pin;
+  stPdmConfig.stInput[1].GPIOx = DIG_IN2_GPIO_Port;
+  stPdmConfig.stInput[1].nPin = DIG_IN2_Pin;
+
   //User inputs
   for(int i=0; i<PDM_NUM_INPUTS; i++)
   {
     nPdmInputs[i] = 0;
     pVariableMap[i+1] = &nPdmInputs[i];
+  
+    SetInputPull(stPdmConfig.stInput[i].GPIOx, stPdmConfig.stInput[i].nPin, stPdmConfig.stInput[i].ePull);
   }
 
   //CAN inputs

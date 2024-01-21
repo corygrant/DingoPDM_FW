@@ -50,6 +50,12 @@ typedef enum{
   COND_NOR
 } PdmConfig_Condition_t;
 
+typedef enum{
+  NOPULL,
+  PULLUP,
+  PULLDOWN
+} PdmConfig_InputPull;
+
 typedef struct{
   uint8_t nVersion;
   uint8_t nCanEnabled;
@@ -63,6 +69,9 @@ typedef struct{
   InputVars_t stInVars;
   bool bInvert;
   uint16_t nDebounceTime;
+  PdmConfig_InputPull ePull;
+  GPIO_TypeDef  *GPIOx;
+  uint16_t nPin;
 } PdmConfig_Input_t;
 
 typedef struct{
