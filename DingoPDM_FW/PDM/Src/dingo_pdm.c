@@ -139,12 +139,6 @@ uint32_t nCanTxMailbox;
 uint32_t nLastCanUpdate;
 
 //========================================================================
-// CANBoard
-//========================================================================
-static volatile CANBoard_RX_t stCANBoard_RX;
-static volatile CANBoard_TX_t stCANBoard_TX;
-
-//========================================================================
 // Wipers
 //========================================================================
 static Wiper_t stWiper;
@@ -531,11 +525,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       Profet_SM(&pf[i]);
     }
-
-    //=====================================================================================================
-    // CANBoard check connection
-    //=====================================================================================================
-    CANBoardCheckConnection(&stCANBoard_RX);
 
     //=====================================================================================================
     // Totalize current

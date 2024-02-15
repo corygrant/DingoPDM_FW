@@ -23,7 +23,6 @@
 #include "pdm_input.h"
 #include "starter.h"
 #include "flasher.h"
-#include "canboard.h"
 #include "mb85rc.h"
 #include "mcp9808.h"
 #include "profet.h"
