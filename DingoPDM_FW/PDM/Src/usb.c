@@ -1,10 +1,5 @@
 #include "usb.h"
 
-//========================================================================
-// USB
-//========================================================================
-char cUsbBuffer[120];
-
 uint8_t USBD_RxBuffer[USBD_RX_DATA_SIZE];
 uint8_t USBD_TxBuffer[USBD_TX_DATA_SIZE];
 
@@ -15,7 +10,7 @@ static int8_t USBD_CDC_DeInit(void);
 static int8_t USBD_CDC_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length);
 static int8_t USBD_CDC_Receive(uint8_t* pbuf, uint32_t *Len);
 
-USBD_CDC_ItfTypeDef USBD_Interface_PDM =
+USBD_CDC_ItfTypeDef USBD_Interface =
 {
   USBD_CDC_Init,
   USBD_CDC_DeInit,
@@ -24,16 +19,16 @@ USBD_CDC_ItfTypeDef USBD_Interface_PDM =
 };
 
 uint8_t nUsbMsgTx[9]; //Add \r to Usb Tx message
-uint16_t nBaseId;
+rcvCallback_t rcvCallback;
 
 /*
 * @brief  USB Initialization
 * @param  nId: CAN Base ID for USB
 * @retval USBD_OK if all operations are OK else USBD_FAIL
 */
-uint8_t USB_InitStart(uint16_t nId)
+uint8_t USB_Init(rcvCallback_t cb)
 {
-    nBaseId = nId;
+    rcvCallback = cb;
 
     /* Init Device Library, add supported class and start the library. */
     if (USBD_Init(&hUSBD, &FS_Desc, DEVICE_FS) != USBD_OK)
@@ -44,7 +39,7 @@ uint8_t USB_InitStart(uint16_t nId)
     {
         return USBD_FAIL;
     }
-    if (USBD_CDC_RegisterInterface(&hUSBD, &USBD_Interface_PDM) != USBD_OK)
+    if (USBD_CDC_RegisterInterface(&hUSBD, &USBD_Interface) != USBD_OK)
     {
         return USBD_FAIL;
     }
@@ -52,16 +47,6 @@ uint8_t USB_InitStart(uint16_t nId)
     {
         return USBD_FAIL;
     }
-}
-
-/**
- * @brief  Update the CAN Base ID for USB
- * 
- * @param  nId: CAN Base ID for the USB
-*/
-void USB_UpdateID(uint16_t nId)
-{
-    nBaseId = nId;
 }
 
 /**
@@ -179,20 +164,7 @@ static int8_t USBD_CDC_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length)
   */
 static int8_t USBD_CDC_Receive(uint8_t* Buf, uint32_t *Len)
 {
-  MsgQueueRx_t stMsg;
-  stMsg.eMsgSrc = USB_RX;
-  stMsg.nCRC = 0xFFFFFFFF;
-  stMsg.nRxLen = 0;
-  for(uint8_t i=0; i<*Len; i++){
-    if(i < 8){
-      stMsg.nRxData[i] = Buf[i];
-      stMsg.nRxLen++;
-    }
-  }
-
-  stMsg.stCanRxHeader.StdId = nBaseId - 1;
-
-  osMessageQueuePut(qMsgQueueRx, &stMsg, 0U, 0U);
+  rcvCallback(Buf, Len);
 
   USBD_CDC_SetRxBuffer(&hUSBD, &Buf[0]);
   USBD_CDC_ReceivePacket(&hUSBD);
@@ -210,7 +182,7 @@ static int8_t USBD_CDC_Receive(uint8_t* Buf, uint32_t *Len)
   * @param  Len: Number of data to be sent (in bytes)
   * @retval USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
   */
-uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len)
+uint8_t USB_Tx(uint8_t* Buf, uint16_t Len)
 {
   uint8_t result = USBD_OK;
   USBD_CDC_HandleTypeDef *hcdc = (USBD_CDC_HandleTypeDef*)hUSBD.pClassData;
@@ -230,7 +202,7 @@ uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len)
  * @param  aData: CAN Data
  * @retval USBD_OK if all operations are OK else USBD_FAIL or USBD_BUSY
 */
-uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[])
+uint8_t USB_Tx_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[])
 {
   uint8_t nUsbData[22];
   nUsbData[0] = 't';
@@ -268,5 +240,5 @@ uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[])
 		}
 	}
 
-	return USBD_CDC_Transmit(nUsbData, sizeof(nUsbData));
+	return USB_Tx(nUsbData, sizeof(nUsbData));
 }
