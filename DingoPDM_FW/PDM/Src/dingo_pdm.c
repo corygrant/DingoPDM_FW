@@ -2,7 +2,7 @@
  * dingo_pdm.c
  *
  *  Created on: Oct 22, 2020
- *      Author: coryg
+ *      Author: corygrant
  */
 
 #include "dingo_pdm.h"
@@ -53,7 +53,6 @@
 #define STM32_TEMP_CALIB_VOLT 3.3
 #define STM32_TEMP_REF_VOLT 3.3
 
-//==============================================================================================================================================
 //========================================================================
 // Device State
 //========================================================================
@@ -139,13 +138,38 @@ uint16_t nAlwaysTrue;
 
 uint32_t nMsgCnt;
 
-
+//========================================================================
+// Local Function Prototypes
+//========================================================================
 void InputLogic();
 void OutputLogic();
 void Profet_Default_Init();
+void SendMsg17(CAN_HandleTypeDef * hcan);
+void SendMsg16(CAN_HandleTypeDef *hcan);
+void SendMsg15(CAN_HandleTypeDef *hcan);
+void SendMsg14(CAN_HandleTypeDef *hcan);
+void SendMsg13(CAN_HandleTypeDef *hcan);
+void SendMsg12(CAN_HandleTypeDef *hcan);
+void SendMsg11(CAN_HandleTypeDef *hcan);
+void SendMsg10(CAN_HandleTypeDef *hcan);
+void SendMsg9(CAN_HandleTypeDef *hcan);
+void SendMsg8(CAN_HandleTypeDef *hcan);
+void SendMsg7(CAN_HandleTypeDef *hcan);
+void SendMsg6(CAN_HandleTypeDef *hcan);
+void SendMsg5(CAN_HandleTypeDef *hcan);
+void SendMsg4(CAN_HandleTypeDef *hcan);
+void SendMsg3(CAN_HandleTypeDef *hcan);
+void SendMsg2(CAN_HandleTypeDef *hcan);
+void SendMsg1(CAN_HandleTypeDef *hcan);
+void SendMsg0(CAN_HandleTypeDef *hcan);
+void SendMsg(CAN_HandleTypeDef *hcan);
 
-//==============================================================================================================================================
-
+/*
+  * @brief  USB Receive Callback
+  * @param  Buf: USB Rx Buffer
+  * @param  Len: USB Rx Buffer Length
+  * @retval None
+*/
 void USB_MsgRcv(uint8_t* Buf, uint32_t *Len)
 {
   MsgQueueRx_t stMsg;
@@ -164,9 +188,11 @@ void USB_MsgRcv(uint8_t* Buf, uint32_t *Len)
   osMessageQueuePut(qMsgQueueRx, &stMsg, 0U, 0U);
 }
 
-//========================================================================
-// CAN Receive Callback
-//========================================================================
+/*
+* @brief  CAN Receive Callback
+* @param  hcan: CAN Handle
+* @retval None
+*/
 void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
 
@@ -184,14 +210,15 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
   memcpy(&stMsg.stCanRxHeader, &stCanRxHeader, sizeof(stCanRxHeader));
   memcpy(&stMsg.nRxData, &nCanRxData, sizeof(nCanRxData));
   osMessageQueuePut(qMsgQueueRx, &stMsg, 0U, 0U);
-
 }
 
-//========================================================================
-//========================================================================
-// MAIN
-//========================================================================
-//========================================================================
+/*
+* @brief Main Task
+* @param thisThreadId: Pointer to this thread ID
+* @param hadc1: Pointer to ADC Handle
+* @param hi2c1: Pointer to I2C Handle
+* @retval None
+*/
 void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_HandleTypeDef* hi2c1){
   /* Infinite loop */
   for(;;)
@@ -357,6 +384,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     //=====================================================================================================
     nBoardTempC = MCP9808_ReadTempC_Int(hi2c1, MCP9808_ADDRESS);
 
+//TODO: Add error handling, transition to DEVICE_OVERTEMP
     if(MCP9808_GetOvertemp());// printf("*******MCP9808 Overtemp Detected*******\n");
     if(MCP9808_GetCriticalTemp());// printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
 
@@ -436,6 +464,11 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
   }
 }
 
+/*
+* @brief  CAN Transmit Task
+* @param  thisThreadId: Pointer to this thread ID
+* @param  hcan: Pointer to CAN Handle
+*/
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 {
   //Configure the CAN Filter
@@ -457,7 +490,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
     Error_Handler();
   }
 
-  //Start the CAN periphera
+  //Start the CAN peripheral
   if (HAL_CAN_Start(hcan) != HAL_OK)
   {
     /* Start Error */
@@ -470,8 +503,6 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
     /* Notification Error */
     Error_Handler();
   }
-
-
 
   //Configure Transmission
   stCanTxHeader.StdId = 1620;
@@ -511,456 +542,27 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         osDelay(CAN_TX_MSG_SPLIT);
       }while(stStatus == osOK);
 
-
-      //=======================================================
-      //Build Msg 0 (Digital inputs 1-2) and Device Status
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 0;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = (nPdmInputs[1] << 1) + nPdmInputs[0];
-      nCanTxData[1] = 0;
-      nCanTxData[2] = nILTotal >> 8;
-      nCanTxData[3] = nILTotal;
-      nCanTxData[4] = nBattSense >> 8;
-      nCanTxData[5] = nBattSense;
-      nCanTxData[6] = nBoardTempC >> 8;
-      nCanTxData[7] = nBoardTempC;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 1 ( )
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 1;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = 0;
-      nCanTxData[1] = 0;
-      nCanTxData[2] = 0;
-      nCanTxData[3] = 0;
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 2 (Out 1-4 Current)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 2;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = pf[0].nIL >> 8;
-      nCanTxData[1] = pf[0].nIL;
-      nCanTxData[2] = pf[1].nIL >> 8;
-      nCanTxData[3] = pf[1].nIL;
-      nCanTxData[4] = pf[2].nIL >> 8;
-      nCanTxData[5] = pf[2].nIL;
-      nCanTxData[6] = pf[3].nIL >> 8;
-      nCanTxData[7] = pf[3].nIL;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 3 (Out 5-8 Current)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 3;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = pf[4].nIL >> 8;
-      nCanTxData[1] = pf[4].nIL;
-      nCanTxData[2] = pf[5].nIL >> 8;
-      nCanTxData[3] = pf[5].nIL;
-      nCanTxData[4] = pf[6].nIL >> 8;
-      nCanTxData[5] = pf[6].nIL;
-      nCanTxData[6] = pf[7].nIL >> 8;
-      nCanTxData[7] = pf[7].nIL;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 4 (Unused)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 4;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = 0;
-      nCanTxData[1] = 0;
-      nCanTxData[2] = 0;
-      nCanTxData[3] = 0;
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 5 (Out 1-8 Status)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 5;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = (pf[1].eState << 4) + pf[0].eState;
-      nCanTxData[1] = (pf[3].eState << 4) + pf[2].eState;
-      nCanTxData[2] = (pf[5].eState << 4) + pf[4].eState;
-      nCanTxData[3] = (pf[7].eState << 4) + pf[6].eState;
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 6 (Out 1-4 Current Limit)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 6;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = pf[0].nIL_Limit >> 8;
-      nCanTxData[1] = pf[0].nIL_Limit;
-      nCanTxData[2] = pf[1].nIL_Limit >> 8;
-      nCanTxData[3] = pf[1].nIL_Limit;
-      nCanTxData[4] = pf[2].nIL_Limit >> 8;
-      nCanTxData[5] = pf[2].nIL_Limit;
-      nCanTxData[6] = pf[3].nIL_Limit >> 8;
-      nCanTxData[7] = pf[3].nIL_Limit;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 7 (Out 5-8 Current Limit)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 7;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = pf[4].nIL_Limit >> 8;
-      nCanTxData[1] = pf[4].nIL_Limit;
-      nCanTxData[2] = pf[5].nIL_Limit >> 8;
-      nCanTxData[3] = pf[5].nIL_Limit;
-      nCanTxData[4] = pf[6].nIL_Limit >> 8;
-      nCanTxData[5] = pf[6].nIL_Limit;
-      nCanTxData[6] = pf[7].nIL_Limit >> 8;
-      nCanTxData[7] = pf[7].nIL_Limit;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 8 (Unused)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 8;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = 0;
-      nCanTxData[1] = 0;
-      nCanTxData[2] = 0;
-      nCanTxData[3] = 0;
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 9 (Out 1-8 Reset Count)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 9;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = pf[0].nOC_Count;
-      nCanTxData[1] = pf[1].nOC_Count;
-      nCanTxData[2] = pf[2].nOC_Count;
-      nCanTxData[3] = pf[3].nOC_Count;
-      nCanTxData[4] = pf[4].nOC_Count;
-      nCanTxData[5] = pf[5].nOC_Count;
-      nCanTxData[6] = pf[6].nOC_Count;
-      nCanTxData[7] = pf[7].nOC_Count;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
-
-      //=======================================================
-      //Build Msg 10 (Flashers 1-4)
-      //=======================================================
-      stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 10;
-      stCanTxHeader.DLC = 8; //Bytes to send
-      nCanTxData[0] = ((nOutputFlasher[stPdmConfig.stFlasher[3].nOutput] & 0x01) << 3) + ((nOutputFlasher[stPdmConfig.stFlasher[2].nOutput] & 0x01) << 2) +
-                      ((nOutputFlasher[stPdmConfig.stFlasher[1].nOutput] & 0x01) << 1) + (nOutputFlasher[stPdmConfig.stFlasher[0].nOutput] & 0x01);
-      nCanTxData[1] = ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 3) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 2) +
-                      ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 1) + (*stPdmConfig.stFlasher[0].pInput & 0x01);
-      nCanTxData[2] = 0;
-      nCanTxData[3] = 0;
-      nCanTxData[4] = 0;
-      nCanTxData[5] = 0;
-      nCanTxData[6] = 0;
-      nCanTxData[7] = 0;
-
-      //=======================================================
-      //Send CAN msg
-      //=======================================================
-      USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-      if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-        Error_Handler();
-      }
-      
-      osDelay(CAN_TX_MSG_SPLIT);
-      //for(int p=0; p<600; p++)
+      //Send periodic messages
+      SendMsg0(hcan);
+      SendMsg1(hcan);
+      SendMsg2(hcan);
+      SendMsg3(hcan);
+      SendMsg4(hcan);
+      SendMsg5(hcan);
+      SendMsg6(hcan);
+      SendMsg7(hcan);
+      SendMsg8(hcan);
+      SendMsg9(hcan);
+      SendMsg10(hcan);
 
       if(true){//(bSoftwareConnected){
-          //=======================================================
-          //Build Msg 11 (CAN Inputs 1-8)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 11;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = nCanInputs[0];
-          nCanTxData[1] = nCanInputs[1];
-          nCanTxData[2] = nCanInputs[2];
-          nCanTxData[3] = nCanInputs[3];
-          nCanTxData[4] = nCanInputs[4];
-          nCanTxData[5] = nCanInputs[5];
-          nCanTxData[6] = nCanInputs[6];
-          nCanTxData[7] = nCanInputs[7];
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
-
-          osDelay(CAN_TX_MSG_SPLIT);
-          //for(int p=0; p<600; p++)
-
-          //=======================================================
-          //Build Msg 12 (CAN Inputs 9-16)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 12;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = nCanInputs[8];
-          nCanTxData[1] = nCanInputs[9];
-          nCanTxData[2] = nCanInputs[10];
-          nCanTxData[3] = nCanInputs[11];
-          nCanTxData[4] = nCanInputs[12];
-          nCanTxData[5] = nCanInputs[13];
-          nCanTxData[6] = nCanInputs[14];
-          nCanTxData[7] = nCanInputs[15];
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
-
-          osDelay(CAN_TX_MSG_SPLIT);
-          //for(int p=0; p<600; p++)
-
-          //=======================================================
-          //Build Msg 13 (CAN Inputs 17-24)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 13;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = nCanInputs[16];
-          nCanTxData[1] = nCanInputs[17];
-          nCanTxData[2] = nCanInputs[18];
-          nCanTxData[3] = nCanInputs[19];
-          nCanTxData[4] = nCanInputs[20];
-          nCanTxData[5] = nCanInputs[21];
-          nCanTxData[6] = nCanInputs[22];
-          nCanTxData[7] = nCanInputs[23];
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
-
-          osDelay(CAN_TX_MSG_SPLIT);
-          //for(int p=0; p<600; p++)
-
-          //=======================================================
-          //Build Msg 14 (CAN Inputs 25-32)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 14;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = nCanInputs[24];
-          nCanTxData[1] = nCanInputs[25];
-          nCanTxData[2] = nCanInputs[26];
-          nCanTxData[3] = nCanInputs[27];
-          nCanTxData[4] = nCanInputs[28];
-          nCanTxData[5] = nCanInputs[29];
-          nCanTxData[6] = nCanInputs[30];
-          nCanTxData[7] = nCanInputs[31];
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
-
-          osDelay(CAN_TX_MSG_SPLIT);
-          //for(int p=0; p<600; p++)
-
-          //=======================================================
-          //Build Msg 15 (Virtual Inputs 1-8)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 15;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = nVirtInputs[0];
-          nCanTxData[1] = nVirtInputs[1];
-          nCanTxData[2] = nVirtInputs[2];
-          nCanTxData[3] = nVirtInputs[3];
-          nCanTxData[4] = nVirtInputs[4];
-          nCanTxData[5] = nVirtInputs[5];
-          nCanTxData[6] = nVirtInputs[6];
-          nCanTxData[7] = nVirtInputs[7];
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
-
-          osDelay(CAN_TX_MSG_SPLIT);
-          //for(int p=0; p<600; p++)
-
-          //=======================================================
-          //Build Msg 16 (Virtual Inputs 9-16)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 16;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = nVirtInputs[8];
-          nCanTxData[1] = nVirtInputs[9];
-          nCanTxData[2] = nVirtInputs[10];
-          nCanTxData[3] = nVirtInputs[11];
-          nCanTxData[4] = nVirtInputs[12];
-          nCanTxData[5] = nVirtInputs[13];
-          nCanTxData[6] = nVirtInputs[14];
-          nCanTxData[7] = nVirtInputs[15];
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
-
-          osDelay(CAN_TX_MSG_SPLIT);
-          //for(int p=0; p<600; p++)
-
-          //=======================================================
-          //Build Msg 17 (Wiper)
-          //=======================================================
-          stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 17;
-          stCanTxHeader.DLC = 8; //Bytes to send
-          nCanTxData[0] = (*pVariableMap[60] << 1) + *pVariableMap[59];
-          nCanTxData[1] = stWiper.eState;
-          nCanTxData[2] = stWiper.eSelectedSpeed;
-          nCanTxData[3] = 0;
-          nCanTxData[4] = 0;
-          nCanTxData[5] = 0;
-          nCanTxData[6] = 0;
-          nCanTxData[7] = 0;
-
-          //=======================================================
-          //Send CAN msg
-          //=======================================================
-          USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK){
-            Error_Handler();
-          }
+        SendMsg11(hcan);
+        SendMsg12(hcan);
+        SendMsg13(hcan);
+        SendMsg14(hcan);
+        SendMsg15(hcan);
+        SendMsg16(hcan);
+        SendMsg17(hcan);
       }
     }
 
@@ -969,12 +571,375 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 #endif
 
     //Debug GPIO
-    //HAL_GPIO_TogglePin(EXTRA2_GPIO_Port, EXTRA2_Pin);
     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_RESET);
+    
     osDelay(stPdmConfig.stCanOutput.nUpdateTime);
   }
 }
 
+void SendMsg17(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 17 (Wiper)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 17;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = (*pVariableMap[60] << 1) + *pVariableMap[59];
+  nCanTxData[1] = stWiper.eState;
+  nCanTxData[2] = stWiper.eSelectedSpeed;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan);
+}
+
+void SendMsg16(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 16 (Virtual Inputs 9-16)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 16;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = nVirtInputs[8];
+  nCanTxData[1] = nVirtInputs[9];
+  nCanTxData[2] = nVirtInputs[10];
+  nCanTxData[3] = nVirtInputs[11];
+  nCanTxData[4] = nVirtInputs[12];
+  nCanTxData[5] = nVirtInputs[13];
+  nCanTxData[6] = nVirtInputs[14];
+  nCanTxData[7] = nVirtInputs[15];
+
+  SendMsg(hcan);
+}
+
+void SendMsg15(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 15 (Virtual Inputs 1-8)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 15;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = nVirtInputs[0];
+  nCanTxData[1] = nVirtInputs[1];
+  nCanTxData[2] = nVirtInputs[2];
+  nCanTxData[3] = nVirtInputs[3];
+  nCanTxData[4] = nVirtInputs[4];
+  nCanTxData[5] = nVirtInputs[5];
+  nCanTxData[6] = nVirtInputs[6];
+  nCanTxData[7] = nVirtInputs[7];
+
+  SendMsg(hcan);
+}
+
+void SendMsg14(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 14 (CAN Inputs 25-32)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 14;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = nCanInputs[24];
+  nCanTxData[1] = nCanInputs[25];
+  nCanTxData[2] = nCanInputs[26];
+  nCanTxData[3] = nCanInputs[27];
+  nCanTxData[4] = nCanInputs[28];
+  nCanTxData[5] = nCanInputs[29];
+  nCanTxData[6] = nCanInputs[30];
+  nCanTxData[7] = nCanInputs[31];
+
+  SendMsg(hcan);
+}
+
+void SendMsg13(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 13 (CAN Inputs 17-24)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 13;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = nCanInputs[16];
+  nCanTxData[1] = nCanInputs[17];
+  nCanTxData[2] = nCanInputs[18];
+  nCanTxData[3] = nCanInputs[19];
+  nCanTxData[4] = nCanInputs[20];
+  nCanTxData[5] = nCanInputs[21];
+  nCanTxData[6] = nCanInputs[22];
+  nCanTxData[7] = nCanInputs[23];
+
+  SendMsg(hcan);
+}
+
+void SendMsg12(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 12 (CAN Inputs 9-16)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 12;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = nCanInputs[8];
+  nCanTxData[1] = nCanInputs[9];
+  nCanTxData[2] = nCanInputs[10];
+  nCanTxData[3] = nCanInputs[11];
+  nCanTxData[4] = nCanInputs[12];
+  nCanTxData[5] = nCanInputs[13];
+  nCanTxData[6] = nCanInputs[14];
+  nCanTxData[7] = nCanInputs[15];
+
+  SendMsg(hcan);
+}
+
+void SendMsg11(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 11 (CAN Inputs 1-8)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 11;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = nCanInputs[0];
+  nCanTxData[1] = nCanInputs[1];
+  nCanTxData[2] = nCanInputs[2];
+  nCanTxData[3] = nCanInputs[3];
+  nCanTxData[4] = nCanInputs[4];
+  nCanTxData[5] = nCanInputs[5];
+  nCanTxData[6] = nCanInputs[6];
+  nCanTxData[7] = nCanInputs[7];
+
+  SendMsg(hcan);
+}
+
+void SendMsg10(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 10 (Flashers 1-4)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 10;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = ((nOutputFlasher[stPdmConfig.stFlasher[3].nOutput] & 0x01) << 3) + ((nOutputFlasher[stPdmConfig.stFlasher[2].nOutput] & 0x01) << 2) +
+                  ((nOutputFlasher[stPdmConfig.stFlasher[1].nOutput] & 0x01) << 1) + (nOutputFlasher[stPdmConfig.stFlasher[0].nOutput] & 0x01);
+  nCanTxData[1] = ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 3) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 2) +
+                  ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 1) + (*stPdmConfig.stFlasher[0].pInput & 0x01);
+  nCanTxData[2] = 0;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan);
+}
+
+void SendMsg9(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 9 (Out 1-8 Reset Count)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 9;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = pf[0].nOC_Count;
+  nCanTxData[1] = pf[1].nOC_Count;
+  nCanTxData[2] = pf[2].nOC_Count;
+  nCanTxData[3] = pf[3].nOC_Count;
+  nCanTxData[4] = pf[4].nOC_Count;
+  nCanTxData[5] = pf[5].nOC_Count;
+  nCanTxData[6] = pf[6].nOC_Count;
+  nCanTxData[7] = pf[7].nOC_Count;
+
+  SendMsg(hcan);
+}
+
+void SendMsg8(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 8 (Unused)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 8;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = 0;
+  nCanTxData[1] = 0;
+  nCanTxData[2] = 0;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan);
+}
+
+void SendMsg7(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 7 (Out 5-8 Current Limit)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 7;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = pf[4].nIL_Limit >> 8;
+  nCanTxData[1] = pf[4].nIL_Limit;
+  nCanTxData[2] = pf[5].nIL_Limit >> 8;
+  nCanTxData[3] = pf[5].nIL_Limit;
+  nCanTxData[4] = pf[6].nIL_Limit >> 8;
+  nCanTxData[5] = pf[6].nIL_Limit;
+  nCanTxData[6] = pf[7].nIL_Limit >> 8;
+  nCanTxData[7] = pf[7].nIL_Limit;
+
+  SendMsg(hcan);
+}
+
+void SendMsg6(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 6 (Out 1-4 Current Limit)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 6;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = pf[0].nIL_Limit >> 8;
+  nCanTxData[1] = pf[0].nIL_Limit;
+  nCanTxData[2] = pf[1].nIL_Limit >> 8;
+  nCanTxData[3] = pf[1].nIL_Limit;
+  nCanTxData[4] = pf[2].nIL_Limit >> 8;
+  nCanTxData[5] = pf[2].nIL_Limit;
+  nCanTxData[6] = pf[3].nIL_Limit >> 8;
+  nCanTxData[7] = pf[3].nIL_Limit;
+
+  SendMsg(hcan);
+}
+
+void SendMsg5(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 5 (Out 1-8 Status)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 5;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = (pf[1].eState << 4) + pf[0].eState;
+  nCanTxData[1] = (pf[3].eState << 4) + pf[2].eState;
+  nCanTxData[2] = (pf[5].eState << 4) + pf[4].eState;
+  nCanTxData[3] = (pf[7].eState << 4) + pf[6].eState;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan);
+}
+
+void SendMsg4(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 4 (Unused)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 4;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = 0;
+  nCanTxData[1] = 0;
+  nCanTxData[2] = 0;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan);
+}
+
+void SendMsg3(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 3 (Out 5-8 Current)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 3;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = pf[4].nIL >> 8;
+  nCanTxData[1] = pf[4].nIL;
+  nCanTxData[2] = pf[5].nIL >> 8;
+  nCanTxData[3] = pf[5].nIL;
+  nCanTxData[4] = pf[6].nIL >> 8;
+  nCanTxData[5] = pf[6].nIL;
+  nCanTxData[6] = pf[7].nIL >> 8;
+  nCanTxData[7] = pf[7].nIL;
+
+  SendMsg(hcan);
+}
+
+void SendMsg2(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 2 (Out 1-4 Current)
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 2;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = pf[0].nIL >> 8;
+  nCanTxData[1] = pf[0].nIL;
+  nCanTxData[2] = pf[1].nIL >> 8;
+  nCanTxData[3] = pf[1].nIL;
+  nCanTxData[4] = pf[2].nIL >> 8;
+  nCanTxData[5] = pf[2].nIL;
+  nCanTxData[6] = pf[3].nIL >> 8;
+  nCanTxData[7] = pf[3].nIL;
+
+  SendMsg(hcan);
+}
+
+void SendMsg1(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 1 ( )
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 1;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = 0;
+  nCanTxData[1] = 0;
+  nCanTxData[2] = 0;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan);
+}
+
+void SendMsg0(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Build Msg 0 (Digital inputs 1-2) and Device Status
+  //=======================================================
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 0;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  nCanTxData[0] = (nPdmInputs[1] << 1) + nPdmInputs[0];
+  nCanTxData[1] = 0;
+  nCanTxData[2] = nILTotal >> 8;
+  nCanTxData[3] = nILTotal;
+  nCanTxData[4] = nBattSense >> 8;
+  nCanTxData[5] = nBattSense;
+  nCanTxData[6] = nBoardTempC >> 8;
+  nCanTxData[7] = nBoardTempC;
+
+  SendMsg(hcan);
+}
+
+void SendMsg(CAN_HandleTypeDef *hcan)
+{
+  //=======================================================
+  // Send CAN msg
+  //=======================================================
+  USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
+  if (HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  osDelay(CAN_TX_MSG_SPLIT);
+}
+
+/*
+* @brief Input logic combining physical and virtual inputs
+* @param None
+* @retval None
+*/
 void InputLogic(){
   for(int i=0; i<PDM_NUM_INPUTS; i++)
     EvaluateInput(&stPdmConfig.stInput[i], &nPdmInputs[i]);
@@ -1003,8 +968,12 @@ void InputLogic(){
   }
 }
 
+/*
+* @brief Output logic combining output enable, starter disable, and flasher
+* @param None
+* @retval None
+*/
 void OutputLogic(){
-  //Copy output logic to profet requested state
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
     pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
@@ -1093,13 +1062,18 @@ void Profet_Default_Init(){
   pf[7].fKILIS = 59258;
 }
 
-//******************************************************
-//Must be called before any tasks are started
-//******************************************************
+/*
+* @brief  PDM Configuration Initialisation
+* @note   This function must be called before any tasks are started
+* @param  hi2c1: Pointer to I2C Handle
+* @retval PDM_OK if successful
+*/
 uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 {
   //PdmConfig_SetDefault(&stPdmConfig);
   //PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
+
+//TODO: Handle reading config at boot properly
 
    //Check that the data is correct, comms are OK, and FRAM device is the right ID
   if(PdmConfig_Check(hi2c1, MB85RC_ADDRESS, &stPdmConfig) == PDM_OK)
