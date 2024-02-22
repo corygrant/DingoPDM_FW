@@ -119,6 +119,11 @@ uint32_t nCanTxMailbox;
 uint32_t nLastCanUpdate;
 
 //========================================================================
+// USB
+//========================================================================
+bool bUsbReady = false;
+
+//========================================================================
 // Wipers
 //========================================================================
 static Wiper_t stWiper;
@@ -137,6 +142,17 @@ uint16_t nOutputFlasher[PDM_NUM_OUTPUTS];
 uint16_t nAlwaysTrue;
 
 uint32_t nMsgCnt;
+
+//========================================================================
+// Status LEDs
+//========================================================================
+void StatusLedOn (void) {HAL_GPIO_WritePin(StatusLED_GPIO_Port, StatusLED_Pin, GPIO_PIN_SET);}
+void StatusLedOff (void) {HAL_GPIO_WritePin(StatusLED_GPIO_Port, StatusLED_Pin, GPIO_PIN_RESET);}
+Led_Output StatusLed = {StatusLedOn, StatusLedOff, false};
+
+void ErrorLedOn (void) {HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_SET);}
+void ErrorLedOff (void) {HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_RESET);}
+Led_Output ErrorLed = {ErrorLedOn, ErrorLedOff, true};
 
 //========================================================================
 // Local Function Prototypes
@@ -162,7 +178,7 @@ void SendMsg3(CAN_HandleTypeDef *hcan);
 void SendMsg2(CAN_HandleTypeDef *hcan);
 void SendMsg1(CAN_HandleTypeDef *hcan);
 void SendMsg0(CAN_HandleTypeDef *hcan);
-void SendMsg(CAN_HandleTypeDef *hcan);
+void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay);
 
 /*
   * @brief  USB Receive Callback
@@ -232,7 +248,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_STARTING:
-      USB_Init(USB_MsgRcv);
+      bUsbReady = USB_Init(USB_MsgRcv) == USBD_OK;
 
       //=====================================================================================================
       // MCP9808 Temperature Sensor Configuration
@@ -389,6 +405,12 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     if(MCP9808_GetCriticalTemp());// printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
 
     //=====================================================================================================
+    // Status LEDs
+    //=====================================================================================================
+    LedUpdate(HAL_GetTick(), &StatusLed);
+    LedUpdate(HAL_GetTick(), &ErrorLed);
+
+    //=====================================================================================================
     // Check for CAN RX messages in queue
     //=====================================================================================================
     MsgQueueRx_t stMsgRx;
@@ -429,6 +451,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 						stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 
 						osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+
+            LedBlink(HAL_GetTick(), &StatusLed);
 					}
     	  }
     	}
@@ -457,8 +481,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     //Debug GPIO
     //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
     HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
-
-    HAL_GPIO_WritePin(StatusLED_GPIO_Port, StatusLED_Pin, GPIO_PIN_SET);
 
     osDelay(MAIN_TASK_DELAY);
   }
@@ -593,7 +615,7 @@ void SendMsg17(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg16(CAN_HandleTypeDef *hcan)
@@ -612,7 +634,7 @@ void SendMsg16(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nVirtInputs[14];
   nCanTxData[7] = nVirtInputs[15];
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg15(CAN_HandleTypeDef *hcan)
@@ -631,7 +653,7 @@ void SendMsg15(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nVirtInputs[6];
   nCanTxData[7] = nVirtInputs[7];
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg14(CAN_HandleTypeDef *hcan)
@@ -650,7 +672,7 @@ void SendMsg14(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nCanInputs[30];
   nCanTxData[7] = nCanInputs[31];
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg13(CAN_HandleTypeDef *hcan)
@@ -669,7 +691,7 @@ void SendMsg13(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nCanInputs[22];
   nCanTxData[7] = nCanInputs[23];
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg12(CAN_HandleTypeDef *hcan)
@@ -688,7 +710,7 @@ void SendMsg12(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nCanInputs[14];
   nCanTxData[7] = nCanInputs[15];
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg11(CAN_HandleTypeDef *hcan)
@@ -707,7 +729,7 @@ void SendMsg11(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nCanInputs[6];
   nCanTxData[7] = nCanInputs[7];
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg10(CAN_HandleTypeDef *hcan)
@@ -728,7 +750,7 @@ void SendMsg10(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg9(CAN_HandleTypeDef *hcan)
@@ -747,7 +769,7 @@ void SendMsg9(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = pf[6].nOC_Count;
   nCanTxData[7] = pf[7].nOC_Count;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg8(CAN_HandleTypeDef *hcan)
@@ -766,7 +788,7 @@ void SendMsg8(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg7(CAN_HandleTypeDef *hcan)
@@ -785,7 +807,7 @@ void SendMsg7(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = pf[7].nIL_Limit >> 8;
   nCanTxData[7] = pf[7].nIL_Limit;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg6(CAN_HandleTypeDef *hcan)
@@ -804,7 +826,7 @@ void SendMsg6(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = pf[3].nIL_Limit >> 8;
   nCanTxData[7] = pf[3].nIL_Limit;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg5(CAN_HandleTypeDef *hcan)
@@ -823,7 +845,7 @@ void SendMsg5(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg4(CAN_HandleTypeDef *hcan)
@@ -842,7 +864,7 @@ void SendMsg4(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg3(CAN_HandleTypeDef *hcan)
@@ -861,7 +883,7 @@ void SendMsg3(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = pf[7].nIL >> 8;
   nCanTxData[7] = pf[7].nIL;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg2(CAN_HandleTypeDef *hcan)
@@ -880,7 +902,7 @@ void SendMsg2(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = pf[3].nIL >> 8;
   nCanTxData[7] = pf[3].nIL;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg1(CAN_HandleTypeDef *hcan)
@@ -899,7 +921,7 @@ void SendMsg1(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
 void SendMsg0(CAN_HandleTypeDef *hcan)
@@ -918,21 +940,33 @@ void SendMsg0(CAN_HandleTypeDef *hcan)
   nCanTxData[6] = nBoardTempC >> 8;
   nCanTxData[7] = nBoardTempC;
 
-  SendMsg(hcan);
+  SendMsg(hcan, true);
 }
 
-void SendMsg(CAN_HandleTypeDef *hcan)
+/*
+* @brief Send CAN message over USB and CAN
+* @param hcan: Pointer to CAN Handle
+* @param bDelay: True to add delay after sending
+* @retval None
+*/
+void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay)
 {
-  //=======================================================
-  // Send CAN msg
-  //=======================================================
-  USB_Tx_SLCAN(&stCanTxHeader, nCanTxData);
+  if (bUsbReady) //and bSoftwareConnected
+  {
+    if (USB_Tx_SLCAN(&stCanTxHeader, nCanTxData) != USBD_OK)
+    {
+      //Error_Handler();
+      //TODO: Throws error if not connected to software
+    }
+  }
+
   if (HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK)
   {
     Error_Handler();
   }
 
-  osDelay(CAN_TX_MSG_SPLIT);
+  if(bDelay)
+    osDelay(CAN_TX_MSG_SPLIT);
 }
 
 /*

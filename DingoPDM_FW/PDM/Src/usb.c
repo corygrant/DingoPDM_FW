@@ -47,6 +47,8 @@ uint8_t USB_Init(rcvCallback_t cb)
     {
         return USBD_FAIL;
     }
+
+    return USBD_OK;
 }
 
 /**
