@@ -9,14 +9,13 @@
 
 uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL);
 
-void Profet_SM(volatile ProfetTypeDef *profet) {
+void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk) {
 
   //Check for inrush
   profet->bInRushActive = (profet->nIL_InRushTime + profet->nInRushOnTime) > HAL_GetTick();
 
   //Check for fault (device overcurrent/overtemp/short)
   //IL will be very high
-  //TODO: Calculate value from datasheet
   if (profet->nIS > 30000){
     profet->eState = FAULT;
   }
@@ -31,7 +30,7 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
     profet->nOC_Count = 0;
 
     //Check for turn on
-    if (profet->eReqState == ON) {
+    if ((profet->eReqState == ON) && bOutputsOk) {
       profet->nInRushOnTime = HAL_GetTick();
       profet->eState = ON;
     }
@@ -63,6 +62,11 @@ void Profet_SM(volatile ProfetTypeDef *profet) {
       profet->nOC_TriggerTime = HAL_GetTick();
       profet->nOC_Count++;
       profet->eState = OVERCURRENT;
+    }
+
+    //Outputs not OK
+    if (!bOutputsOk){
+      profet->eState = OFF;
     }
     break;
 

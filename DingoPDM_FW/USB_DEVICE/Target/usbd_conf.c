@@ -40,7 +40,7 @@
 /* USER CODE END PV */
 
 PCD_HandleTypeDef hpcd_USB_OTG_FS;
-void Error_Handler(void);
+void Error_Handler(uint16_t nErrorCode);
 
 /* External functions --------------------------------------------------------*/
 void SystemClock_Config(void);
@@ -82,7 +82,7 @@ void HAL_PCD_MspInit(PCD_HandleTypeDef* pcdHandle)
     PeriphClkInitStruct.Clk48ClockSelection = RCC_CLK48CLKSOURCE_PLLQ;
     if (HAL_RCCEx_PeriphCLKConfig(&PeriphClkInitStruct) != HAL_OK)
     {
-      Error_Handler();
+      Error_Handler(PDM_ERROR_USB);
     }
 
     __HAL_RCC_GPIOA_CLK_ENABLE();
@@ -222,7 +222,7 @@ void HAL_PCD_ResetCallback(PCD_HandleTypeDef *hpcd)
   }
   else
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_USB);
   }
     /* Set Speed. */
   USBD_LL_SetSpeed((USBD_HandleTypeDef*)hpcd->pData, speed);
@@ -361,7 +361,7 @@ USBD_StatusTypeDef USBD_LL_Init(USBD_HandleTypeDef *pdev)
   hpcd_USB_OTG_FS.Init.use_dedicated_ep1 = DISABLE;
   if (HAL_PCD_Init(&hpcd_USB_OTG_FS) != HAL_OK)
   {
-    Error_Handler( );
+    Error_Handler(PDM_ERROR_USB);
   }
 
 #if (USE_HAL_PCD_REGISTER_CALLBACKS == 1U)

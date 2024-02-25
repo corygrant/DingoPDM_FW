@@ -39,7 +39,7 @@ void MX_CRC_Init(void)
   hcrc.Instance = CRC;
   if (HAL_CRC_Init(&hcrc) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CRC);
   }
   /* USER CODE BEGIN CRC_Init 2 */
 

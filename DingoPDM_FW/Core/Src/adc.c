@@ -56,7 +56,7 @@ void MX_ADC1_Init(void)
   hadc1.Init.EOCSelection = ADC_EOC_SINGLE_CONV;
   if (HAL_ADC_Init(&hadc1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -66,7 +66,7 @@ void MX_ADC1_Init(void)
   sConfig.SamplingTime = ADC_SAMPLETIME_56CYCLES;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -75,7 +75,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 2;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -84,7 +84,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 3;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -93,7 +93,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 4;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -102,7 +102,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 5;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -111,7 +111,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 6;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -120,7 +120,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 7;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
 
   /** Configure for the selected ADC regular channel its corresponding rank in the sequencer and its sample time.
@@ -129,7 +129,7 @@ void MX_ADC1_Init(void)
   sConfig.Rank = 8;
   if (HAL_ADC_ConfigChannel(&hadc1, &sConfig) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_ADC);
   }
   /* USER CODE BEGIN ADC1_Init 2 */
 
@@ -183,7 +183,7 @@ void HAL_ADC_MspInit(ADC_HandleTypeDef* adcHandle)
     hdma_adc1.Init.FIFOMode = DMA_FIFOMODE_DISABLE;
     if (HAL_DMA_Init(&hdma_adc1) != HAL_OK)
     {
-      Error_Handler();
+      Error_Handler(PDM_ERROR_ADC);
     }
 
     __HAL_LINKDMA(adcHandle,DMA_Handle,hdma_adc1);

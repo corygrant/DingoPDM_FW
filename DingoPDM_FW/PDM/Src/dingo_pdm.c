@@ -57,6 +57,9 @@
 // Device State
 //========================================================================
 DeviceState_t eDeviceState = DEVICE_POWER_ON;
+bool bDeviceOverTemp = false;
+bool bDeviceCriticalTemp = false;
+uint16_t nDeviceError = 0;
 
 //========================================================================
 // PDM Config
@@ -214,7 +217,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
   if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &stCanRxHeader, nCanRxData) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CAN);
   }
 
   //Store latest receive time
@@ -248,26 +251,28 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_STARTING:
+      //=====================================================================================================
+      // USB initialization
+      //=====================================================================================================
       bUsbReady = USB_Init(USB_MsgRcv) == USBD_OK;
+      if(!bUsbReady){
+        Error_Handler(PDM_ERROR_USB);
+      }
 
       //=====================================================================================================
       // MCP9808 Temperature Sensor Configuration
       //=====================================================================================================
-      MCP9808_Init(hi2c1, MCP9808_ADDRESS);
-      //if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
-        //printf("MCP9808 Init FAIL\n");
+      if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
+        Error_Handler(PDM_ERROR_TEMP_SENSOR);
 
       MCP9808_SetResolution(hi2c1, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
 
-      MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX);
-      //if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
-        //printf("MCP9808 Set Upper Limit Failed\n");
-      MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN);
-      //if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
-        //printf("MCP9808 Set Lower Limit Failed\n");
-      MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT);
-      //if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
-        //printf("MCP9808 Set Critical Limit Failed\n");
+      if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
+        Error_Handler(PDM_ERROR_TEMP_SENSOR);
+      if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
+        Error_Handler(PDM_ERROR_TEMP_SENSOR);
+      if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
+        Error_Handler(PDM_ERROR_TEMP_SENSOR);
 
       //Setup configuration
       //Enable alert pin
@@ -279,7 +284,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //=====================================================================================================
       // Start ADC DMA
       //=====================================================================================================
-      HAL_ADC_Start_DMA(hadc1, (uint32_t*) nAdc1Data, ADC_1_COUNT);
+      if(HAL_ADC_Start_DMA(hadc1, (uint32_t*) nAdc1Data, ADC_1_COUNT) != HAL_OK)
+        Error_Handler(PDM_ERROR_ADC);
 
       //=====================================================================================================
       // Init Profet Settings
@@ -292,19 +298,45 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_RUN:
-      
+      LedSetSteady(&ErrorLed, false);
+
+      if (bDeviceCriticalTemp)
+      {
+        eDeviceState = DEVICE_OVERTEMP;
+      }
       break;
 
     case DEVICE_OVERTEMP:
-      
+      //Red LED solid
+      //Outputs still on
+      //Go back to run when temp falls
+
+      LedSetSteady(&ErrorLed, true);
+
+      if (!bDeviceCriticalTemp)
+      {
+        LedSetSteady(&ErrorLed, false);
+        eDeviceState = DEVICE_RUN;
+      }
       break;
 
     case DEVICE_ERROR:
-      
+      //Error LED - flash error code
+      //No way to recover, must power cycle
+      //Gets trapped in main Error_Handler()
+      Error_Handler(nDeviceError);
+
       break;
     
     default:
       break;
+    }
+
+    //=====================================================================================================
+    // Check for device errors
+    //=====================================================================================================
+    if(nDeviceError > 0){
+      eDeviceState = DEVICE_ERROR;
     }
 
     //Need space for code that always runs
@@ -380,7 +412,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // Profet State Machine
     //=====================================================================================================
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
-      Profet_SM(&pf[i]);
+      Profet_SM(&pf[i], eDeviceState == DEVICE_RUN);
     }
 
     //=====================================================================================================
@@ -399,10 +431,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // MCP9808 temperature sensor
     //=====================================================================================================
     nBoardTempC = MCP9808_ReadTempC_Int(hi2c1, MCP9808_ADDRESS);
-
-//TODO: Add error handling, transition to DEVICE_OVERTEMP
-    if(MCP9808_GetOvertemp());// printf("*******MCP9808 Overtemp Detected*******\n");
-    if(MCP9808_GetCriticalTemp());// printf("*******MCP9808 CRITICAL Overtemp Detected*******\n");
+    bDeviceOverTemp = MCP9808_GetOvertemp();
+    bDeviceCriticalTemp = MCP9808_GetCriticalTemp();
 
     //=====================================================================================================
     // Status LEDs
@@ -509,21 +539,21 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
   if (HAL_CAN_ConfigFilter(hcan, &sFilterConfig) != HAL_OK)
   {
     /* Filter configuration Error */
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CAN);
   }
 
   //Start the CAN peripheral
   if (HAL_CAN_Start(hcan) != HAL_OK)
   {
     /* Start Error */
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CAN);
   }
 
   //Activate CAN RX notification
   if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
   {
     /* Notification Error */
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CAN);
   }
 
   //Configure Transmission
@@ -962,7 +992,7 @@ void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay)
 
   if (HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CAN);
   }
 
   if(bDelay)
@@ -1227,7 +1257,4 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   return PDM_OK;
 }
 
-void ErrorState(uint8_t nErrorId)
-{
-  HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_SET);
-}
+

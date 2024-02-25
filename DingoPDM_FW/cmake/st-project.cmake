@@ -115,6 +115,7 @@ target_sources(
     "PDM\\Src\\pdm_input.c"
     "PDM\\Src\\starter.c"
     "PDM\\Src\\status_led.c"
+    "PDM\\Src\\error.c"
     "PDM\\Src\\usb.c"
     "PDM\\Src\\virtual_input.c"
     "PDM\\Src\\wipers.c"

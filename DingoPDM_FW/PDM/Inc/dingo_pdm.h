@@ -25,6 +25,7 @@
 #include "wipers.h"
 #include "status_led.h"
 #include "usb.h"
+#include "error.h"
 
 //#define MEAS_HEAP_USE
 
@@ -56,6 +57,8 @@ typedef enum{
   PDM_ERROR_FRAM_READ = 1,
   PDM_ERROR_FRAM_WRITE
 } PdmErrorState_t;
+
+
 
 extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueUsbTx;
