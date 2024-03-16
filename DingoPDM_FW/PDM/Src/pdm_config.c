@@ -318,7 +318,7 @@ void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wi
       pConfig->stWiper.nEnabled = (stMsgRx->nRxData[1] & 0x01);
       pConfig->stWiper.nMode = (stMsgRx->nRxData[1] & 0x06) >> 1;
       pConfig->stWiper.nParkStopLevel = (stMsgRx->nRxData[1] & 0x08) >> 3;
-      pConfig->stWiper.nWashWipeCycles = (stMsgRx->nRxData[1] * 0xF0) >> 4;
+      pConfig->stWiper.nWashWipeCycles = (stMsgRx->nRxData[1] & 0xF0) >> 4;
       pConfig->stWiper.nSlowInput = stMsgRx->nRxData[2];
       pConfig->stWiper.nFastInput = stMsgRx->nRxData[3];
       pConfig->stWiper.nInterInput = stMsgRx->nRxData[4];
@@ -328,7 +328,6 @@ void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wi
 
       pWiper->nEnabled = pConfig->stWiper.nEnabled;
       pWiper->eMode = pConfig->stWiper.nMode;
-      //pConfig->stWiper.nWashWipeCycles;
       pWiper->nParkStopLevel = pConfig->stWiper.nParkStopLevel;
       pWiper->nWashWipeCycles = pConfig->stWiper.nWashWipeCycles;
       pWiper->pSlowInput = pVariableMap[pConfig->stWiper.nSlowInput];
