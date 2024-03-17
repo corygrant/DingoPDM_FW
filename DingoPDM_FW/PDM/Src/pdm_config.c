@@ -364,14 +364,14 @@ void SetWiperSpeed(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
     if(stMsgRx->nRxLen == 7){
       pConfig->stWiper.nSwipeInput = stMsgRx->nRxData[1];
       pConfig->stWiper.nSpeedInput = stMsgRx->nRxData[2];
-      pConfig->stWiper.nSpeedMap[0] = (stMsgRx->nRxData[3] * 0x0F);
-      pConfig->stWiper.nSpeedMap[1] = (stMsgRx->nRxData[3] * 0xF0) >> 4;
-      pConfig->stWiper.nSpeedMap[2] = (stMsgRx->nRxData[4] * 0x0F);
-      pConfig->stWiper.nSpeedMap[3] = (stMsgRx->nRxData[4] * 0xF0) >> 4;
-      pConfig->stWiper.nSpeedMap[4] = (stMsgRx->nRxData[5] * 0x0F);
-      pConfig->stWiper.nSpeedMap[5] = (stMsgRx->nRxData[5] * 0xF0) >> 4;
-      pConfig->stWiper.nSpeedMap[6] = (stMsgRx->nRxData[6] * 0x0F);
-      pConfig->stWiper.nSpeedMap[7] = (stMsgRx->nRxData[6] * 0xF0) >> 4;
+      pConfig->stWiper.nSpeedMap[0] = (stMsgRx->nRxData[3] & 0x0F);
+      pConfig->stWiper.nSpeedMap[1] = (stMsgRx->nRxData[3] & 0xF0) >> 4;
+      pConfig->stWiper.nSpeedMap[2] = (stMsgRx->nRxData[4] & 0x0F);
+      pConfig->stWiper.nSpeedMap[3] = (stMsgRx->nRxData[4] & 0xF0) >> 4;
+      pConfig->stWiper.nSpeedMap[4] = (stMsgRx->nRxData[5] & 0x0F);
+      pConfig->stWiper.nSpeedMap[5] = (stMsgRx->nRxData[5] & 0xF0) >> 4;
+      pConfig->stWiper.nSpeedMap[6] = (stMsgRx->nRxData[6] & 0x0F);
+      pConfig->stWiper.nSpeedMap[7] = (stMsgRx->nRxData[6] & 0xF0) >> 4;
       pWiper->pSwipeInput = pVariableMap[pConfig->stWiper.nSwipeInput];
       pWiper->pSpeedInput = pVariableMap[pConfig->stWiper.nSpeedInput];
 
@@ -401,12 +401,12 @@ void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
   if( (stMsgRx->nRxLen == 7) ||
       (stMsgRx->nRxLen == 1)){
     if(stMsgRx->nRxLen == 7){
-      pConfig->stWiper.nIntermitTime[0] = stMsgRx->nRxData[1] * 10;
-      pConfig->stWiper.nIntermitTime[1] = stMsgRx->nRxData[2] * 10;
-      pConfig->stWiper.nIntermitTime[2] = stMsgRx->nRxData[3] * 10;
-      pConfig->stWiper.nIntermitTime[3] = stMsgRx->nRxData[4] * 10;
-      pConfig->stWiper.nIntermitTime[4] = stMsgRx->nRxData[5] * 10;
-      pConfig->stWiper.nIntermitTime[5] = stMsgRx->nRxData[6] * 10;
+      pConfig->stWiper.nIntermitTime[0] = stMsgRx->nRxData[1] * 100;
+      pConfig->stWiper.nIntermitTime[1] = stMsgRx->nRxData[2] * 100;
+      pConfig->stWiper.nIntermitTime[2] = stMsgRx->nRxData[3] * 100;
+      pConfig->stWiper.nIntermitTime[3] = stMsgRx->nRxData[4] * 100;
+      pConfig->stWiper.nIntermitTime[4] = stMsgRx->nRxData[5] * 100;
+      pConfig->stWiper.nIntermitTime[5] = stMsgRx->nRxData[6] * 100;
 
       for(int i=0; i<PDM_NUM_WIPER_INTER_DELAYS; i++)
         pWiper->nInterDelays[i] = pConfig->stWiper.nIntermitTime[i];
@@ -414,12 +414,12 @@ void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
     stMsgCanTx.stTxHeader.DLC = 7;
 
     stMsgCanTx.nTxData[0] = MSG_TX_SET_WIPER_DELAYS;
-    stMsgCanTx.nTxData[1] = (uint8_t)(pConfig->stWiper.nIntermitTime[0] / 10);
-    stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stWiper.nIntermitTime[1] / 10);
-    stMsgCanTx.nTxData[3] = (uint8_t)(pConfig->stWiper.nIntermitTime[2] / 10);
-    stMsgCanTx.nTxData[4] = (uint8_t)(pConfig->stWiper.nIntermitTime[3] / 10);
-    stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stWiper.nIntermitTime[4] / 10);
-    stMsgCanTx.nTxData[6] = (uint8_t)(pConfig->stWiper.nIntermitTime[5] / 10);
+    stMsgCanTx.nTxData[1] = (uint8_t)(pConfig->stWiper.nIntermitTime[0] / 100);
+    stMsgCanTx.nTxData[2] = (uint8_t)(pConfig->stWiper.nIntermitTime[1] / 100);
+    stMsgCanTx.nTxData[3] = (uint8_t)(pConfig->stWiper.nIntermitTime[2] / 100);
+    stMsgCanTx.nTxData[4] = (uint8_t)(pConfig->stWiper.nIntermitTime[3] / 100);
+    stMsgCanTx.nTxData[5] = (uint8_t)(pConfig->stWiper.nIntermitTime[4] / 100);
+    stMsgCanTx.nTxData[6] = (uint8_t)(pConfig->stWiper.nIntermitTime[5] / 100);
     stMsgCanTx.nTxData[7] = 0;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
