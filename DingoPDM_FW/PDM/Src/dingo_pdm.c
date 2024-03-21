@@ -348,7 +348,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // Device temperature
     // VREFint
     //=====================================================================================================
-    nBattSense = (uint16_t)(((float)nAdc1Data[ADC_1_BATT_SENSE]) * 0.0519 - 11.3);
+    nBattSense = (uint16_t)(((float)nAdc1Data[ADC_1_BATT_SENSE]) * 0.089319);
     nStmTemp = (uint16_t)( (80.0 / (float)(*STM32_TEMP_3V3_110C - *STM32_TEMP_3V3_30C)) *
                            (float)(nAdc1Data[ADC_1_TEMP_SENSOR] - *STM32_TEMP_3V3_30C) + 30.0);
     nVREFINT = nAdc1Data[ADC_1_VREF_INT];
@@ -1062,7 +1062,7 @@ void Profet_Default_Init(){
   pf[0].nIN_Pin = PF_IN1_Pin;
   pf[0].nDEN_Port = PF_DEN1_GPIO_Port;
   pf[0].nDEN_Pin = PF_DEN1_Pin;
-  pf[0].fKILIS = 254795;
+  pf[0].fKILIS = 229421;
 
   pf[1].eModel = BTS7002_1EPP;
   pf[1].nNum = 1;
@@ -1070,7 +1070,7 @@ void Profet_Default_Init(){
   pf[1].nIN_Pin = PF_IN2_Pin;
   pf[1].nDEN_Port = PF_DEN2_GPIO_Port;
   pf[1].nDEN_Pin = PF_DEN2_Pin;
-  pf[1].fKILIS = 254795;
+  pf[1].fKILIS = 229421;
 
   pf[2].eModel = BTS7008_2EPA_CH1;
   pf[2].nNum = 2;
@@ -1078,7 +1078,7 @@ void Profet_Default_Init(){
   pf[2].nIN_Pin = PF_IN3_Pin;
   pf[2].nDEN_Port = PF_DEN3_4_GPIO_Port;
   pf[2].nDEN_Pin = PF_DEN3_4_Pin;
-  pf[2].fKILIS = 59258;
+  pf[2].fKILIS = 59481;
 
   pf[3].eModel = BTS7008_2EPA_CH2;
   pf[3].eState = OFF;
@@ -1087,7 +1087,7 @@ void Profet_Default_Init(){
   pf[3].nIN_Pin = PF_IN4_Pin;
   pf[3].nDEN_Port = PF_DEN3_4_GPIO_Port;
   pf[3].nDEN_Pin = PF_DEN3_4_Pin;
-  pf[3].fKILIS = 59258;
+  pf[3].fKILIS = 59481;
 
   pf[4].eModel = BTS7008_2EPA_CH1;
   pf[4].eState = OFF;
@@ -1096,7 +1096,7 @@ void Profet_Default_Init(){
   pf[4].nIN_Pin = PF_IN5_Pin;
   pf[4].nDEN_Port = PF_DEN5_6_GPIO_Port;
   pf[4].nDEN_Pin = PF_DEN5_6_Pin;
-  pf[4].fKILIS = 59258;
+  pf[4].fKILIS = 59481;
 
   pf[5].eModel = BTS7008_2EPA_CH2;
   pf[5].eState = OFF;
@@ -1105,7 +1105,7 @@ void Profet_Default_Init(){
   pf[5].nIN_Pin = PF_IN6_Pin;
   pf[5].nDEN_Port = PF_DEN5_6_GPIO_Port;
   pf[5].nDEN_Pin = PF_DEN5_6_Pin;
-  pf[5].fKILIS = 59258;
+  pf[5].fKILIS = 59481;
 
   pf[6].eModel = BTS7008_2EPA_CH1;
   pf[6].eState = OFF;
@@ -1114,7 +1114,7 @@ void Profet_Default_Init(){
   pf[6].nIN_Pin = PF_IN7_Pin;
   pf[6].nDEN_Port = PF_DEN7_8_GPIO_Port;
   pf[6].nDEN_Pin = PF_DEN7_8_Pin;
-  pf[6].fKILIS = 59258;
+  pf[6].fKILIS = 59481;
 
   pf[7].eModel = BTS7008_2EPA_CH2;
   pf[7].eState = OFF;
@@ -1123,7 +1123,7 @@ void Profet_Default_Init(){
   pf[7].nIN_Pin = PF_IN8_Pin;
   pf[7].nDEN_Port = PF_DEN7_8_GPIO_Port;
   pf[7].nDEN_Pin = PF_DEN7_8_Pin;
-  pf[7].fKILIS = 59258;
+  pf[7].fKILIS = 59481;
 }
 
 /*
