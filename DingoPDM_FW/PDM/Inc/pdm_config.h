@@ -18,9 +18,9 @@
 #include "profet.h"
 #include "wipers.h"
 
-#define PDM_MAJOR_VERSION 7
-#define PDM_MINOR_VERSION 0
-#define PDM_BUILD 1
+#define PDM_MAJOR_VERSION 0
+#define PDM_MINOR_VERSION 1
+#define PDM_BUILD 0
 
 #define PDM_NUM_OUTPUTS 8
 #define PDM_NUM_INPUTS 2
