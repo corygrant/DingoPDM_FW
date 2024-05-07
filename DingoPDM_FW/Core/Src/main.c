@@ -151,7 +151,7 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.PLL.PLLR = 2;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_RCC);
   }
 
   /** Initializes the CPU, AHB and APB buses clocks
@@ -165,7 +165,7 @@ void SystemClock_Config(void)
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_4) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_RCC);
   }
 }
 
@@ -200,16 +200,17 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 /**
   * @brief  This function is executed in case of error occurrence.
+  * @param  nErrorCode: Error code
   * @retval None
   */
-void Error_Handler(void)
+void Error_Handler(uint16_t nErrorCode)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
   /* User can add his own implementation to report the HAL error return state */
   __disable_irq();
   while (1)
   {
-    ErrorState(0);
+    ErrorState(nErrorCode);
   }
   /* USER CODE END Error_Handler_Debug */
 }

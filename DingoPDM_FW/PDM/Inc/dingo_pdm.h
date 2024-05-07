@@ -14,31 +14,31 @@
 #include "stdio.h"
 #include "cmsis_os.h"
 
-#include "usbd_core.h"
-#include "usbd_def.h"
-#include "usbd_cdc.h"
-#include "usbd_desc.h"
-
 #include "msg_queue.h"
 #include "pdm_input.h"
 #include "starter.h"
 #include "flasher.h"
-#include "canboard.h"
 #include "mb85rc.h"
 #include "mcp9808.h"
 #include "profet.h"
 #include "virtual_input.h"
 #include "wipers.h"
+#include "status_led.h"
+#include "usb.h"
+#include "error.h"
 
 //#define MEAS_HEAP_USE
 
-#define SEND_ALL_USB
-
-#define USBD_RX_DATA_SIZE  2048
-#define USBD_TX_DATA_SIZE  2048
-
 #define PDM_NOK 0
 #define PDM_OK 1
+
+typedef enum{
+  DEVICE_POWER_ON,
+  DEVICE_STARTING,
+  DEVICE_RUN,
+  DEVICE_OVERTEMP,
+  DEVICE_ERROR
+} DeviceState_t;
 
 typedef enum{
     CAN_BITRATE_10K = 0,
@@ -58,13 +58,13 @@ typedef enum{
   PDM_ERROR_FRAM_WRITE
 } PdmErrorState_t;
 
+
+
 extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueUsbTx;
 extern osMessageQueueId_t qMsgQueueCanTx;
 
-extern USBD_CDC_ItfTypeDef USBD_Interface_PDM;
-uint8_t USBD_CDC_Transmit(uint8_t* Buf, uint16_t Len);
-uint8_t USBD_CDC_Transmit_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[]);
+
 
 void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_HandleTypeDef* hi2c1);
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan);

@@ -117,19 +117,19 @@ void MX_FREERTOS_Init(void) {
   qMsgQueueRx = osMessageQueueNew(MSGQUEUE_RX_SIZE, sizeof(MsgQueueRx_t), NULL);
   if(qMsgQueueRx == NULL){
     //TODO: Message queue not created
-    Error_Handler();
+    Error_Handler(PDM_ERROR_MSG_QUEUE);
   }
 
   qMsgQueueUsbTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueUsbTx_t), NULL);
   if(qMsgQueueUsbTx == NULL){
    //TODO: Message queue not created
-    Error_Handler();
+    Error_Handler(PDM_ERROR_MSG_QUEUE);
   }
 
   qMsgQueueCanTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
   if(qMsgQueueCanTx == NULL){
     //TODO: Message queue not created
-	Error_Handler();
+	Error_Handler(PDM_ERROR_MSG_QUEUE);
   }
   /* USER CODE END RTOS_QUEUES */
 
@@ -142,15 +142,15 @@ void MX_FREERTOS_Init(void) {
 
   /* USER CODE BEGIN RTOS_THREADS */
   if(defaultTaskHandle == 0x0)
-    Error_Handler();
+    Error_Handler(PDM_ERROR_TASK);
 
   if(canTxTaskHandle == 0x0)
-    Error_Handler();
+    Error_Handler(PDM_ERROR_TASK);
   /* USER CODE END RTOS_THREADS */
 
   /* USER CODE BEGIN RTOS_EVENTS */
   if(InitPdmConfig(&hi2c1) != PDM_OK)
-    Error_Handler();
+    Error_Handler(PDM_ERROR_CONFIG);
   /* USER CODE END RTOS_EVENTS */
 
 }

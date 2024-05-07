@@ -47,7 +47,7 @@ void MX_I2C1_Init(void)
   hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
   if (HAL_I2C_Init(&hi2c1) != HAL_OK)
   {
-    Error_Handler();
+    Error_Handler(PDM_ERROR_I2C);
   }
   /* USER CODE BEGIN I2C1_Init 2 */
 

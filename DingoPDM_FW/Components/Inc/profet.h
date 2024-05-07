@@ -70,6 +70,6 @@ typedef struct {
 
 } ProfetTypeDef;
 
-void Profet_SM(volatile ProfetTypeDef *profet);
+void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk);
 void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal, volatile float fVDDA);
 #endif /* COMPONENTS_INC_PROFET_H_ */
