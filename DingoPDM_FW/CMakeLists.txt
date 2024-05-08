@@ -48,11 +48,28 @@ target_link_directories(${CMAKE_PROJECT_NAME} PRIVATE
 # Add sources to executable
 target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user sources here
+    Components/Src/mb85rc.c
+    Components/Src/mcp9808.c
+    Components/Src/profet.c
+    PDM/Src/can_input.c
+    PDM/Src/dingo_pdm.c
+    PDM/Src/flasher.c
+    PDM/Src/input.c
+    PDM/Src/pdm_config.c
+    PDM/Src/pdm_input.c
+    PDM/Src/starter.c
+    PDM/Src/status_led.c
+    PDM/Src/error.c
+    PDM/Src/usb.c
+    PDM/Src/virtual_input.c
+    PDM/Src/wipers.c
 )
 
 # Add include paths
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
     # Add user defined include paths
+    PDM/Inc
+    Components/Inc
 )
 
 # Add project symbols (macros)

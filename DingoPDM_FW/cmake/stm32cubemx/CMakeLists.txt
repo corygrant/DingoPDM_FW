@@ -13,8 +13,6 @@ target_compile_definitions(stm32cubemx INTERFACE
 )
 
 target_include_directories(stm32cubemx INTERFACE
-    ../../PDM/Inc
-    ../../Components/Inc
     ../../Core/Inc
     ../../USB_DEVICE/App
     ../../USB_DEVICE/Target
@@ -30,21 +28,6 @@ target_include_directories(stm32cubemx INTERFACE
 )
 
 target_sources(stm32cubemx INTERFACE
-    ../../Components/Src/mb85rc.c
-    ../../Components/Src/mcp9808.c
-    ../../Components/Src/profet.c
-    ../../PDM/Src/can_input.c
-    ../../PDM/Src/dingo_pdm.c
-    ../../PDM/Src/flasher.c
-    ../../PDM/Src/input.c
-    ../../PDM/Src/pdm_config.c
-    ../../PDM/Src/pdm_input.c
-    ../../PDM/Src/starter.c
-    ../../PDM/Src/status_led.c
-    ../../PDM/Src/error.c
-    ../../PDM/Src/usb.c
-    ../../PDM/Src/virtual_input.c
-    ../../PDM/Src/wipers.c
     ../../Core/Src/main.c
     ../../Core/Src/gpio.c
     ../../Core/Src/freertos.c
