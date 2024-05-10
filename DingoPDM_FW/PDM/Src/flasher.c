@@ -9,10 +9,7 @@
 
 void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[PDM_NUM_OUTPUTS])
 {
-  if(!pFlasher->nEnabled){
-    pResult[pFlasher->nOutput] = 1;
-    return;
-  }
+
   if(!*pFlasher->pInput){
     pResult[pFlasher->nOutput] = 1;
     return;

@@ -1018,7 +1018,8 @@ void InputLogic(){
   }
 
   //Flasher not used - set to 1
-  for(int i=0; i<PDM_NUM_OUTPUTS; i++){
+  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
+  {
       if( (stPdmConfig.stFlasher[0].nOutput != i) &&
           (stPdmConfig.stFlasher[1].nOutput != i) &&
           (stPdmConfig.stFlasher[2].nOutput != i) &&
@@ -1027,8 +1028,12 @@ void InputLogic(){
   }
 
   //Set flasher outputs
-  for(int i=0; i<PDM_NUM_FLASHERS; i++){
-    EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
+  for(int i=0; i<PDM_NUM_FLASHERS; i++)
+  {
+    if(stPdmConfig.stFlasher[i].nEnabled)
+    {
+      EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
+    }
   }
 }
 
