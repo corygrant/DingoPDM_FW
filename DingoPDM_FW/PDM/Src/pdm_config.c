@@ -298,8 +298,8 @@ void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
       stMsgCanTx.nTxData[3] = pConfig->stVirtualInput[nIndex].nVar0;
       stMsgCanTx.nTxData[4] = pConfig->stVirtualInput[nIndex].nVar1;
       stMsgCanTx.nTxData[5] = pConfig->stVirtualInput[nIndex].nVar2;
-      stMsgCanTx.nTxData[6] = ((pConfig->stVirtualInput[nIndex].eMode & 0x0F) << 6) + ((pConfig->stVirtualInput[nIndex].eCond0 & 0x03) << 2) +
-                              (pConfig->stVirtualInput[nIndex].eCond1 & 0x03);
+      stMsgCanTx.nTxData[6] = ((pConfig->stVirtualInput[nIndex].eMode & 0x0F) << 6) + ((pConfig->stVirtualInput[nIndex].eCond1 & 0x03) << 2) +
+                              (pConfig->stVirtualInput[nIndex].eCond0 & 0x03);
       stMsgCanTx.nTxData[7] = 0;
 
       stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
