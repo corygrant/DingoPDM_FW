@@ -240,6 +240,7 @@ void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], 
         pConfig->stOutput[nIndex].pInput = pVariableMap[pConfig->stOutput[nIndex].nInput];
 
         //Copy config values to profet
+        profet[nIndex].bEnabled = pConfig->stOutput[nIndex].nEnabled;
         profet[nIndex].nIL_Limit = pConfig->stOutput[nIndex].nCurrentLimit;
         profet[nIndex].nIL_InRushLimit = pConfig->stOutput[nIndex].nInrushLimit;
         profet[nIndex].nIL_InRushTime = pConfig->stOutput[nIndex].nInrushTime;

@@ -11,6 +11,15 @@ uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL);
 
 void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk) {
 
+  //Not enabled
+  if (!profet->bEnabled) {
+    HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(profet->nDEN_Port, profet->nDEN_Pin, GPIO_PIN_RESET);
+    profet->nOC_Count = 0;
+    profet->eState = OFF;
+    return;
+  }
+
   //Check for inrush
   profet->bInRushActive = (profet->nIL_InRushTime + profet->nInRushOnTime) > HAL_GetTick();
 
@@ -19,6 +28,7 @@ void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk) {
   if (profet->nIS > 30000){
     profet->eState = FAULT;
   }
+
 
   switch (profet->eState) {
 

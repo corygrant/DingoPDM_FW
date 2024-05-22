@@ -42,6 +42,7 @@ typedef struct {
   volatile ProfetResetMode_t eResetMode;
   volatile char cState;
 
+  bool bEnabled;
   uint16_t nNum;
 
   GPIO_TypeDef* nIN_Port;

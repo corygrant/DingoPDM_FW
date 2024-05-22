@@ -1162,6 +1162,7 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
+    pf[i].bEnabled = stPdmConfig.stOutput[i].nEnabled;
     pf[i].nIL_Limit = stPdmConfig.stOutput[i].nCurrentLimit;
     pf[i].nIL_InRushLimit = stPdmConfig.stOutput[i].nInrushLimit;
     pf[i].nIL_InRushTime = stPdmConfig.stOutput[i].nInrushTime;
