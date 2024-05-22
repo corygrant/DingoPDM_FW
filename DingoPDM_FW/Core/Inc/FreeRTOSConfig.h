@@ -93,7 +93,7 @@
 #define configTIMER_QUEUE_LENGTH                 10
 #define configTIMER_TASK_STACK_DEPTH             256
 
-#define configGENERATE_RUN_TIME_STATS 0
+#define configGENERATE_RUN_TIME_STATS 1
 extern void ConfigureRunTimeCounter(void);
 #define portCONFIGURE_TIMER_FOR_RUN_TIME_STATS() ConfigureRunTimeCounter()
 extern uint32_t GetRunTimeCounter(void);
