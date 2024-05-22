@@ -1,10 +1,3 @@
-/*
- * dingo_pdm.c
- *
- *  Created on: Oct 22, 2020
- *      Author: corygrant
- */
-
 #include "dingo_pdm.h"
 #include "pdm_config.h"
 #include "main.h"
@@ -151,11 +144,11 @@ uint32_t nMsgCnt;
 //========================================================================
 void StatusLedOn (void) {HAL_GPIO_WritePin(StatusLED_GPIO_Port, StatusLED_Pin, GPIO_PIN_SET);}
 void StatusLedOff (void) {HAL_GPIO_WritePin(StatusLED_GPIO_Port, StatusLED_Pin, GPIO_PIN_RESET);}
-Led_Output StatusLed = {StatusLedOn, StatusLedOff, false};
+Led_Output StatusLed = {StatusLedOn, StatusLedOff, false, 0};
 
 void ErrorLedOn (void) {HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_SET);}
 void ErrorLedOff (void) {HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_RESET);}
-Led_Output ErrorLed = {ErrorLedOn, ErrorLedOff, true};
+Led_Output ErrorLed = {ErrorLedOn, ErrorLedOff, true, 0};
 
 //========================================================================
 // Local Function Prototypes
@@ -488,7 +481,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     	}
 
 			//Check for settings change or request message
-      if(stMsgRx.stCanRxHeader.StdId == stPdmConfig.stCanOutput.nBaseId - 1){
+      if((int)stMsgRx.stCanRxHeader.StdId == (int)(stPdmConfig.stCanOutput.nBaseId - 1)){
         PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueCanTx);
       }
     }
@@ -1139,24 +1132,24 @@ void Profet_Default_Init(){
 */
 uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 {
+  //NOTE: These lines must be uncommented when a new PDM is built or the config structure is changed
+  //Otherwise the FRAM won't hold any config values and will fail when the byte length doesn't match
   //PdmConfig_SetDefault(&stPdmConfig);
   //PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
 
-//TODO: Handle reading config at boot properly
-
-   //Check that the data is correct, comms are OK, and FRAM device is the right ID
+  //Check that the data is correct, comms are OK, and FRAM device is the right ID
   if(PdmConfig_Check(hi2c1, MB85RC_ADDRESS, &stPdmConfig) == PDM_OK)
   {
     if(PdmConfig_Read(hi2c1, MB85RC_ADDRESS, &stPdmConfig) != PDM_OK)
     {
       PdmConfig_SetDefault(&stPdmConfig);
-      //ErrorState(PDM_ERROR_FRAM_READ);
+      ErrorState(PDM_ERROR_FRAM_READ);
     }
   }
   else
   {
     PdmConfig_SetDefault(&stPdmConfig);
-    //ErrorState(PDM_ERROR_FRAM_READ);
+    ErrorState(PDM_ERROR_FRAM_READ);
   }
 
   //Map config to profet values
@@ -1239,7 +1232,7 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 
   stWiper.nEnabled = stPdmConfig.stWiper.nEnabled;
   stWiper.eMode = stPdmConfig.stWiper.nMode;
-  //stPdmConfig.stWiper.nParkStopLevel;
+  stWiper.nParkStopLevel = stPdmConfig.stWiper.nParkStopLevel;
   stWiper.nWashWipeCycles = stPdmConfig.stWiper.nWashWipeCycles;
   stWiper.pSlowInput = pVariableMap[stPdmConfig.stWiper.nSlowInput];
   stWiper.pFastInput = pVariableMap[stPdmConfig.stWiper.nFastInput];

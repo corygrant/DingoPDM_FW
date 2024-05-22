@@ -51,6 +51,8 @@ uint8_t PdmConfig_Write(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pCo
     return 0;
   }
 
+  //Write the size of the config structure to FRAM
+  //Used to check that the settings have been stored in FRAM properly 
   uint16_t nSizeOfConfig = sizeof(*pConfig);
 
   if(!MB85RC_Write(hi2c, nAddr, sizeof(*pConfig), (uint8_t*)&nSizeOfConfig, sizeof(nSizeOfConfig)) == HAL_OK)
