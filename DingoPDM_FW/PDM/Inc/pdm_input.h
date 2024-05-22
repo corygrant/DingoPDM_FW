@@ -1,10 +1,3 @@
-/*
- * pdm_input.h
- *
- *  Created on: Jan 5, 2021
- *      Author: coryg
- */
-
 #ifndef INC_PDM_INPUT_H_
 #define INC_PDM_INPUT_H_
 

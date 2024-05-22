@@ -1,10 +1,3 @@
-/*
- * mb85rc.h
- *
- *  Created on: Jan 11, 2021
- *      Author: coryg
- */
-
 #ifndef COMPONENTS_INC_MB85RC_H_
 #define COMPONENTS_INC_MB85RC_H_
 

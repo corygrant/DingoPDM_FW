@@ -1,10 +1,3 @@
-/*
- * virtual_input.c
- *
- *  Created on: Jan 6, 2021
- *      Author: coryg
- */
-
 #include "virtual_input.h"
 
 void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)

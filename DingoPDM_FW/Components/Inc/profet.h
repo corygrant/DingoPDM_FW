@@ -1,10 +1,3 @@
-/*
- * profet.h
- *
- *  Created on: Nov 9, 2020
- *      Author: coryg
- */
-
 #ifndef COMPONENTS_INC_PROFET_H_
 #define COMPONENTS_INC_PROFET_H_
 
@@ -50,8 +43,6 @@ typedef struct {
   GPIO_TypeDef* nDEN_Port;
   uint16_t nDEN_Pin;
 
-  //volatile uint16_t nIS_Avg;
-  //volatile uint32_t nIS_Sum;
   uint16_t nIL_Limit; //Current limit (amps)
 
   bool bInRushActive; //Currently in inrush

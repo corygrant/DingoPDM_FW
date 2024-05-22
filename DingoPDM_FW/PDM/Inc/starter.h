@@ -1,10 +1,3 @@
-/*
- * starter.h
- *
- *  Created on: Jan 6, 2021
- *      Author: coryg
- */
-
 #ifndef INC_STARTER_H_
 #define INC_STARTER_H_
 

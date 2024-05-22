@@ -1,10 +1,3 @@
-/*
- * mb85rc.c
- *
- *  Created on: Jan 11, 2021
- *      Author: coryg
- */
-
 #include "mb85rc.h"
 
 #define I2C_TIMEOUT 100

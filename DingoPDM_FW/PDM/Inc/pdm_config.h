@@ -1,10 +1,3 @@
-/*
- * pdm_config.h
- *
- *  Created on: Jan 5, 2021
- *      Author: coryg
- */
-
 #ifndef INC_PDM_CONFIG_H_
 #define INC_PDM_CONFIG_H_
 

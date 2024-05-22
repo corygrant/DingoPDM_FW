@@ -1,10 +1,3 @@
-/*
- * flasher.c
- *
- *  Created on: Jan 6, 2021
- *      Author: coryg
- */
-
 #include "flasher.h"
 
 void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[PDM_NUM_OUTPUTS])

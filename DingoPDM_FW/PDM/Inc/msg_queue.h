@@ -1,10 +1,3 @@
-/*
- * msg_queue.h
- *
- *  Created on: Feb 20, 2021
- *      Author: coryg
- */
-
 #ifndef INC_MSG_QUEUE_H_
 #define INC_MSG_QUEUE_H_
 

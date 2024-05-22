@@ -1,10 +1,3 @@
-/*
- * flasher.h
- *
- *  Created on: Jan 6, 2021
- *      Author: coryg
- */
-
 #ifndef INC_FLASHER_H_
 #define INC_FLASHER_H_
 

@@ -1,11 +1,3 @@
-/*
- * input.h
- *
- *  Created on: Jan 3, 2021
- *      Author: coryg
- *
- */
-
 #ifndef COMPONENTS_INC_PUSHBUTTON_H_
 #define COMPONENTS_INC_PUSHBUTTON_H_
 

@@ -1,10 +1,3 @@
-/*
- * wipers.c
- *
- *  Created on: Jan 1, 2021
- *      Author: coryg
- */
-
 #include "wipers.h"
 
 static void Parked(Wiper_t* wiper)

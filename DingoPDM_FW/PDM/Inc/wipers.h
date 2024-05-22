@@ -1,10 +1,3 @@
-/*
- * wipers.h
- *
- *  Created on: Jan 1, 2021
- *      Author: coryg
- */
-
 #ifndef COMPONENTS_INC_WIPERS_H_
 #define COMPONENTS_INC_WIPERS_H_
 

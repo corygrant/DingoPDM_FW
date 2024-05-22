@@ -1,12 +1,3 @@
-/*
- * input.c
- *
- *  Created on: Jan 3, 2021
- *      Author: coryg
- *
- *      -Evaluate input debounce, mode and inversion
- */
-
 #include <input.h>
 
 void SetInputPull(GPIO_TypeDef  *GPIOx, uint16_t nPin, uint8_t nPull){

@@ -119,16 +119,7 @@ void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk) {
 
 void Profet_UpdateIS(volatile ProfetTypeDef *profet, volatile uint16_t newVal, volatile float fVDDA)
 {
-
-  //Moving average without array or dividing
-  //Store the new val, incase we need a non-filtered val elsewhere
   profet->nIS = newVal;
-  //Add new value to old sum
-  //profet->nIS_Sum += profet->nIS;
-  //Shift sum by 1 which is equal to dividing by 2
-  //profet->nIS_Avg = profet->nIS_Sum >> 1;
-  //Remove the average from the sum, otherwise sum always goes up never down
-  //profet->nIS_Sum -= profet->nIS_Avg;
 
   //BTS7002 - IS inaccurate below 4A
   //BTS7008 - IS fairly accurate across range

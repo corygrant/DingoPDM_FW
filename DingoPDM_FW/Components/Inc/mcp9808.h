@@ -1,10 +1,3 @@
-/*
- * MCP9808.h
- *
- *  Created on: Oct 30, 2020
- *      Author: coryg
- */
-
 #ifndef INC_MCP9808_H_
 #define INC_MCP9808_H_
 

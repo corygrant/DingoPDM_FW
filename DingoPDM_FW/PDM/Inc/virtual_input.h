@@ -1,10 +1,3 @@
-/*
- * virtual_input.h
- *
- *  Created on: Jan 6, 2021
- *      Author: coryg
- */
-
 #ifndef COMPONENTS_INC_VIRTUAL_INPUT_H_
 #define COMPONENTS_INC_VIRTUAL_INPUT_H_
 

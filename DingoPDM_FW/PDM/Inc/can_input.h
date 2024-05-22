@@ -1,10 +1,3 @@
-/*
- * can_input.h
- *
- *  Created on: Jan 5, 2021
- *      Author: coryg
- */
-
 #ifndef INC_CAN_INPUT_H_
 #define INC_CAN_INPUT_H_
 

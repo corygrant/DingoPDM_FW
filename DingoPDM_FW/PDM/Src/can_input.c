@@ -1,10 +1,3 @@
-/*
- * can_input.c
- *
- *  Created on: Jan 5, 2021
- *      Author: coryg
- */
-
 #include "can_input.h"
 
 uint8_t EvaluateCANInput(CAN_RxHeaderTypeDef* stRxHeader, uint8_t nRxData[8], PdmConfig_CanInput_t *stIn, uint16_t* nResult)

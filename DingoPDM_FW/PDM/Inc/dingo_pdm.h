@@ -1,10 +1,3 @@
-/*
- * dingo_pdm.h
- *
- *  Created on: Oct 22, 2020
- *      Author: coryg
- */
-
 #ifndef INC_DINGO_PDM_H_
 #define INC_DINGO_PDM_H_
 
