@@ -122,6 +122,8 @@ void WakeupReInit();
 #define EXTRA1_GPIO_Port GPIOC
 #define EXTRA2_Pin GPIO_PIN_11
 #define EXTRA2_GPIO_Port GPIOC
+#define EXTRA3_Pin GPIO_PIN_13
+#define EXTRA3_GPIO_Port GPIOC
 
 /* USER CODE BEGIN Private defines */
 

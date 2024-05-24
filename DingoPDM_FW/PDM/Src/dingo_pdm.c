@@ -299,6 +299,11 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       // Init Profet Settings
       //=====================================================================================================
       Profet_Default_Init();    
+
+      //=====================================================================================================
+      // Set CAN Transceiver to High Speed Mode
+      //=====================================================================================================
+      HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
       
       //if successful
       eDeviceState = DEVICE_RUN;
@@ -355,6 +360,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //Must be more than 1 in case state changed in the middle of last TX
       if(nTXBeforeSleep > 1){
         LedSetSteady(&StatusLed, false);
+        //Set CAN transceiver to Standby (power saving)
+        HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
         EnterStopMode();
         //Resume here
 
@@ -367,6 +374,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_WAKEUP:
+      //Set CAN transceiver back to High Speed Mode
+      HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
       LedSetSteady(&StatusLed, true);
       eDeviceState = DEVICE_RUN;
       break;
@@ -602,7 +611,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 #endif
 
     //Debug GPIO
-    //EXTRA3_GPIO_Port->ODR ^= EXTRA3_Pin;
     HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
 
     osDelay(MAIN_TASK_DELAY);
