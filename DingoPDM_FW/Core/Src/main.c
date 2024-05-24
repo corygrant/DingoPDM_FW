@@ -47,6 +47,30 @@ int main(void)
   }
  }
 
+ void EnterStopMode()
+ {
+    //Reconfigure CAN as GPIO event
+    CAN_DeInitBeforeStop(&hcan1);
+
+    //Enter Stop Mode
+    HAL_SuspendTick();
+    __HAL_PWR_CLEAR_FLAG(PWR_FLAG_WU);
+    HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFE);
+
+    //Execution will resume here after wakeup
+    WakeupReInit();
+ }
+ 
+ void WakeupReInit()
+ {
+    //Start clocks
+    SystemClock_Config();
+    HAL_ResumeTick();
+
+    //Reconfigure CAN
+    CAN_ReInitAtWakeup(&hcan1);
+ }
+
 /**
   * @brief System Clock Configuration
   * @retval None

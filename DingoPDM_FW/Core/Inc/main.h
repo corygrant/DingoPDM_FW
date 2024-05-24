@@ -59,7 +59,8 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(uint16_t nErrorCode);
-
+void EnterStopMode();
+void WakeupReInit();
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

@@ -5,6 +5,8 @@ uint8_t USBD_TxBuffer[USBD_TX_DATA_SIZE];
 
 USBD_HandleTypeDef hUSBD;
 
+bool bUsbConnected = false;
+
 static int8_t USBD_CDC_Init(void);
 static int8_t USBD_CDC_DeInit(void);
 static int8_t USBD_CDC_Control(uint8_t cmd, uint8_t* pbuf, uint16_t length);
@@ -60,6 +62,8 @@ static int8_t USBD_CDC_Init(void)
   /* Set Application Buffers */
   USBD_CDC_SetTxBuffer(&hUSBD, USBD_TxBuffer, 0);
   USBD_CDC_SetRxBuffer(&hUSBD, USBD_RxBuffer);
+
+  bUsbConnected = true;
   return (USBD_OK);
 }
 
@@ -69,6 +73,7 @@ static int8_t USBD_CDC_Init(void)
   */
 static int8_t USBD_CDC_DeInit(void)
 {
+  bUsbConnected = false;
   return (USBD_OK);
 }
 
@@ -243,4 +248,9 @@ uint8_t USB_Tx_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[])
 	}
 
 	return USB_Tx(nUsbData, sizeof(nUsbData));
+}
+
+bool USB_IsConnected()
+{
+  return bUsbConnected;
 }

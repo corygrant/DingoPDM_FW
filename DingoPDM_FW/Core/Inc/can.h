@@ -41,7 +41,8 @@ extern CAN_HandleTypeDef hcan1;
 void MX_CAN1_Init(void);
 
 /* USER CODE BEGIN Prototypes */
-
+void CAN_DeInitBeforeStop(CAN_HandleTypeDef* canHandle);
+void CAN_ReInitAtWakeup(CAN_HandleTypeDef* canHandle);
 /* USER CODE END Prototypes */
 
 #ifdef __cplusplus

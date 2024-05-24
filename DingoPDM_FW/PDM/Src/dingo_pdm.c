@@ -47,6 +47,12 @@
 #define STM32_TEMP_REF_VOLT 3.3
 
 //========================================================================
+// Sleep (STM32 Stop Mode)
+//========================================================================
+#define ENABLE_SLEEP 1
+#define SLEEP_TIMEOUT 30000
+
+//========================================================================
 // Device State
 //========================================================================
 DeviceState_t eDeviceState = DEVICE_POWER_ON;
@@ -149,6 +155,15 @@ Led_Output StatusLed = {StatusLedOn, StatusLedOff, false, 0};
 void ErrorLedOn (void) {HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_SET);}
 void ErrorLedOff (void) {HAL_GPIO_WritePin(ErrorLED_GPIO_Port, ErrorLED_Pin, GPIO_PIN_RESET);}
 Led_Output ErrorLed = {ErrorLedOn, ErrorLedOff, true, 0};
+
+//========================================================================
+// Low Power Stop
+//========================================================================
+bool bSleepMsgReceived = false;
+uint8_t nNumOutputsOn = 0;
+uint8_t nLastNumOutputsOn = 8;
+uint32_t nAllOutputsOffTime = 0;
+uint8_t nTXBeforeSleep = 0;
 
 //========================================================================
 // Local Function Prototypes
@@ -291,12 +306,69 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_RUN:
+      LedSetSteady(&StatusLed, true);
       LedSetSteady(&ErrorLed, false);
 
       if (bDeviceCriticalTemp)
       {
         eDeviceState = DEVICE_OVERTEMP;
       }
+
+      if(ENABLE_SLEEP){
+
+        if(bSleepMsgReceived){
+          bSleepMsgReceived = false;
+          eDeviceState = DEVICE_SLEEP;
+          nTXBeforeSleep = 0;
+        }
+        else{
+          //Count number of outputs on
+          nNumOutputsOn = 0;
+          for(int i=0; i<PDM_NUM_OUTPUTS; i++){
+            if(!pf[i].eState == OFF){
+              nNumOutputsOn++;
+            }  
+          }
+
+          //All outputs just turned off, save time
+          if((nNumOutputsOn == 0) && (nLastNumOutputsOn > 0)){
+            nAllOutputsOffTime = HAL_GetTick();
+          }
+          nLastNumOutputsOn = nNumOutputsOn;
+          
+          //No outputs on, no CAN msgs received and no USB connected
+          //Go to sleep after timeout
+          if( (nNumOutputsOn == 0) && (nLastNumOutputsOn == 0) &&
+              !USB_IsConnected()){
+            if(((HAL_GetTick() - nAllOutputsOffTime) > SLEEP_TIMEOUT) && 
+                ((HAL_GetTick() - nLastCanUpdate) > SLEEP_TIMEOUT)){
+                  eDeviceState = DEVICE_SLEEP;
+                  nTXBeforeSleep = 0;
+              }
+          }
+        }
+      }
+      break;
+
+    case DEVICE_SLEEP:
+      //Wait for messages to TX
+      //Must be more than 1 in case state changed in the middle of last TX
+      if(nTXBeforeSleep > 1){
+        LedSetSteady(&StatusLed, false);
+        EnterStopMode();
+        //Resume here
+
+        //Set time to now so it doesn't trigger sleep right away
+        nAllOutputsOffTime = HAL_GetTick();
+        nLastCanUpdate = HAL_GetTick();
+
+        eDeviceState = DEVICE_WAKEUP;
+      }
+      break;
+
+    case DEVICE_WAKEUP:
+      LedSetSteady(&StatusLed, true);
+      eDeviceState = DEVICE_RUN;
       break;
 
     case DEVICE_OVERTEMP:
@@ -331,9 +403,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     if(nDeviceError > 0){
       eDeviceState = DEVICE_ERROR;
     }
-
-    //Need space for code that always runs
-    //Some code will error if it hasn't been initalized in DEVICE_STARTING
 
     //=====================================================================================================
     // ADC channels
@@ -430,8 +499,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     //=====================================================================================================
     // Status LEDs
     //=====================================================================================================
-    LedUpdate(HAL_GetTick(), &StatusLed);
-    LedUpdate(HAL_GetTick(), &ErrorLed);
+    //LedUpdate(HAL_GetTick(), &StatusLed);
+    //LedUpdate(HAL_GetTick(), &ErrorLed);
 
     //=====================================================================================================
     // Check for CAN RX messages in queue
@@ -448,40 +517,71 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         }
       }
 
-      //Burn Settings
-      // 'B'
-      if((MsgQueueRxCmd_t)stMsgRx.nRxData[0] == MSG_RX_BURN_SETTINGS){
-
-    	  //Check special number sequence
-    	  if(stMsgRx.nRxLen == 4){
-					if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 3) && (stMsgRx.nRxData[3] == 8)){
-						//Write settings to FRAM
-						uint8_t nRet = PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
-
-						MsgQueueCanTx_t stMsgCanTx;
-
-						stMsgCanTx.stTxHeader.DLC = 2;
-
-						stMsgCanTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-						stMsgCanTx.nTxData[1] = nRet;
-						stMsgCanTx.nTxData[2] = 0;
-						stMsgCanTx.nTxData[3] = 0;
-						stMsgCanTx.nTxData[4] = 0;
-						stMsgCanTx.nTxData[5] = 0;
-						stMsgCanTx.nTxData[6] = 0;
-						stMsgCanTx.nTxData[7] = 0;
-
-						stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-
-						osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
-
-            LedBlink(HAL_GetTick(), &StatusLed);
-					}
-    	  }
-    	}
-
 			//Check for settings change or request message
       if((int)stMsgRx.stCanRxHeader.StdId == (int)(stPdmConfig.stCanOutput.nBaseId - 1)){
+
+        //Burn Settings
+        // 'B'
+        if((MsgQueueRxCmd_t)stMsgRx.nRxData[0] == MSG_RX_BURN_SETTINGS){
+
+          //Check special number sequence
+          if(stMsgRx.nRxLen == 4){
+            if((stMsgRx.nRxData[1] == 1) && (stMsgRx.nRxData[2] == 3) && (stMsgRx.nRxData[3] == 8)){
+              //Write settings to FRAM
+              uint8_t nRet = PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
+
+              MsgQueueCanTx_t stMsgCanTx;
+
+              stMsgCanTx.stTxHeader.DLC = 2;
+
+              stMsgCanTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
+              stMsgCanTx.nTxData[1] = nRet;
+              stMsgCanTx.nTxData[2] = 0;
+              stMsgCanTx.nTxData[3] = 0;
+              stMsgCanTx.nTxData[4] = 0;
+              stMsgCanTx.nTxData[5] = 0;
+              stMsgCanTx.nTxData[6] = 0;
+              stMsgCanTx.nTxData[7] = 0;
+
+              stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
+
+              osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+
+              LedBlink(HAL_GetTick(), &StatusLed);
+            }
+          }
+        }
+
+        //Sleep
+        // 'Q'
+        if((MsgQueueRxCmd_t)stMsgRx.nRxData[0] == MSG_RX_SLEEP){
+
+          //Check special sequence 'UIT'
+          if(stMsgRx.nRxLen == 4){
+            if((stMsgRx.nRxData[1] == 85) && (stMsgRx.nRxData[2] == 73) && (stMsgRx.nRxData[3] == 84)){
+              bSleepMsgReceived = true;
+
+              MsgQueueCanTx_t stMsgCanTx;
+
+              stMsgCanTx.stTxHeader.DLC = 2;
+
+              stMsgCanTx.nTxData[0] = MSG_TX_SLEEP;
+              stMsgCanTx.nTxData[1] = 1;
+              stMsgCanTx.nTxData[2] = 0;
+              stMsgCanTx.nTxData[3] = 0;
+              stMsgCanTx.nTxData[4] = 0;
+              stMsgCanTx.nTxData[5] = 0;
+              stMsgCanTx.nTxData[6] = 0;
+              stMsgCanTx.nTxData[7] = 0;
+
+              stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
+
+              osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+            }
+          }
+        }
+      
+        //Check for config change or request message
         PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueCanTx);
       }
     }
@@ -610,6 +710,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         SendMsg17(hcan);
       }
     }
+
+    nTXBeforeSleep++;
 
 #ifdef MEAS_HEAP_USE
       __attribute__((unused)) uint32_t nThisThreadSpace = osThreadGetStackSpace(*thisThreadId);

@@ -16,5 +16,5 @@ typedef void (*rcvCallback_t)(uint8_t* Buf, uint32_t *Len);
 uint8_t USB_Init(void (*rcvFunction)(uint8_t* Buf, uint32_t *Len));
 uint8_t USB_Tx(uint8_t* Buf, uint16_t Len);
 uint8_t USB_Tx_SLCAN(CAN_TxHeaderTypeDef *pHeader, uint8_t aData[]);
-
+bool USB_IsConnected();
 #endif /* INC_USB_H_ */

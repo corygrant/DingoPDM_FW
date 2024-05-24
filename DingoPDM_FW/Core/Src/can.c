@@ -117,5 +117,34 @@ void HAL_CAN_MspDeInit(CAN_HandleTypeDef* canHandle)
 }
 
 /* USER CODE BEGIN 1 */
+void CAN_DeInitBeforeStop(CAN_HandleTypeDef* canHandle)
+{
+  //Set CAN TX/RX as GPIO event to enable wakeup from STOP mode
 
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  HAL_CAN_MspDeInit(canHandle);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  GPIO_InitStruct.Pin = GPIO_PIN_9;
+  GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+}
+
+void CAN_ReInitAtWakeup(CAN_HandleTypeDef* canHandle)
+{
+  //Reconfigure CAN after wakeup from STOP mode
+  
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8);
+  HAL_GPIO_DeInit(GPIOB, GPIO_PIN_9);
+
+  HAL_CAN_MspInit(canHandle);
+}
 /* USER CODE END 1 */

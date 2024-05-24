@@ -13,6 +13,7 @@ typedef enum
 typedef enum
 {
   MSG_RX_BURN_SETTINGS = 'B',
+  MSG_RX_SLEEP = 'Q',
   MSG_RX_SET_CAN = 'C',
   MSG_RX_SET_INPUTS = 'I',
   MSG_RX_SET_OUTPUTS = 'O',
@@ -30,6 +31,7 @@ typedef enum
 typedef enum
 {
   MSG_TX_BURN_SETTINGS = 'b',
+  MSG_TX_SLEEP = 'q',
   MSG_TX_SET_CAN = 'c',
   MSG_TX_SET_INPUTS = 'i',
   MSG_TX_SET_OUTPUTS = 'o',

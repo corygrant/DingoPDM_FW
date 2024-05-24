@@ -40,12 +40,6 @@ void LedUpdate(uint32_t nNow, Led_Output* out){
       } else{
         out->Off();
       }
-    } else{
-      if(nNow < out->nOnUntil){
-        out->Off();
-      } else{
-        out->On();
-      }
     }
 }
 
