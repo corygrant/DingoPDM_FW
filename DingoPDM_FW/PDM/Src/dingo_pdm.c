@@ -1137,6 +1137,10 @@ void InputLogic(){
     {
       EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
     }
+    else
+    {
+      nOutputFlasher[stPdmConfig.stFlasher[i].nOutput] = 1; //1 = flasher disabled
+    }
   }
 }
 
