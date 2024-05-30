@@ -702,21 +702,6 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       SendMsg3(hcan);
       SendMsg4(hcan);
       SendMsg5(hcan);
-      SendMsg6(hcan);
-      SendMsg7(hcan);
-      SendMsg8(hcan);
-      SendMsg9(hcan);
-      SendMsg10(hcan);
-
-      if(true){//(bSoftwareConnected){
-        SendMsg11(hcan);
-        SendMsg12(hcan);
-        SendMsg13(hcan);
-        SendMsg14(hcan);
-        SendMsg15(hcan);
-        SendMsg16(hcan);
-        SendMsg17(hcan);
-      }
     }
 
     nTXBeforeSleep++;
@@ -732,166 +717,43 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
   }
 }
 
-void SendMsg17(CAN_HandleTypeDef *hcan)
+void SendMsg5(CAN_HandleTypeDef *hcan)
 {
   //=======================================================
-  // Build Msg 17 (Wiper)
+  // Build Msg 5 (CAN Inputs and Virtual Inputs)
   //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 17;
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 5;
   stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = (*pVariableMap[60] << 1) + *pVariableMap[59];
-  nCanTxData[1] = stWiper.eState;
-  nCanTxData[2] = stWiper.eSelectedSpeed;
-  nCanTxData[3] = 0;
-  nCanTxData[4] = 0;
-  nCanTxData[5] = 0;
+  nCanTxData[0] = ((nCanInputs[7] & 0x01) << 7) + ((nCanInputs[6] & 0x01) << 6) + ((nCanInputs[5] & 0x01) << 5) + 
+                  ((nCanInputs[4] & 0x01) << 4) + ((nCanInputs[3] & 0x01) << 3) + ((nCanInputs[2] & 0x01) << 2) + 
+                  ((nCanInputs[1] & 0x01) << 1) + (nCanInputs[0] & 0x01);
+  nCanTxData[1] = ((nCanInputs[15] & 0x01) << 7) + ((nCanInputs[14] & 0x01) << 6) + ((nCanInputs[13] & 0x01) << 5) + 
+                  ((nCanInputs[12] & 0x01) << 4) + ((nCanInputs[11] & 0x01) << 3) + ((nCanInputs[10] & 0x01) << 2) + 
+                  ((nCanInputs[9] & 0x01) << 1) + (nCanInputs[8] & 0x01);
+  nCanTxData[2] = ((nCanInputs[23] & 0x01) << 7) + ((nCanInputs[22] & 0x01) << 6) + ((nCanInputs[21] & 0x01) << 5) + 
+                  ((nCanInputs[20] & 0x01) << 4) + ((nCanInputs[19] & 0x01) << 3) + ((nCanInputs[18] & 0x01) << 2) + 
+                  ((nCanInputs[17] & 0x01) << 1) + (nCanInputs[16] & 0x01);
+  nCanTxData[3] = ((nCanInputs[31] & 0x01) << 7) + ((nCanInputs[30] & 0x01) << 6) + ((nCanInputs[29] & 0x01) << 5) + 
+                  ((nCanInputs[28] & 0x01) << 4) + ((nCanInputs[27] & 0x01) << 3) + ((nCanInputs[26] & 0x01) << 2) + 
+                  ((nCanInputs[25] & 0x01) << 1) + (nCanInputs[24] & 0x01);
+  nCanTxData[4] = ((nVirtInputs[7] & 0x01) << 7) + ((nVirtInputs[6] & 0x01) << 6) + ((nVirtInputs[5] & 0x01) << 5) + 
+                  ((nVirtInputs[4] & 0x01) << 4) + ((nVirtInputs[3] & 0x01) << 3) + ((nVirtInputs[2] & 0x01) << 2) + 
+                  ((nVirtInputs[1] & 0x01) << 1) + (nVirtInputs[0] & 0x01);
+  nCanTxData[5] = ((nVirtInputs[15] & 0x01) << 7) + ((nVirtInputs[14] & 0x01) << 6) + ((nVirtInputs[13] & 0x01) << 5) + 
+                  ((nVirtInputs[12] & 0x01) << 4) + ((nVirtInputs[11] & 0x01) << 3) + ((nVirtInputs[10] & 0x01) << 2) + 
+                  ((nVirtInputs[9] & 0x01) << 1) + (nVirtInputs[8] & 0x01);
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
 
   SendMsg(hcan, true);
 }
 
-void SendMsg16(CAN_HandleTypeDef *hcan)
+void SendMsg4(CAN_HandleTypeDef *hcan)
 {
   //=======================================================
-  // Build Msg 16 (Virtual Inputs 9-16)
+  // Build Msg 4 (Out 1-8 Reset Count)
   //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 16;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = nVirtInputs[8];
-  nCanTxData[1] = nVirtInputs[9];
-  nCanTxData[2] = nVirtInputs[10];
-  nCanTxData[3] = nVirtInputs[11];
-  nCanTxData[4] = nVirtInputs[12];
-  nCanTxData[5] = nVirtInputs[13];
-  nCanTxData[6] = nVirtInputs[14];
-  nCanTxData[7] = nVirtInputs[15];
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg15(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 15 (Virtual Inputs 1-8)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 15;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = nVirtInputs[0];
-  nCanTxData[1] = nVirtInputs[1];
-  nCanTxData[2] = nVirtInputs[2];
-  nCanTxData[3] = nVirtInputs[3];
-  nCanTxData[4] = nVirtInputs[4];
-  nCanTxData[5] = nVirtInputs[5];
-  nCanTxData[6] = nVirtInputs[6];
-  nCanTxData[7] = nVirtInputs[7];
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg14(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 14 (CAN Inputs 25-32)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 14;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = nCanInputs[24];
-  nCanTxData[1] = nCanInputs[25];
-  nCanTxData[2] = nCanInputs[26];
-  nCanTxData[3] = nCanInputs[27];
-  nCanTxData[4] = nCanInputs[28];
-  nCanTxData[5] = nCanInputs[29];
-  nCanTxData[6] = nCanInputs[30];
-  nCanTxData[7] = nCanInputs[31];
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg13(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 13 (CAN Inputs 17-24)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 13;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = nCanInputs[16];
-  nCanTxData[1] = nCanInputs[17];
-  nCanTxData[2] = nCanInputs[18];
-  nCanTxData[3] = nCanInputs[19];
-  nCanTxData[4] = nCanInputs[20];
-  nCanTxData[5] = nCanInputs[21];
-  nCanTxData[6] = nCanInputs[22];
-  nCanTxData[7] = nCanInputs[23];
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg12(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 12 (CAN Inputs 9-16)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 12;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = nCanInputs[8];
-  nCanTxData[1] = nCanInputs[9];
-  nCanTxData[2] = nCanInputs[10];
-  nCanTxData[3] = nCanInputs[11];
-  nCanTxData[4] = nCanInputs[12];
-  nCanTxData[5] = nCanInputs[13];
-  nCanTxData[6] = nCanInputs[14];
-  nCanTxData[7] = nCanInputs[15];
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg11(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 11 (CAN Inputs 1-8)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 11;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = nCanInputs[0];
-  nCanTxData[1] = nCanInputs[1];
-  nCanTxData[2] = nCanInputs[2];
-  nCanTxData[3] = nCanInputs[3];
-  nCanTxData[4] = nCanInputs[4];
-  nCanTxData[5] = nCanInputs[5];
-  nCanTxData[6] = nCanInputs[6];
-  nCanTxData[7] = nCanInputs[7];
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg10(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 10 (Flashers 1-4)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 10;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = ((nOutputFlasher[stPdmConfig.stFlasher[3].nOutput] & 0x01) << 3) + ((nOutputFlasher[stPdmConfig.stFlasher[2].nOutput] & 0x01) << 2) +
-                  ((nOutputFlasher[stPdmConfig.stFlasher[1].nOutput] & 0x01) << 1) + (nOutputFlasher[stPdmConfig.stFlasher[0].nOutput] & 0x01);
-  nCanTxData[1] = ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 3) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 2) +
-                  ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 1) + (*stPdmConfig.stFlasher[0].pInput & 0x01);
-  nCanTxData[2] = 0;
-  nCanTxData[3] = 0;
-  nCanTxData[4] = 0;
-  nCanTxData[5] = 0;
-  nCanTxData[6] = 0;
-  nCanTxData[7] = 0;
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg9(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 9 (Out 1-8 Reset Count)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 9;
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 4;
   stCanTxHeader.DLC = 8; // Bytes to send
   nCanTxData[0] = pf[0].nOC_Count;
   nCanTxData[1] = pf[1].nOC_Count;
@@ -905,107 +767,34 @@ void SendMsg9(CAN_HandleTypeDef *hcan)
   SendMsg(hcan, true);
 }
 
-void SendMsg8(CAN_HandleTypeDef *hcan)
+void SendMsg3(CAN_HandleTypeDef *hcan)
 {
   //=======================================================
-  // Build Msg 8 (Unused)
+  // Build Msg 3 (Out 1-8 Status)
   //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 8;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = 0;
-  nCanTxData[1] = 0;
-  nCanTxData[2] = 0;
-  nCanTxData[3] = 0;
-  nCanTxData[4] = 0;
-  nCanTxData[5] = 0;
-  nCanTxData[6] = 0;
-  nCanTxData[7] = 0;
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg7(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 7 (Out 5-8 Current Limit)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 7;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = pf[4].nIL_Limit >> 8;
-  nCanTxData[1] = pf[4].nIL_Limit;
-  nCanTxData[2] = pf[5].nIL_Limit >> 8;
-  nCanTxData[3] = pf[5].nIL_Limit;
-  nCanTxData[4] = pf[6].nIL_Limit >> 8;
-  nCanTxData[5] = pf[6].nIL_Limit;
-  nCanTxData[6] = pf[7].nIL_Limit >> 8;
-  nCanTxData[7] = pf[7].nIL_Limit;
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg6(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 6 (Out 1-4 Current Limit)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 6;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = pf[0].nIL_Limit >> 8;
-  nCanTxData[1] = pf[0].nIL_Limit;
-  nCanTxData[2] = pf[1].nIL_Limit >> 8;
-  nCanTxData[3] = pf[1].nIL_Limit;
-  nCanTxData[4] = pf[2].nIL_Limit >> 8;
-  nCanTxData[5] = pf[2].nIL_Limit;
-  nCanTxData[6] = pf[3].nIL_Limit >> 8;
-  nCanTxData[7] = pf[3].nIL_Limit;
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg5(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 5 (Out 1-8 Status)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 5;
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 3;
   stCanTxHeader.DLC = 8; // Bytes to send
   nCanTxData[0] = (pf[1].eState << 4) + pf[0].eState;
   nCanTxData[1] = (pf[3].eState << 4) + pf[2].eState;
   nCanTxData[2] = (pf[5].eState << 4) + pf[4].eState;
   nCanTxData[3] = (pf[7].eState << 4) + pf[6].eState;
-  nCanTxData[4] = 0;
-  nCanTxData[5] = 0;
-  nCanTxData[6] = 0;
+  nCanTxData[4] = (*pVariableMap[60] << 1) + *pVariableMap[59];
+  nCanTxData[5] = (stWiper.eState << 4) + stWiper.eSelectedSpeed;
+  nCanTxData[6] = ((nOutputFlasher[stPdmConfig.stFlasher[3].nOutput] & 0x01) << 3) + ((nOutputFlasher[stPdmConfig.stFlasher[2].nOutput] & 0x01) << 2) +
+                  ((nOutputFlasher[stPdmConfig.stFlasher[1].nOutput] & 0x01) << 1) + (nOutputFlasher[stPdmConfig.stFlasher[0].nOutput] & 0x01) +
+                  ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 7) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 6) +
+                  ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 5) + ((*stPdmConfig.stFlasher[0].pInput & 0x01) << 4);
   nCanTxData[7] = 0;
 
   SendMsg(hcan, true);
 }
 
-void SendMsg4(CAN_HandleTypeDef *hcan)
+void SendMsg2(CAN_HandleTypeDef *hcan)
 {
   //=======================================================
-  // Build Msg 4 (Unused)
+  // Build Msg 2 (Out 5-8 Current)
   //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 4;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = 0;
-  nCanTxData[1] = 0;
-  nCanTxData[2] = 0;
-  nCanTxData[3] = 0;
-  nCanTxData[4] = 0;
-  nCanTxData[5] = 0;
-  nCanTxData[6] = 0;
-  nCanTxData[7] = 0;
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg3(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 3 (Out 5-8 Current)
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 3;
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 2;
   stCanTxHeader.DLC = 8; // Bytes to send
   nCanTxData[0] = pf[4].nIL >> 8;
   nCanTxData[1] = pf[4].nIL;
@@ -1019,12 +808,12 @@ void SendMsg3(CAN_HandleTypeDef *hcan)
   SendMsg(hcan, true);
 }
 
-void SendMsg2(CAN_HandleTypeDef *hcan)
+void SendMsg1(CAN_HandleTypeDef *hcan)
 {
   //=======================================================
-  // Build Msg 2 (Out 1-4 Current)
+  // Build Msg 1 (Out 1-4 Current)
   //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 2;
+  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 1;
   stCanTxHeader.DLC = 8; // Bytes to send
   nCanTxData[0] = pf[0].nIL >> 8;
   nCanTxData[1] = pf[0].nIL;
@@ -1034,25 +823,6 @@ void SendMsg2(CAN_HandleTypeDef *hcan)
   nCanTxData[5] = pf[2].nIL;
   nCanTxData[6] = pf[3].nIL >> 8;
   nCanTxData[7] = pf[3].nIL;
-
-  SendMsg(hcan, true);
-}
-
-void SendMsg1(CAN_HandleTypeDef *hcan)
-{
-  //=======================================================
-  // Build Msg 1 ( )
-  //=======================================================
-  stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 1;
-  stCanTxHeader.DLC = 8; // Bytes to send
-  nCanTxData[0] = 0;
-  nCanTxData[1] = 0;
-  nCanTxData[2] = 0;
-  nCanTxData[3] = 0;
-  nCanTxData[4] = 0;
-  nCanTxData[5] = 0;
-  nCanTxData[6] = 0;
-  nCanTxData[7] = 0;
 
   SendMsg(hcan, true);
 }

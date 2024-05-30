@@ -22,7 +22,7 @@ uint8_t EvaluateCANInput(CAN_RxHeaderTypeDef* stRxHeader, uint8_t nRxData[8], Pd
   switch(stIn->eOperator)
   {
   case OPER_EQUAL:
-    *nResult = nSelected & 0xFF;
+    *nResult = (nSelected == stIn->nOnVal);
     break;
 
   case OPER_GREATER_THAN:
