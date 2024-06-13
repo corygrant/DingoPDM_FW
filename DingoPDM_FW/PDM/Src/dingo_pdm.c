@@ -362,6 +362,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         LedSetSteady(&StatusLed, false);
         //Set CAN transceiver to Standby (power saving)
         HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_SET);
+        HAL_GPIO_WritePin(CAN_STBY_GPIO_Port, CAN_STBY_Pin, GPIO_PIN_SET);
         EnterStopMode();
         //Resume here
 
@@ -376,6 +377,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     case DEVICE_WAKEUP:
       //Set CAN transceiver back to High Speed Mode
       HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
+      HAL_GPIO_WritePin(CAN_STBY_GPIO_Port, CAN_STBY_Pin, GPIO_PIN_RESET);
       LedSetSteady(&StatusLed, true);
       eDeviceState = DEVICE_RUN;
       break;
@@ -624,6 +626,10 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 */
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 {
+  //Set CAN Standby pin to low = enable
+  HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(CAN_STBY_GPIO_Port, CAN_STBY_Pin, GPIO_PIN_RESET);
+
   //Configure the CAN Filter
   CAN_FilterTypeDef  sFilterConfig;
   sFilterConfig.FilterBank = 0;
