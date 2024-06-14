@@ -9,7 +9,7 @@
 
 uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL);
 
-void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk) {
+void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk, osMessageQueueId_t* qMsgQueueTx) {
 
   //Not enabled
   if (!profet->bEnabled) {

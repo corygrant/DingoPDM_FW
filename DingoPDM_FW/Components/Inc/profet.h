@@ -4,6 +4,8 @@
 #include "stdint.h"
 #include "stdbool.h"
 #include "stm32f4xx_hal.h"
+#include "msg_queue.h"
+#include "cmsis_os.h"
 
 typedef enum{
   BTS7002_1EPP,
@@ -62,6 +64,6 @@ typedef struct {
 
 } ProfetTypeDef;
 
-void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk);
+void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk, osMessageQueueId_t* qMsgQueueTx);
 void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal, volatile float fVDDA);
 #endif /* COMPONENTS_INC_PROFET_H_ */

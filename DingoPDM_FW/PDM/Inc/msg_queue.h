@@ -46,6 +46,52 @@ typedef enum
   MSG_TX_GET_TEMP = 'f'
 } MsgQueueTxCmd_t;
 
+typedef enum
+{
+  MSG_TYPE_INFO = 'F',
+  MSG_TYPE_WARNING = 'R',
+  MSG_TYPE_ERROR = 'E'
+} MsgType_t;
+
+typedef enum
+{
+  MSG_INFO_STATE_POWER_ON = 1,
+  MSG_INFO_STATE_STARTING,
+  MSG_INFO_STATE_RUN,
+  MSG_INFO_STATE_SLEEP,
+  MSG_INFO_STATE_WAKE,
+  MSG_INFO_USB_CONNECTED
+ } MsgInfo_t;
+
+typedef enum
+{
+  MSG_WARNING_STATE_OVERTEMP = 1,
+  MSG_WARNING_OVERCURRENT,
+  MSG_WARNING_TEMP,
+  MSG_WARNING_VOLTAGE,
+  MSG_WARNING_CAN,
+  MSG_WARNING_USB
+ } MsgWarning_t;
+
+typedef enum{
+  MSG_ERROR_NONE = 0,
+  MSG_ERROR_STATE_ERROR,
+  MSG_ERROR_OVERCURRENT,
+  MSG_ERROR_OVERTEMP,
+  MSG_ERROR_IWDG,
+  MSG_ERROR_MSG_QUEUE,
+  MSG_ERROR_TASK,
+  MSG_ERROR_CONFIG,
+  MSG_ERROR_FRAM,
+  MSG_ERROR_ADC,
+  MSG_ERROR_TEMP_SENSOR,
+  MSG_ERROR_USB,
+  MSG_ERROR_CAN,
+  MSG_ERROR_CRC,
+  MSG_ERROR_I2C,
+  MSG_ERROR_RCC
+} MsgError_t;
+
 typedef struct
 {
   MsgQueueRxSrc_t eMsgSrc;
@@ -56,13 +102,8 @@ typedef struct
 } MsgQueueRx_t;
 
 typedef struct{
-  uint8_t nTxData[8];
-  uint8_t nTxLen;
-} MsgQueueUsbTx_t;
-
-typedef struct{
   CAN_TxHeaderTypeDef stTxHeader;
   uint8_t nTxData[8];
-} MsgQueueCanTx_t;
+} MsgQueueTx_t;
 
 #endif /* INC_MSG_QUEUE_H_ */

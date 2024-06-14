@@ -484,7 +484,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // Profet State Machine
     //=====================================================================================================
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
-      Profet_SM(&pf[i], eDeviceState == DEVICE_RUN);
+      Profet_SM(&pf[i], eDeviceState == DEVICE_RUN, &qMsgQueueTx);
     }
 
     //=====================================================================================================
@@ -540,22 +540,22 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
               //Write settings to FRAM
               uint8_t nRet = PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
 
-              MsgQueueCanTx_t stMsgCanTx;
+              MsgQueueTx_t stMsgTx;
 
-              stMsgCanTx.stTxHeader.DLC = 2;
+              stMsgTx.stTxHeader.DLC = 2;
 
-              stMsgCanTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
-              stMsgCanTx.nTxData[1] = nRet;
-              stMsgCanTx.nTxData[2] = 0;
-              stMsgCanTx.nTxData[3] = 0;
-              stMsgCanTx.nTxData[4] = 0;
-              stMsgCanTx.nTxData[5] = 0;
-              stMsgCanTx.nTxData[6] = 0;
-              stMsgCanTx.nTxData[7] = 0;
+              stMsgTx.nTxData[0] = MSG_TX_BURN_SETTINGS;
+              stMsgTx.nTxData[1] = nRet;
+              stMsgTx.nTxData[2] = 0;
+              stMsgTx.nTxData[3] = 0;
+              stMsgTx.nTxData[4] = 0;
+              stMsgTx.nTxData[5] = 0;
+              stMsgTx.nTxData[6] = 0;
+              stMsgTx.nTxData[7] = 0;
 
-              stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
+              stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 
-              osMessageQueuePut(qMsgQueueTx, &stMsgCanTx, 0U, 0U);
+              osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
 
               LedBlink(HAL_GetTick(), &StatusLed);
             }
@@ -571,22 +571,22 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
             if((stMsgRx.nRxData[1] == 85) && (stMsgRx.nRxData[2] == 73) && (stMsgRx.nRxData[3] == 84)){
               bSleepMsgReceived = true;
 
-              MsgQueueCanTx_t stMsgCanTx;
+              MsgQueueTx_t stMsgTx;
 
-              stMsgCanTx.stTxHeader.DLC = 2;
+              stMsgTx.stTxHeader.DLC = 2;
 
-              stMsgCanTx.nTxData[0] = MSG_TX_SLEEP;
-              stMsgCanTx.nTxData[1] = 1;
-              stMsgCanTx.nTxData[2] = 0;
-              stMsgCanTx.nTxData[3] = 0;
-              stMsgCanTx.nTxData[4] = 0;
-              stMsgCanTx.nTxData[5] = 0;
-              stMsgCanTx.nTxData[6] = 0;
-              stMsgCanTx.nTxData[7] = 0;
+              stMsgTx.nTxData[0] = MSG_TX_SLEEP;
+              stMsgTx.nTxData[1] = 1;
+              stMsgTx.nTxData[2] = 0;
+              stMsgTx.nTxData[3] = 0;
+              stMsgTx.nTxData[4] = 0;
+              stMsgTx.nTxData[5] = 0;
+              stMsgTx.nTxData[6] = 0;
+              stMsgTx.nTxData[7] = 0;
 
-              stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
+              stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 
-              osMessageQueuePut(qMsgQueueTx, &stMsgCanTx, 0U, 0U);
+              osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
             }
           }
         }
@@ -678,22 +678,22 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
         stPdmConfig.stCanOutput.nBaseId > 0 &&
         stPdmConfig.stCanOutput.nBaseId < 2048){ //2047 = max 11bit ID
 
-      MsgQueueCanTx_t stMsgCanTx;
+      MsgQueueTx_t stMsgTx;
 
       osStatus_t stStatus;
       //Keep sending queued messages until empty
       do{
-        stStatus = osMessageQueueGet(qMsgQueueTx, &stMsgCanTx, NULL, 0U);
+        stStatus = osMessageQueueGet(qMsgQueueTx, &stMsgTx, NULL, 0U);
         if(stStatus == osOK){
-          stMsgCanTx.stTxHeader.ExtId = 0;
-          stMsgCanTx.stTxHeader.IDE = CAN_ID_STD;
-          stMsgCanTx.stTxHeader.RTR = CAN_RTR_DATA;
-          stMsgCanTx.stTxHeader.TransmitGlobalTime = DISABLE;
+          stMsgTx.stTxHeader.ExtId = 0;
+          stMsgTx.stTxHeader.IDE = CAN_ID_STD;
+          stMsgTx.stTxHeader.RTR = CAN_RTR_DATA;
+          stMsgTx.stTxHeader.TransmitGlobalTime = DISABLE;
 
-          USB_Tx_SLCAN(&stMsgCanTx.stTxHeader, stMsgCanTx.nTxData);
-          if(HAL_CAN_AddTxMessage(hcan, &stMsgCanTx.stTxHeader, stMsgCanTx.nTxData, &nCanTxMailbox) != HAL_OK){
+          USB_Tx_SLCAN(&stMsgTx.stTxHeader, stMsgTx.nTxData);
+          if(HAL_CAN_AddTxMessage(hcan, &stMsgTx.stTxHeader, stMsgTx.nTxData, &nCanTxMailbox) != HAL_OK){
             //Send failed - add back to queue
-            osMessageQueuePut(qMsgQueueTx, &stMsgCanTx, 0U, 0U);
+            osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
           }
         }
         //Pause for preemption - TX is not that important
