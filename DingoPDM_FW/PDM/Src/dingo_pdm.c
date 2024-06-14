@@ -69,8 +69,7 @@ PdmConfig_t stPdmConfig;
 // Message Queues
 //========================================================================
 osMessageQueueId_t qMsgQueueRx;
-osMessageQueueId_t qMsgQueueUsbTx;
-osMessageQueueId_t qMsgQueueCanTx;
+osMessageQueueId_t qMsgQueueTx;
 
 //========================================================================
 // Profets
@@ -556,7 +555,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 
               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 
-              osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+              osMessageQueuePut(qMsgQueueTx, &stMsgCanTx, 0U, 0U);
 
               LedBlink(HAL_GetTick(), &StatusLed);
             }
@@ -587,13 +586,13 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 
               stMsgCanTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 
-              osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+              osMessageQueuePut(qMsgQueueTx, &stMsgCanTx, 0U, 0U);
             }
           }
         }
       
         //Check for config change or request message
-        PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueCanTx);
+        PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueTx);
       }
     }
 
@@ -684,7 +683,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       osStatus_t stStatus;
       //Keep sending queued messages until empty
       do{
-        stStatus = osMessageQueueGet(qMsgQueueCanTx, &stMsgCanTx, NULL, 0U);
+        stStatus = osMessageQueueGet(qMsgQueueTx, &stMsgCanTx, NULL, 0U);
         if(stStatus == osOK){
           stMsgCanTx.stTxHeader.ExtId = 0;
           stMsgCanTx.stTxHeader.IDE = CAN_ID_STD;
@@ -694,7 +693,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
           USB_Tx_SLCAN(&stMsgCanTx.stTxHeader, stMsgCanTx.nTxData);
           if(HAL_CAN_AddTxMessage(hcan, &stMsgCanTx.stTxHeader, stMsgCanTx.nTxData, &nCanTxMailbox) != HAL_OK){
             //Send failed - add back to queue
-            osMessageQueuePut(qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+            osMessageQueuePut(qMsgQueueTx, &stMsgCanTx, 0U, 0U);
           }
         }
         //Pause for preemption - TX is not that important

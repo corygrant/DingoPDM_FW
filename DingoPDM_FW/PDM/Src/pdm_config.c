@@ -63,86 +63,86 @@ uint8_t PdmConfig_Write(I2C_HandleTypeDef* hi2c, uint8_t nAddr, PdmConfig_t* pCo
   return 1;
 }
 
-void SetCan(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], volatile ProfetTypeDef profet[PDM_NUM_OUTPUTS], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetWiperSpeed(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetStarter(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void SetCanInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
-void GetVersion(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx);
+void SetCan(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], volatile ProfetTypeDef profet[PDM_NUM_OUTPUTS], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetWiperSpeed(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetStarter(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void SetCanInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
+void GetVersion(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx);
 
-uint8_t PdmConfig_Set(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], volatile ProfetTypeDef profet[PDM_NUM_OUTPUTS], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+uint8_t PdmConfig_Set(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], volatile ProfetTypeDef profet[PDM_NUM_OUTPUTS], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   switch((MsgQueueRxCmd_t)stMsgRx->nRxData[0]){
 
     //Set CAN Settings
     // 'C'
     case MSG_RX_SET_CAN:
-      SetCan(pConfig, stMsgRx, qMsgQueueCanTx);
+      SetCan(pConfig, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Input Settings
     // 'I'
     case MSG_RX_SET_INPUTS:
-      SetInputs(pConfig, stMsgRx, qMsgQueueCanTx);
+      SetInputs(pConfig, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Output Settings
     // 'O'
     case MSG_RX_SET_OUTPUTS:
-      SetOutputs(pConfig, pVariableMap, profet, stMsgRx, qMsgQueueCanTx);
+      SetOutputs(pConfig, pVariableMap, profet, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Virtual Input Settings
     // 'U'
     case MSG_RX_SET_VIRTUAL_INPUTS:
-      SetVirtInputs(pConfig, pVariableMap, stMsgRx, qMsgQueueCanTx);
+      SetVirtInputs(pConfig, pVariableMap, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Wiper Settings
     // 'W'
     case MSG_RX_SET_WIPER:
-      SetWiper(pConfig, pVariableMap, pWiper, stMsgRx, qMsgQueueCanTx);
+      SetWiper(pConfig, pVariableMap, pWiper, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Wiper Speed Settings
     // 'P'
     case MSG_RX_SET_WIPER_SPEED:
-      SetWiperSpeed(pConfig, pVariableMap, pWiper, stMsgRx, qMsgQueueCanTx);
+      SetWiperSpeed(pConfig, pVariableMap, pWiper, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Wiper Intermit Delays Settings
     // 'Y'
     case MSG_RX_SET_WIPER_DELAYS:
-      SetWiperDelay(pConfig, pVariableMap, pWiper, stMsgRx, qMsgQueueCanTx);
+      SetWiperDelay(pConfig, pVariableMap, pWiper, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Flasher Settings
     // 'H'
     case MSG_RX_SET_FLASHER:
-      SetFlashers(pConfig, pVariableMap, stMsgRx, qMsgQueueCanTx);
+      SetFlashers(pConfig, pVariableMap, stMsgRx, qMsgQueueTx);
     break;
 
     //Set Starter Disable Settings
     // 'D'
     case MSG_RX_SET_STARTER:
-      SetStarter(pConfig, pVariableMap, stMsgRx, qMsgQueueCanTx);
+      SetStarter(pConfig, pVariableMap, stMsgRx, qMsgQueueTx);
     break;
 
     //Set CAN Input Settings
     // 'N'
     case MSG_RX_SET_CAN_INPUTS:
-      SetCanInputs(pConfig, stMsgRx, qMsgQueueCanTx);
+      SetCanInputs(pConfig, stMsgRx, qMsgQueueTx);
     break;
 
     //Get Version
     // 'V'
     case MSG_RX_GET_VERSION:
-      GetVersion(pConfig, stMsgRx, qMsgQueueCanTx);
+      GetVersion(pConfig, stMsgRx, qMsgQueueTx);
     break;
 
     default:
@@ -152,7 +152,7 @@ uint8_t PdmConfig_Set(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_S
   return 1;
 }
 
-void SetCan(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetCan(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   if(stMsgRx->nRxLen == 5){
@@ -177,11 +177,11 @@ void SetCan(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMs
     stMsgCanTx.nTxData[7] = 0;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-    osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+    osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
   }
 }
 
-void SetInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   uint8_t nIndex;
@@ -216,12 +216,12 @@ void SetInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* 
       stMsgCanTx.nTxData[7] = 0;
 
       stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-      osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+      osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
     }
   }
 }
 
-void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], volatile ProfetTypeDef profet[PDM_NUM_OUTPUTS], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], volatile ProfetTypeDef profet[PDM_NUM_OUTPUTS], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   uint8_t nIndex;
@@ -263,12 +263,12 @@ void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], 
       stMsgCanTx.nTxData[7] = (uint8_t)(pConfig->stOutput[nIndex].nInrushTime / 10);
 
       stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-      osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+      osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
     }
   }
 }
 
-void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   uint8_t nIndex;
@@ -306,12 +306,12 @@ void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
       stMsgCanTx.nTxData[7] = 0;
 
       stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-      osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+      osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
     }
   }
 }
 
-void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
 
@@ -354,11 +354,11 @@ void SetWiper(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wi
     stMsgCanTx.nTxData[7] = pConfig->stWiper.nWashInput;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-    osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+    osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
   }
 }
 
-void SetWiperSpeed(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetWiperSpeed(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
 
@@ -393,11 +393,11 @@ void SetWiperSpeed(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
     stMsgCanTx.nTxData[7] = 0;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-    osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+    osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
   }
 }
 
-void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], Wiper_t* pWiper, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
 
@@ -426,11 +426,11 @@ void SetWiperDelay(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
     stMsgCanTx.nTxData[7] = 0;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-    osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+    osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
   }
 }
 
-void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   uint8_t nIndex;
@@ -461,12 +461,12 @@ void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE],
       stMsgCanTx.nTxData[7] = 0;
 
       stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-      osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+      osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
     }
   }
 }
 
-void SetStarter(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetStarter(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   
@@ -501,11 +501,11 @@ void SetStarter(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], 
     stMsgCanTx.nTxData[7] = 0;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-    osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+    osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
   }
 }
 
-void SetCanInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void SetCanInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
   uint8_t nIndex;
@@ -539,12 +539,12 @@ void SetCanInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_
       stMsgCanTx.nTxData[6] = (uint8_t)(pConfig->stCanInput[nIndex].nOnVal);
 
       stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-      osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+      osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
     }
   }
 }
 
-void GetVersion(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueCanTx)
+void GetVersion(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t* qMsgQueueTx)
 {
   MsgQueueCanTx_t stMsgCanTx;
 
@@ -561,7 +561,7 @@ void GetVersion(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_t*
     stMsgCanTx.nTxData[7] = 0;
 
     stMsgCanTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
-    osMessageQueuePut(*qMsgQueueCanTx, &stMsgCanTx, 0U, 0U);
+    osMessageQueuePut(*qMsgQueueTx, &stMsgCanTx, 0U, 0U);
   }
 }
 
@@ -655,10 +655,6 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   pConfig->stStarter.nDisableOut[5] = 0;
   pConfig->stStarter.nDisableOut[6] = 0;
   pConfig->stStarter.nDisableOut[7] = 0;
-  pConfig->stStarter.nDisableOut[8] = 0;
-  pConfig->stStarter.nDisableOut[9] = 0;
-  pConfig->stStarter.nDisableOut[10] = 0;
-  pConfig->stStarter.nDisableOut[11] = 0;
 
   //CAN Input
   for(int i=0; i<PDM_NUM_CAN_INPUTS; i++){

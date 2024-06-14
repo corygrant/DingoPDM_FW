@@ -53,13 +53,8 @@ void MX_FREERTOS_Init(void) {
     Error_Handler(PDM_ERROR_MSG_QUEUE);
   }
 
-  qMsgQueueUsbTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueUsbTx_t), NULL);
-  if(qMsgQueueUsbTx == NULL){
-    Error_Handler(PDM_ERROR_MSG_QUEUE);
-  }
-
-  qMsgQueueCanTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
-  if(qMsgQueueCanTx == NULL){
+  qMsgQueueTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueCanTx_t), NULL);
+  if(qMsgQueueTx == NULL){
 	  Error_Handler(PDM_ERROR_MSG_QUEUE);
   }
 

@@ -56,8 +56,7 @@ typedef enum{
 
 
 extern osMessageQueueId_t qMsgQueueRx;
-extern osMessageQueueId_t qMsgQueueUsbTx;
-extern osMessageQueueId_t qMsgQueueCanTx;
+extern osMessageQueueId_t qMsgQueueTx;
 
 
 
