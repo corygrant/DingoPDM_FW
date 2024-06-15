@@ -33,6 +33,7 @@ typedef enum{
 typedef struct {
   ProfetModelTypeDef eModel;
   volatile ProfetStateTypeDef eState;
+  volatile ProfetStateTypeDef eLastState;
   volatile ProfetStateTypeDef eReqState;
   volatile ProfetResetMode_t eResetMode;
   volatile char cState;
@@ -64,6 +65,6 @@ typedef struct {
 
 } ProfetTypeDef;
 
-void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk, osMessageQueueId_t* qMsgQueueTx);
+void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk);
 void Profet_UpdateIS(volatile ProfetTypeDef *profet, uint16_t newVal, volatile float fVDDA);
 #endif /* COMPONENTS_INC_PROFET_H_ */

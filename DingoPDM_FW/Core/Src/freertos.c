@@ -50,12 +50,12 @@ void MX_FREERTOS_Init(void) {
 
   qMsgQueueRx = osMessageQueueNew(MSGQUEUE_RX_SIZE, sizeof(MsgQueueRx_t), NULL);
   if(qMsgQueueRx == NULL){
-    Error_Handler(PDM_ERROR_MSG_QUEUE);
+    Error_Handler(FATAL_ERROR_MSG_QUEUE);
   }
 
   qMsgQueueTx = osMessageQueueNew(MSGQUEUE_TX_SIZE, sizeof(MsgQueueTx_t), NULL);
   if(qMsgQueueTx == NULL){
-	  Error_Handler(PDM_ERROR_MSG_QUEUE);
+	  Error_Handler(FATAL_ERROR_MSG_QUEUE);
   }
 
 
@@ -63,13 +63,13 @@ void MX_FREERTOS_Init(void) {
   canTxTaskHandle = osThreadNew(StartCanTxTask, NULL, &canTxTask_attributes);
 
   if(defaultTaskHandle == 0x0)
-    Error_Handler(PDM_ERROR_TASK);
+    Error_Handler(FATAL_ERROR_TASK);
 
   if(canTxTaskHandle == 0x0)
-    Error_Handler(PDM_ERROR_TASK);
+    Error_Handler(FATAL_ERROR_TASK);
 
   if(InitPdmConfig(&hi2c1) != PDM_OK)
-    Error_Handler(PDM_ERROR_CONFIG);
+    Error_Handler(FATAL_ERROR_CONFIG);
 
 }
 

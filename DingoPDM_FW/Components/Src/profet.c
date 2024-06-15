@@ -9,8 +9,10 @@
 
 uint32_t GetTripTime(ProfetModelTypeDef eModel, uint16_t nIL, uint16_t nMaxIL);
 
-void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk, osMessageQueueId_t* qMsgQueueTx) {
+void Profet_SM(volatile ProfetTypeDef *profet, bool bOutputsOk) {
 
+  profet->eLastState = profet->eState;
+  
   //Not enabled
   if (!profet->bEnabled) {
     HAL_GPIO_WritePin(profet->nIN_Port, profet->nIN_Pin, GPIO_PIN_RESET);

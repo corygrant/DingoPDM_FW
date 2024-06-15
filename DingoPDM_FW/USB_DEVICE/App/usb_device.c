@@ -70,19 +70,19 @@ void MX_USB_DEVICE_Init(void)
   /* Init Device Library, add supported class and start the library. */
   if (USBD_Init(&hUsbDeviceFS, &FS_Desc, DEVICE_FS) != USBD_OK)
   {
-    Error_Handler(PDM_ERROR_USB);
+    Error_Handler(FATAL_ERROR_USB);
   }
   if (USBD_RegisterClass(&hUsbDeviceFS, &USBD_CDC) != USBD_OK)
   {
-    Error_Handler(PDM_ERROR_USB);
+    Error_Handler(FATAL_ERROR_USB);
   }
   if (USBD_CDC_RegisterInterface(&hUsbDeviceFS, &USBD_Interface_fops_FS) != USBD_OK)
   {
-    Error_Handler(PDM_ERROR_USB);
+    Error_Handler(FATAL_ERROR_USB);
   }
   if (USBD_Start(&hUsbDeviceFS) != USBD_OK)
   {
-    Error_Handler(PDM_ERROR_USB);
+    Error_Handler(FATAL_ERROR_USB);
   }
 
   /* USER CODE BEGIN USB_DEVICE_Init_PostTreatment */

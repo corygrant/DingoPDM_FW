@@ -1,6 +1,5 @@
 #include "dingo_pdm.h"
-#include "pdm_config.h"
-#include "main.h"
+
 
 //========================================================================
 // Task Delays
@@ -56,6 +55,7 @@
 // Device State
 //========================================================================
 DeviceState_t eDeviceState = DEVICE_POWER_ON;
+DeviceState_t eLastDeviceState;
 bool bDeviceOverTemp = false;
 bool bDeviceCriticalTemp = false;
 uint16_t nDeviceError = 0;
@@ -189,6 +189,7 @@ void SendMsg2(CAN_HandleTypeDef *hcan);
 void SendMsg1(CAN_HandleTypeDef *hcan);
 void SendMsg0(CAN_HandleTypeDef *hcan);
 void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay);
+void NewTxMsg(MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3);
 
 /*
   * @brief  USB Receive Callback
@@ -224,7 +225,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
   if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &stCanRxHeader, nCanRxData) != HAL_OK)
   {
-    Error_Handler(PDM_ERROR_CAN);
+    NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_CAN, 0, 0, 0);
   }
 
   //Store latest receive time
@@ -254,32 +255,35 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     switch (eDeviceState)
     {
     case DEVICE_POWER_ON:
+      NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_POWER_ON, 0, 0, 0);
+      eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_STARTING;
       break;
 
     case DEVICE_STARTING:
+      NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_STARTING, 0, 0, 0);
       //=====================================================================================================
       // USB initialization
       //=====================================================================================================
       bUsbReady = USB_Init(USB_MsgRcv) == USBD_OK;
       if(!bUsbReady){
-        Error_Handler(PDM_ERROR_USB);
+        FatalError(FATAL_ERROR_USB);
       }
 
       //=====================================================================================================
       // MCP9808 Temperature Sensor Configuration
       //=====================================================================================================
       if(MCP9808_Init(hi2c1, MCP9808_ADDRESS) != MCP9808_OK)
-        Error_Handler(PDM_ERROR_TEMP_SENSOR);
+        FatalError(FATAL_ERROR_TEMP_SENSOR);
 
       MCP9808_SetResolution(hi2c1, MCP9808_ADDRESS, MCP9808_RESOLUTION_0_5DEG);
 
       if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_UPPER_TEMP, BOARD_TEMP_MAX) != MCP9808_OK)
-        Error_Handler(PDM_ERROR_TEMP_SENSOR);
+        FatalError(FATAL_ERROR_TEMP_SENSOR);
       if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_LOWER_TEMP, BOARD_TEMP_MIN) != MCP9808_OK)
-        Error_Handler(PDM_ERROR_TEMP_SENSOR);
+        FatalError(FATAL_ERROR_TEMP_SENSOR);
       if(MCP9808_SetLimit(hi2c1, MCP9808_ADDRESS, MCP9808_REG_CRIT_TEMP, BOARD_TEMP_CRIT) != MCP9808_OK)
-        Error_Handler(PDM_ERROR_TEMP_SENSOR);
+        FatalError(FATAL_ERROR_TEMP_SENSOR);
 
       //Setup configuration
       //Enable alert pin
@@ -292,7 +296,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       // Start ADC DMA
       //=====================================================================================================
       if(HAL_ADC_Start_DMA(hadc1, (uint32_t*) nAdc1Data, ADC_1_COUNT) != HAL_OK)
-        Error_Handler(PDM_ERROR_ADC);
+        FatalError(FATAL_ERROR_ADC);
 
       //=====================================================================================================
       // Init Profet Settings
@@ -304,24 +308,46 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //=====================================================================================================
       HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
       
-      //if successful
+      eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_RUN;
 
       break;
 
     case DEVICE_RUN:
+      if (eLastDeviceState != DEVICE_RUN)
+      {
+        eLastDeviceState = eDeviceState;
+        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_RUN, 0, 0, 0);
+      }
+
       LedSetSteady(&StatusLed, true);
       LedSetSteady(&ErrorLed, false);
 
+      if (bDeviceOverTemp && !bDeviceCriticalTemp)
+      {
+        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+        eLastDeviceState = eDeviceState;
+        eDeviceState = DEVICE_OVERTEMP;
+      }
+
       if (bDeviceCriticalTemp)
       {
-        eDeviceState = DEVICE_OVERTEMP;
+        NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+        nDeviceError = FATAL_ERROR_TEMP;
+        eLastDeviceState = eDeviceState;
+        eDeviceState = DEVICE_ERROR;
+      }
+
+      if (nBattSense < 100)
+      {
+        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, 0, 0, 0);
       }
 
       if(ENABLE_SLEEP){
 
         if(bSleepMsgReceived){
           bSleepMsgReceived = false;
+          eLastDeviceState = eDeviceState;
           eDeviceState = DEVICE_SLEEP;
           nTXBeforeSleep = 0;
         }
@@ -346,6 +372,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
               !USB_IsConnected()){
             if(((HAL_GetTick() - nAllOutputsOffTime) > SLEEP_TIMEOUT) && 
                 ((HAL_GetTick() - nLastCanUpdate) > SLEEP_TIMEOUT)){
+                  eLastDeviceState = eDeviceState;
                   eDeviceState = DEVICE_SLEEP;
                   nTXBeforeSleep = 0;
               }
@@ -355,6 +382,12 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_SLEEP:
+      if (eLastDeviceState != DEVICE_SLEEP)
+      {
+        eLastDeviceState = eDeviceState;
+        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_SLEEP, 0, 0, 0);
+      }
+      
       //Wait for messages to TX
       //Must be more than 1 in case state changed in the middle of last TX
       if(nTXBeforeSleep > 1){
@@ -369,6 +402,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         nAllOutputsOffTime = HAL_GetTick();
         nLastCanUpdate = HAL_GetTick();
 
+        eLastDeviceState = eDeviceState;
         eDeviceState = DEVICE_WAKEUP;
       }
       break;
@@ -378,6 +412,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(CAN_STBY_GPIO_Port, CAN_STBY_Pin, GPIO_PIN_RESET);
       LedSetSteady(&StatusLed, true);
+      NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_WAKE, 0, 0, 0);
+      eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_RUN;
       break;
 
@@ -385,12 +421,18 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //Red LED solid
       //Outputs still on
       //Go back to run when temp falls
+      if (eLastDeviceState != DEVICE_OVERTEMP)
+      {
+        eLastDeviceState = eDeviceState;
+        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_OVERTEMP, 0, 0, 0);
+      }
 
       LedSetSteady(&ErrorLed, true);
 
       if (!bDeviceCriticalTemp)
       {
         LedSetSteady(&ErrorLed, false);
+        eLastDeviceState = eDeviceState;
         eDeviceState = DEVICE_RUN;
       }
       break;
@@ -399,7 +441,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //Error LED - flash error code
       //No way to recover, must power cycle
       //Gets trapped in main Error_Handler()
-      Error_Handler(nDeviceError);
+      FatalError(nDeviceError);
 
       break;
     
@@ -411,6 +453,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // Check for device errors
     //=====================================================================================================
     if(nDeviceError > 0){
+      eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_ERROR;
     }
 
@@ -484,7 +527,15 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     // Profet State Machine
     //=====================================================================================================
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
-      Profet_SM(&pf[i], eDeviceState == DEVICE_RUN, &qMsgQueueTx);
+      Profet_SM(&pf[i], eDeviceState == DEVICE_RUN);
+
+      if ((pf[i].eState == OVERCURRENT) && (pf[i].eLastState != OVERCURRENT)){
+        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+      }
+
+      if ((pf[i].eState == FAULT) && (pf[i].eLastState != FAULT)){
+        NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+      }
     }
 
     //=====================================================================================================
@@ -645,21 +696,21 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
   if (HAL_CAN_ConfigFilter(hcan, &sFilterConfig) != HAL_OK)
   {
     /* Filter configuration Error */
-    Error_Handler(PDM_ERROR_CAN);
+    FatalError(FATAL_ERROR_CAN);
   }
 
   //Start the CAN peripheral
   if (HAL_CAN_Start(hcan) != HAL_OK)
   {
     /* Start Error */
-    Error_Handler(PDM_ERROR_CAN);
+    FatalError(FATAL_ERROR_CAN);
   }
 
   //Activate CAN RX notification
   if (HAL_CAN_ActivateNotification(hcan, CAN_IT_RX_FIFO0_MSG_PENDING) != HAL_OK)
   {
     /* Notification Error */
-    Error_Handler(PDM_ERROR_CAN);
+    FatalError(FATAL_ERROR_CAN);
   }
 
   //Configure Transmission
@@ -870,7 +921,7 @@ void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay)
 
   if (HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK)
   {
-    Error_Handler(PDM_ERROR_CAN);
+    NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_CAN, 0, 0, 0);
   }
 
   if(bDelay)
@@ -917,6 +968,35 @@ void InputLogic(){
       nOutputFlasher[stPdmConfig.stFlasher[i].nOutput] = 1; //1 = flasher disabled
     }
   }
+}
+
+/*
+* @brief Send a new CAN message to the TX queue
+* @param eType: Message type
+* @param nId: Message ID
+* @param nParam1: Message parameter 1
+* @param nParam2: Message parameter 2
+* @param nParam3: Message parameter 3
+* @retval None
+*/
+void NewTxMsg(MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3){
+    MsgQueueTx_t stMsgTx;
+
+    stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_MSG_ID_OFFSET;
+    stMsgTx.stTxHeader.ExtId = 0;
+    stMsgTx.stTxHeader.IDE = CAN_ID_STD;
+    stMsgTx.stTxHeader.RTR = CAN_RTR_DATA;
+    stMsgTx.stTxHeader.DLC = 5;
+    stMsgTx.nTxData[0] = eType;
+    stMsgTx.nTxData[1] = eSrc;
+    stMsgTx.nTxData[2] = nParam1;
+    stMsgTx.nTxData[3] = nParam2;
+    stMsgTx.nTxData[4] = nParam3;
+    stMsgTx.nTxData[5] = 0;
+    stMsgTx.nTxData[6] = 0;
+    stMsgTx.nTxData[7] = 0;
+    
+    osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0, 0);
 }
 
 /*
@@ -1031,14 +1111,14 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   {
     if(PdmConfig_Read(hi2c1, MB85RC_ADDRESS, &stPdmConfig) != PDM_OK)
     {
-      PdmConfig_SetDefault(&stPdmConfig);
-      ErrorState(PDM_ERROR_FRAM_READ);
+      //PdmConfig_SetDefault(&stPdmConfig);
+      FatalError(PDM_ERROR_FRAM_READ);
     }
   }
   else
   {
-    PdmConfig_SetDefault(&stPdmConfig);
-    ErrorState(PDM_ERROR_FRAM_READ);
+    //PdmConfig_SetDefault(&stPdmConfig);
+    FatalError(PDM_ERROR_FRAM_READ);
   }
 
   //Map config to profet values

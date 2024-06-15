@@ -1,12 +1,15 @@
 #ifndef INC_DINGO_PDM_H_
 #define INC_DINGO_PDM_H_
 
-#include <can_input.h>
-#include <input.h>
+
 #include <stdbool.h>
 #include "stdio.h"
 #include "cmsis_os.h"
+#include "main.h"
 
+#include "pdm_config.h"
+#include "can_input.h"
+#include "input.h"
 #include "msg_queue.h"
 #include "pdm_input.h"
 #include "starter.h"

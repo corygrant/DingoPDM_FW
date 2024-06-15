@@ -58,7 +58,7 @@ extern "C" {
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(uint16_t nErrorCode);
+void Error_Handler(PdmFatalError_t EErrorCode);
 void EnterStopMode();
 void WakeupReInit();
 /* USER CODE BEGIN EFP */

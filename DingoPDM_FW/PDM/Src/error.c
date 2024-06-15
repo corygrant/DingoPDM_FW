@@ -1,6 +1,6 @@
 #include "error.h"
 
-void ErrorState(uint8_t nErrorId)
+void FatalError(PdmFatalError_t eErrorId)
 {
   //Handle flashing the LED based on nErrorId
   LedSetSteady(&ErrorLed, true);
