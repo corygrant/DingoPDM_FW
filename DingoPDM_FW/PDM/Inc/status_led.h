@@ -2,6 +2,7 @@
 #define INC_STATUS_LED_H_
 
 #define LED_BLINK_SPLIT 200
+#define LED_BLINK_PAUSE 1500
 
 #include "stdint.h"
 #include "stdbool.h"
@@ -16,8 +17,10 @@ typedef struct
 {
   const LedFunc On;
   const LedFunc Off;
-  bool bBlinkOn; //Blink by turning on = true, blink by turning off = false
-  uint32_t nOnUntil;
+  bool bState; //Current state of the LED
+  uint32_t nUntil;
+  uint8_t nBlinkCount;
+  uint8_t nBlinkState; //0 = blinking code, 1 = pause between blinks
 }Led_Output;
 
 typedef enum{
@@ -30,8 +33,7 @@ extern Led_Output StatusLed;
 extern Led_Output ErrorLed;
 
 void LedSetSteady(Led_Output* out, bool bState);
-void LedSetCode(Led_Output* out, uint8_t nCode);
-void LedUpdate(uint32_t nNow, Led_Output* out);
+void LedSetCode(uint32_t nNow, Led_Output* out, uint8_t nCode);
 void LedBlink(uint32_t nNow, Led_Output* out);
 
 #endif /* INC_STATUS_LED_H_ */

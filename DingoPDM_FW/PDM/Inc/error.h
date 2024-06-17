@@ -4,6 +4,7 @@
 #include "stdint.h"
 #include "stdbool.h"
 #include "status_led.h"
+#include "stm32f4xx_hal.h"
 
 typedef enum{
   FATAL_ERROR_NONE = 0,
@@ -22,6 +23,6 @@ typedef enum{
   FATAL_ERROR_TEMP
 } PdmFatalError_t;
 
-void FatalError(uint8_t nErrorId);
+void FatalError(PdmFatalError_t eErrorId);
 
 #endif /* INC_ERROR_H_ */

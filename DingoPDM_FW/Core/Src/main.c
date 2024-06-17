@@ -146,10 +146,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void Error_Handler(PdmFatalError_t eErrorCode)
 {
   __disable_irq();
-  while (1)
-  {
-    FatalError(eErrorCode);
-  }
+  FatalError(eErrorCode);
 }
 
 #ifdef  USE_FULL_ASSERT

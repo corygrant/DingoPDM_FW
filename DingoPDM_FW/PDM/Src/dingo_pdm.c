@@ -76,6 +76,8 @@ osMessageQueueId_t qMsgQueueTx;
 //========================================================================
 volatile ProfetTypeDef pf[PDM_NUM_OUTPUTS];
 volatile uint16_t nILTotal;
+volatile bool bAnyOutputOvercurrent = false;
+volatile bool bAnyOutputFault = false;
 
 //========================================================================
 // User Digital Inputs
@@ -323,8 +325,21 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_RUN, 0, 0, 0);
       }
 
-      LedSetSteady(&StatusLed, true);
-      LedSetSteady(&ErrorLed, false);
+
+      if(bAnyOutputOvercurrent && !bAnyOutputFault){
+        LedBlink(HAL_GetTick(), &StatusLed);
+        LedSetSteady(&ErrorLed, false);
+      }
+
+      if(bAnyOutputFault){
+        LedBlink(HAL_GetTick(), &StatusLed);
+        LedSetSteady(&ErrorLed, true);
+      }
+
+      if(!bAnyOutputOvercurrent && !bAnyOutputFault){
+        LedSetSteady(&StatusLed, true);
+        LedSetSteady(&ErrorLed, false);
+      }
 
       if (bDeviceOverTemp && !bDeviceCriticalTemp)
       {
@@ -337,8 +352,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       {
         NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
         nDeviceError = FATAL_ERROR_TEMP;
-        eLastDeviceState = eDeviceState;
-        eDeviceState = DEVICE_ERROR;
       }
 
       if (nBattSense < 100)
@@ -426,8 +439,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_OVERTEMP:
-      //Red LED solid
-      //Outputs still on
       //Go back to run when temp falls
       if (eLastDeviceState != DEVICE_OVERTEMP)
       {
@@ -435,11 +446,18 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       }
 
-      LedSetSteady(&ErrorLed, true);
+      LedBlink(HAL_GetTick(), &StatusLed);
+      LedBlink(HAL_GetTick(), &ErrorLed);
 
-      if (!bDeviceCriticalTemp)
+      if (bDeviceCriticalTemp)
       {
-        LedSetSteady(&ErrorLed, false);
+        NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+        nDeviceError = FATAL_ERROR_TEMP;
+      }
+
+      if (!bDeviceOverTemp)
+      {
+        LedSetSteady(&StatusLed, true);
         eLastDeviceState = eDeviceState;
         eDeviceState = DEVICE_RUN;
       }
@@ -448,7 +466,9 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     case DEVICE_ERROR:
       //Error LED - flash error code
       //No way to recover, must power cycle
-      //Gets trapped in main Error_Handler()
+      //Gets trapped in FatalError
+      NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_ERROR, nDeviceError, 0, 0);
+      LedSetSteady(&StatusLed, false);
       FatalError(nDeviceError);
 
       break;
@@ -534,15 +554,23 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     //=====================================================================================================
     // Profet State Machine
     //=====================================================================================================
+    bAnyOutputOvercurrent = false;
+    bAnyOutputFault = false;
     for(int i=0; i<PDM_NUM_OUTPUTS; i++){
       Profet_SM(&pf[i], eDeviceState == DEVICE_RUN);
 
-      if ((pf[i].eState == OVERCURRENT) && (pf[i].eLastState != OVERCURRENT)){
-        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+      if (pf[i].eState == OVERCURRENT){
+        bAnyOutputOvercurrent = true;
+        if (pf[i].eLastState != OVERCURRENT){
+          NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+        }
       }
 
-      if ((pf[i].eState == FAULT) && (pf[i].eLastState != FAULT)){
-        NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+      if (pf[i].eState == FAULT){
+        bAnyOutputFault = true;
+        if (pf[i].eLastState != FAULT){
+          NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+        }
       }
     }
 
@@ -564,12 +592,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     nBoardTempC = MCP9808_ReadTempC_Int(hi2c1, MCP9808_ADDRESS);
     bDeviceOverTemp = MCP9808_GetOvertemp();
     bDeviceCriticalTemp = MCP9808_GetCriticalTemp();
-
-    //=====================================================================================================
-    // Status LEDs
-    //=====================================================================================================
-    //LedUpdate(HAL_GetTick(), &StatusLed);
-    //LedUpdate(HAL_GetTick(), &ErrorLed);
 
     //=====================================================================================================
     // Check for CAN RX messages in queue

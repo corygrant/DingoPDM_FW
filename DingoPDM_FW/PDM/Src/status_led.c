@@ -7,10 +7,11 @@
 */
 void LedSetSteady(Led_Output* out, bool bState)
 {
-    out->bBlinkOn = true;
     if(bState){
+        out->bState = true;
         out->On();
     } else{
+        out->bState = false;
         out->Off();
     }
 }
@@ -20,25 +21,42 @@ void LedSetSteady(Led_Output* out, bool bState)
 * @param  out: Pointer to the LED output
 * @param  nCode: Number of blinks
 */
-void LedSetCode(Led_Output* out, uint8_t nCode)
+void LedSetCode(uint32_t nNow, Led_Output* out, uint8_t nCode)
 {
-    //Call LedBlink to blink the number of times in nCode without blocking
+    //Blinking code
+    if (out->nBlinkState == 0){
+      //Blink until code is done
+      if(out->nBlinkCount <= nCode){
 
+        //This blink done
+        if(nNow > out->nUntil){
+          //On, turn off
+          if(out->bState){
+            LedSetSteady(out, false);
+            out->nUntil = nNow + (LED_BLINK_SPLIT*2);
+          }
+          //Off, turn on
+          else{
+            LedSetSteady(out, true);
+            out->nBlinkCount++;
+            out->nUntil = nNow + (LED_BLINK_SPLIT*2);
+          }
+        }
+      }
+      else{
+        //Pause after code
+        out->nBlinkCount = 0;
+        out->nUntil = nNow + LED_BLINK_PAUSE;
+        out->nBlinkState = 1;
+      }
+    }
+    //Pause between blinks 
+    else{
+      LedSetSteady(out, true);
 
-}
-
-/*
-* @brief  Update the LED state
-* @param  nNow: Current time
-* @param  out: Pointer to the LED output
-*/
-void LedUpdate(uint32_t nNow, Led_Output* out){
-
-    if(out->bBlinkOn){
-      if(nNow < out->nOnUntil){
-        out->On();
-      } else{
-        out->Off();
+      //Done pausing, back to blinking
+      if (nNow > out->nUntil){
+        out->nBlinkState = 0;
       }
     }
 }
@@ -49,5 +67,18 @@ void LedUpdate(uint32_t nNow, Led_Output* out){
 * @param  out: Pointer to the LED output
 */
 void LedBlink(uint32_t nNow, Led_Output* out){
-    out->nOnUntil = nNow + LED_BLINK_SPLIT;
+
+    if(nNow > out->nUntil){
+      //On, turn off
+      if(out->bState){
+        LedSetSteady(out, false);
+        out->nUntil = nNow + LED_BLINK_SPLIT;
+      }
+      //Off, turn on
+      else{
+        LedSetSteady(out, true);
+        out->nBlinkCount++;
+        out->nUntil = nNow + LED_BLINK_SPLIT;
+      }
+    }
 }

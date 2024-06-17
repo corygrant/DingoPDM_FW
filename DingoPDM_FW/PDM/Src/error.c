@@ -2,7 +2,7 @@
 
 void FatalError(PdmFatalError_t eErrorId)
 {
-  //Handle flashing the LED based on nErrorId
-  LedSetSteady(&ErrorLed, true);
-  //LedSetCode(&ErrorLed, nErrorId);
+  while(1){
+    LedSetCode(HAL_GetTick(), &ErrorLed, eErrorId);
+  }
 }
