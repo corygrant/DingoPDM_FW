@@ -51,12 +51,6 @@ typedef enum{
     CAN_BITRATE_INVALID
 } CAN_BitRate_t;
 
-typedef enum{
-  PDM_ERROR_FRAM_READ = 1,
-  PDM_ERROR_FRAM_WRITE
-} PdmErrorState_t;
-
-
 
 extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueTx;

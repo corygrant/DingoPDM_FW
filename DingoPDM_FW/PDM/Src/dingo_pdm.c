@@ -308,6 +308,9 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //=====================================================================================================
       HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
       
+      for(int i=0; i<PDM_NUM_INPUTS; i++)
+        stPdmConfig.stInput[i].stInVars.bInit = false;
+
       eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_RUN;
 
@@ -340,7 +343,12 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 
       if (nBattSense < 100)
       {
-        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, 0, 0, 0);
+        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
+      }
+
+      if (nBattSense > 160)
+      {
+        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
       }
 
       if(ENABLE_SLEEP){
@@ -424,7 +432,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       if (eLastDeviceState != DEVICE_OVERTEMP)
       {
         eLastDeviceState = eDeviceState;
-        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_OVERTEMP, 0, 0, 0);
+        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       }
 
       LedSetSteady(&ErrorLed, true);
@@ -1111,14 +1119,15 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   {
     if(PdmConfig_Read(hi2c1, MB85RC_ADDRESS, &stPdmConfig) != PDM_OK)
     {
-      //PdmConfig_SetDefault(&stPdmConfig);
-      FatalError(PDM_ERROR_FRAM_READ);
+      FatalError(FATAL_ERROR_FRAM);
     }
   }
   else
   {
-    //PdmConfig_SetDefault(&stPdmConfig);
-    FatalError(PDM_ERROR_FRAM_READ);
+    PdmConfig_SetDefault(&stPdmConfig);
+    //Write default config to FRAM so it is correct on the next boot
+    PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
+    FatalError(FATAL_ERROR_CONFIG);
   }
 
   //Map config to profet values

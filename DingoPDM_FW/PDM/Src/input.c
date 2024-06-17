@@ -35,31 +35,29 @@ void CheckInput(InputVars_t* stInVars, InputMode_t eMode, bool bInvertInput, boo
   {
     //Check for button change
     //Store trigger time
-    if(bInputResult != stInVars->bLastState)
+    if((bInputResult != stInVars->bLastState) && 
+       (bInputResult != *nOutput)) //Rising/Falling
     {
-      if(bInputResult != *nOutput) //Rising/Falling
-      {
         stInVars->nLastTrigTime = HAL_GetTick();
         stInVars->bCheckTime = true;
-      }
     }
-
+    
     stInVars->bLastState = bInputResult;
 
-    if(stInVars->bCheckTime && ((HAL_GetTick() - stInVars->nLastTrigTime) > nDebounceTime))
+    if((stInVars->bCheckTime && ((HAL_GetTick() - stInVars->nLastTrigTime) > nDebounceTime)) 
+      || (!stInVars->bInit))
     {
       stInVars->bCheckTime = false;
       *nOutput = bInputResult;
     }
-
-    //Don't change output
   }
 
   if(eMode == MODE_LATCHING)
   {
     //Check for rising trigger
     //Store trigger time
-    if((bInputResult != stInVars->bLastState) && (bInputResult == true))
+    if((bInputResult != stInVars->bLastState) && 
+       (bInputResult == true))
     {
       stInVars->nLastTrigTime = HAL_GetTick();
       stInVars->bCheckTime = true;
@@ -67,10 +65,13 @@ void CheckInput(InputVars_t* stInVars, InputMode_t eMode, bool bInvertInput, boo
 
     stInVars->bLastState = bInputResult;
 
-    if(stInVars->bCheckTime && ((HAL_GetTick() - stInVars->nLastTrigTime) > nDebounceTime))
+    if((stInVars->bCheckTime && ((HAL_GetTick() - stInVars->nLastTrigTime) > nDebounceTime)) 
+      || (!stInVars->bInit))
     {
       stInVars->bCheckTime = false;
       *nOutput = !*nOutput;
     }
   }
+
+  stInVars->bInit = true;
 }

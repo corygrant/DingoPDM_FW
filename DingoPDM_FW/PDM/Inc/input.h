@@ -16,6 +16,7 @@ typedef enum
 
 typedef struct
 {
+  bool bInit;
   uint32_t nLastTrigTime;
   bool bLastState;
   bool bCheckTime;
