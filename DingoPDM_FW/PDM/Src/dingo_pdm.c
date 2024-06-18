@@ -114,6 +114,7 @@ volatile uint16_t nVREFINTCAL;
 //========================================================================
 // CAN
 //========================================================================
+PdmConfig_CanSpeed_t eCanSpeed = CAN_BITRATE_500K;
 CAN_TxHeaderTypeDef stCanTxHeader;
 CAN_RxHeaderTypeDef stCanRxHeader;
 uint8_t nCanTxData[8];
@@ -706,6 +707,41 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 */
 void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 {
+  //Configure the CAN peripheral with speed from settings
+  //Default is 500K, don't need to change
+  if(eCanSpeed != BITRATE_500K){
+    switch(eCanSpeed){
+      case BITRATE_1000K:
+        hcan->Init.Prescaler = 2;
+        break;
+      case BITRATE_500K:
+        hcan->Init.Prescaler = 4;
+        break;
+      case BITRATE_250K:
+        hcan->Init.Prescaler = 8;
+        break;
+      default: //500K
+        hcan->Init.Prescaler = 4;
+        break;
+    }
+
+    hcan->Instance = CAN1;
+    hcan->Init.Mode = CAN_MODE_NORMAL;
+    hcan->Init.SyncJumpWidth = CAN_SJW_1TQ;
+    hcan->Init.TimeSeg1 = CAN_BS1_15TQ;
+    hcan->Init.TimeSeg2 = CAN_BS2_2TQ;
+    hcan->Init.TimeTriggeredMode = DISABLE;
+    hcan->Init.AutoBusOff = DISABLE;
+    hcan->Init.AutoWakeUp = DISABLE;
+    hcan->Init.AutoRetransmission = DISABLE;
+    hcan->Init.ReceiveFifoLocked = DISABLE;
+    hcan->Init.TransmitFifoPriority = DISABLE;
+    if (HAL_CAN_Init(hcan) != HAL_OK)
+    {
+      Error_Handler(FATAL_ERROR_CAN);
+    }
+  }
+
   //Set CAN Standby pin to low = enable
   HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(CAN_STBY_GPIO_Port, CAN_STBY_Pin, GPIO_PIN_RESET);
@@ -1151,6 +1187,8 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
     PdmConfig_Write(hi2c1, MB85RC_ADDRESS, &stPdmConfig);
     FatalError(FATAL_ERROR_CONFIG);
   }
+
+  eCanSpeed = (PdmConfig_CanSpeed_t)stPdmConfig.stDevConfig.nCanSpeed;
 
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)

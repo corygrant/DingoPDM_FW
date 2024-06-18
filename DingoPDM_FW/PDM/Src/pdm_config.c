@@ -569,7 +569,7 @@ void PdmConfig_SetDefault(PdmConfig_t* pConfig){
   //Device Configuration
   pConfig->stDevConfig.nVersion = 3;
   pConfig->stDevConfig.nCanEnabled = 1;
-  pConfig->stDevConfig.nCanSpeed = 6;
+  pConfig->stDevConfig.nCanSpeed = 1;
 
   //Inputs
   for(int i=0; i<PDM_NUM_INPUTS; i++){

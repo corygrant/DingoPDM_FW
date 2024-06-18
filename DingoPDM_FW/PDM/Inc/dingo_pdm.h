@@ -38,19 +38,6 @@ typedef enum{
   DEVICE_ERROR
 } DeviceState_t;
 
-typedef enum{
-    CAN_BITRATE_10K = 0,
-    CAN_BITRATE_20K = 1,
-    CAN_BITRATE_50K = 2,
-    CAN_BITRATE_100K = 3,
-    CAN_BITRATE_125K = 4,
-    CAN_BITRATE_250K = 5,
-    CAN_BITRATE_500K = 6,
-    CAN_BITRATE_750K = 7,
-    CAN_BITRATE_1000K = 8,
-    CAN_BITRATE_INVALID
-} CAN_BitRate_t;
-
 
 extern osMessageQueueId_t qMsgQueueRx;
 extern osMessageQueueId_t qMsgQueueTx;
