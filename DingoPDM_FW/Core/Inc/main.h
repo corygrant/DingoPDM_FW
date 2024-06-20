@@ -36,6 +36,11 @@ extern "C" {
 
 /* Exported types ------------------------------------------------------------*/
 /* USER CODE BEGIN ET */
+typedef enum{
+  BITRATE_1000K = 0,
+  BITRATE_500K = 1,
+  BITRATE_250K = 2
+} CanSpeed_t;
 
 /* USER CODE END ET */
 
@@ -59,8 +64,7 @@ extern "C" {
 
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(PdmFatalError_t EErrorCode);
-void EnterStopMode();
-void WakeupReInit();
+void EnterStopMode(CanSpeed_t eSpeed);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */

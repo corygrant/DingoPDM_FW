@@ -50,12 +50,6 @@ typedef enum{
   PULLDOWN
 } PdmConfig_InputPull;
 
-typedef enum{
-  BITRATE_1000K = 0,
-  BITRATE_500K = 1,
-  BITRATE_250K = 2
-} PdmConfig_CanSpeed_t;
-
 typedef struct{
   uint8_t nVersion;
   uint8_t nCanEnabled;

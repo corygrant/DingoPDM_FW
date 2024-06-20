@@ -28,7 +28,7 @@ int main(void)
   MX_GPIO_Init();
   MX_DMA_Init();
   MX_ADC1_Init();
-  MX_CAN1_Init();
+  //MX_CAN1_Init();
   MX_CRC_Init();
   MX_I2C1_Init();
   
@@ -47,10 +47,24 @@ int main(void)
   }
  }
 
- void EnterStopMode()
+ void EnterStopMode(CanSpeed_t eSpeed)
  {
-    //Reconfigure CAN as GPIO event
-    CAN_DeInitBeforeStop(&hcan1);
+    //Set CAN TX/RX as GPIO event to enable wakeup from STOP mode
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+    __HAL_RCC_CAN1_CLK_DISABLE();
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8|GPIO_PIN_9);
+    HAL_NVIC_DisableIRQ(CAN1_RX0_IRQn);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_8;
+    GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING_FALLING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = GPIO_PIN_9;
+    GPIO_InitStruct.Mode = GPIO_MODE_EVT_RISING_FALLING;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
     //Enter Stop Mode
     HAL_SuspendTick();
@@ -58,18 +72,16 @@ int main(void)
     HAL_PWR_EnterSTOPMode(PWR_LOWPOWERREGULATOR_ON, PWR_STOPENTRY_WFE);
 
     //Execution will resume here after wakeup
-    WakeupReInit();
- }
- 
- void WakeupReInit()
- {
-    //Start clocks
     SystemClock_Config();
     HAL_ResumeTick();
 
-    //Reconfigure CAN
-    CAN_ReInitAtWakeup(&hcan1);
+    //Reconfigure CAN after wakeup from STOP mode  
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_9);
+
+    CAN_Init(&hcan1, eSpeed);
  }
+ 
 
 /**
   * @brief System Clock Configuration
