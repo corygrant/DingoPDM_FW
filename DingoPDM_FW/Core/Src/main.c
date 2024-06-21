@@ -79,7 +79,8 @@ int main(void)
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_8);
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_9);
 
-    CAN_Init(&hcan1, eSpeed);
+    HAL_CAN_MspInit(&hcan1);
+    //CAN_Init(&hcan1, eSpeed);
  }
  
 

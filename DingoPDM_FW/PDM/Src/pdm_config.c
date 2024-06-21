@@ -275,7 +275,12 @@ void SetVirtInputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE
 
   if( (stMsgRx->nRxLen == 7) ||
       (stMsgRx->nRxLen == 2)){
-    nIndex = (stMsgRx->nRxData[2]);
+
+    if (stMsgRx->nRxLen == 7)
+      nIndex = stMsgRx->nRxData[2];
+    else
+      nIndex = stMsgRx->nRxData[1];
+      
     if(nIndex < PDM_NUM_VIRT_INPUTS){
       if(stMsgRx->nRxLen == 7){
         pConfig->stVirtualInput[nIndex].nEnabled = (stMsgRx->nRxData[1] & 0x01);
@@ -512,7 +517,12 @@ void SetCanInputs(PdmConfig_t* pConfig, MsgQueueRx_t* stMsgRx, osMessageQueueId_
 
   if( (stMsgRx->nRxLen == 7) ||
       (stMsgRx->nRxLen == 2)){
-    nIndex = (stMsgRx->nRxData[2]);
+
+    if (stMsgRx->nRxLen == 7)
+      nIndex = stMsgRx->nRxData[2];
+    else
+      nIndex = stMsgRx->nRxData[1];
+
     if(nIndex < PDM_NUM_CAN_INPUTS){
       if(stMsgRx->nRxLen == 7){
         pConfig->stCanInput[nIndex].nEnabled = (stMsgRx->nRxData[1] & 0x01);

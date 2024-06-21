@@ -954,7 +954,8 @@ void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay)
 
   if (HAL_CAN_AddTxMessage(hcan, &stCanTxHeader, nCanTxData, &nCanTxMailbox) != HAL_OK)
   {
-    NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_CAN, 0, 0, 0);
+    //Too many messages 
+    //NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_CAN, 0, 0, 0);
   }
 
   if(bDelay)
