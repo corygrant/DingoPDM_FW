@@ -12,8 +12,8 @@
 #include "wipers.h"
 
 #define PDM_MAJOR_VERSION 0
-#define PDM_MINOR_VERSION 2
-#define PDM_BUILD 3
+#define PDM_MINOR_VERSION 3
+#define PDM_BUILD 0
 
 #define PDM_NUM_OUTPUTS 8
 #define PDM_NUM_INPUTS 2
