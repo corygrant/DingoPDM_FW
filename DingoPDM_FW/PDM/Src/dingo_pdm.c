@@ -1156,7 +1156,23 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
     FatalError(FATAL_ERROR_CONFIG);
   }
 
-  eCanSpeed = (CanSpeed_t)stPdmConfig.stDevConfig.nCanSpeed;
+  switch(stPdmConfig.stDevConfig.nCanSpeed){
+    case 0:
+      eCanSpeed = BITRATE_1000K;
+      break;
+    case 1:
+      eCanSpeed = BITRATE_500K;
+      break;
+    case 2:
+      eCanSpeed = BITRATE_250K;
+      break;
+    case 3:
+      eCanSpeed = BITRATE_125K;
+      break;
+    default:
+      eCanSpeed = BITRATE_500K;
+      break;
+  }
 
   //Map config to profet values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)

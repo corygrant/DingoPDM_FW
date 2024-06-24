@@ -7,6 +7,8 @@
 #include "cmsis_os.h"
 #include "main.h"
 
+#include "can.h"
+
 #include "pdm_config.h"
 #include "can_input.h"
 #include "input.h"

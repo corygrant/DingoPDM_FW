@@ -39,7 +39,8 @@ extern "C" {
 typedef enum{
   BITRATE_1000K = 0,
   BITRATE_500K = 1,
-  BITRATE_250K = 2
+  BITRATE_250K = 2,
+  BITRATE_125K = 3
 } CanSpeed_t;
 
 /* USER CODE END ET */

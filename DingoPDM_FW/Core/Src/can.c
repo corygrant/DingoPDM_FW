@@ -2,27 +2,34 @@
 
 void CAN_Init(CAN_HandleTypeDef* canHandle, CanSpeed_t eSpeed)
 {
+  uint32_t nBitrate;
   HAL_CAN_MspInit(canHandle);
 
   //Configure the CAN peripheral with the correct speed
   switch(eSpeed){
     case BITRATE_1000K:
-      canHandle->Init.Prescaler = 2;
+      nBitrate = 1000000;
       break;
     case BITRATE_500K:
-      canHandle->Init.Prescaler = 4;
+      nBitrate = 500000;
       break;
     case BITRATE_250K:
-      canHandle->Init.Prescaler = 8;
+      nBitrate = 250000;
+      break;
+    case BITRATE_125K:
+      nBitrate = 125000;
       break;
     default: //500K
-      canHandle->Init.Prescaler = 4;
+      nBitrate = 500000;
       break;
   }
+
+  uint32_t nPrescaler = HAL_RCC_GetPCLK1Freq()/(nBitrate*17);
 
   canHandle->Instance = CAN1;
   canHandle->Init.Mode = CAN_MODE_NORMAL;
   canHandle->Init.SyncJumpWidth = CAN_SJW_1TQ;
+  canHandle->Init.Prescaler = nPrescaler;
   canHandle->Init.TimeSeg1 = CAN_BS1_15TQ;
   canHandle->Init.TimeSeg2 = CAN_BS2_2TQ;
   canHandle->Init.TimeTriggeredMode = DISABLE;
