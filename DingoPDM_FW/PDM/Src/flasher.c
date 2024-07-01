@@ -1,20 +1,24 @@
 #include "flasher.h"
 
-void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[PDM_NUM_OUTPUTS])
+void EvaluateFlasher(uint32_t nNow, PdmConfig_Flasher_t* pFlasher, uint16_t* pResult)
 {
-
-  if(!*pFlasher->pInput){
-    pResult[pFlasher->nOutput] = 1;
+  if(pFlasher->nEnabled == 0){
+    *pResult = 0;
     return;
   }
 
-  if((pResult[pFlasher->nOutput] == 0) && ((HAL_GetTick() - pFlasher->nTimeOff) > pFlasher->nFlashOffTime)){
-    pResult[pFlasher->nOutput] = 1;
-    pFlasher->nTimeOn = HAL_GetTick();
+  if(!*pFlasher->pInput){
+    *pResult = 0;
+    return;
   }
-  if((pResult[pFlasher->nOutput] == 1) && ((HAL_GetTick() - pFlasher->nTimeOn) > pFlasher->nFlashOnTime)){
-    pResult[pFlasher->nOutput] = 0;
-    pFlasher->nTimeOff = HAL_GetTick();
+
+  if((*pResult == 0) && ((nNow - pFlasher->nTimeOff) > pFlasher->nFlashOffTime)){
+    *pResult = 1;
+    pFlasher->nTimeOn = nNow;
+  }
+  if((*pResult == 1) && ((nNow - pFlasher->nTimeOn) > pFlasher->nFlashOnTime)){
+    *pResult = 0;
+    pFlasher->nTimeOff = nNow;
   }
 
 }

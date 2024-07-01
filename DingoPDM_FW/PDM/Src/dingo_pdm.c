@@ -142,7 +142,7 @@ CANInput_Rx_t stCanInputsRx[PDM_NUM_CAN_INPUTS];
 uint16_t nVirtInputs[PDM_NUM_VIRT_INPUTS];
 uint16_t nOutputs[PDM_NUM_OUTPUTS];
 uint16_t nStarterDisable[PDM_NUM_OUTPUTS];
-uint16_t nOutputFlasher[PDM_NUM_OUTPUTS];
+uint16_t nFlashers[PDM_NUM_FLASHERS];
 uint16_t nAlwaysTrue;
 
 uint32_t nMsgCnt;
@@ -869,8 +869,8 @@ void SendMsg3(CAN_HandleTypeDef *hcan)
   nCanTxData[3] = (pf[7].eState << 4) + pf[6].eState;
   nCanTxData[4] = (*pVariableMap[60] << 1) + *pVariableMap[59];
   nCanTxData[5] = (stWiper.eState << 4) + stWiper.eSelectedSpeed;
-  nCanTxData[6] = ((nOutputFlasher[stPdmConfig.stFlasher[3].nOutput] & 0x01) << 3) + ((nOutputFlasher[stPdmConfig.stFlasher[2].nOutput] & 0x01) << 2) +
-                  ((nOutputFlasher[stPdmConfig.stFlasher[1].nOutput] & 0x01) << 1) + (nOutputFlasher[stPdmConfig.stFlasher[0].nOutput] & 0x01) +
+  nCanTxData[6] = ((nFlashers[3] & 0x01) << 3) + ((nFlashers[2] & 0x01) << 2) +
+                  ((nFlashers[1] & 0x01) << 1) + (nFlashers[0] & 0x01) +
                   ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 7) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 6) +
                   ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 5) + ((*stPdmConfig.stFlasher[0].pInput & 0x01) << 4);
   nCanTxData[7] = 0;
@@ -980,27 +980,10 @@ void InputLogic(){
     EvaluateStarter(&stPdmConfig.stStarter, i, &nStarterDisable[i]);
   }
 
-  //Flasher not used - set to 1
-  for(int i=0; i<PDM_NUM_OUTPUTS; i++)
-  {
-      if( (stPdmConfig.stFlasher[0].nOutput != i) &&
-          (stPdmConfig.stFlasher[1].nOutput != i) &&
-          (stPdmConfig.stFlasher[2].nOutput != i) &&
-          (stPdmConfig.stFlasher[3].nOutput != i))
-        nOutputFlasher[i] = 1;
-  }
-
   //Set flasher outputs
   for(int i=0; i<PDM_NUM_FLASHERS; i++)
   {
-    if(stPdmConfig.stFlasher[i].nEnabled)
-    {
-      EvaluateFlasher(&stPdmConfig.stFlasher[i], nOutputFlasher);
-    }
-    else
-    {
-      nOutputFlasher[stPdmConfig.stFlasher[i].nOutput] = 1; //1 = flasher disabled
-    }
+    EvaluateFlasher(HAL_GetTick(), &stPdmConfig.stFlasher[i], &nFlashers[i]);
   }
 }
 
@@ -1041,7 +1024,7 @@ void NewTxMsg(MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, 
 void OutputLogic(){
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)
   {
-    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i] && nOutputFlasher[i]);
+    pf[i].eReqState = (ProfetStateTypeDef)(*stPdmConfig.stOutput[i].pInput && nStarterDisable[i]);
   }
 }
 
@@ -1225,8 +1208,13 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
   pVariableMap[59] = &stWiper.nSlowOut;
   pVariableMap[60] = &stWiper.nFastOut;
 
+  pVariableMap[61] = &nFlashers[0];
+  pVariableMap[62] = &nFlashers[1];
+  pVariableMap[63] = &nFlashers[2];
+  pVariableMap[64] = &nFlashers[3];
+
   nAlwaysTrue = 1;
-  pVariableMap[61] = &nAlwaysTrue;
+  pVariableMap[65] = &nAlwaysTrue;
 
   //Assign variable map values
   for(int i=0; i<PDM_NUM_OUTPUTS; i++)

@@ -57,7 +57,7 @@ void EvaluateVirtInput(PdmConfig_VirtualInput_t *pIn, uint16_t* pResult)
       nResult2 = nResult2;
     }
 
-    switch(pIn->eCond0)
+    switch(pIn->eCond1)
     {
     case COND_AND:
       CheckInput(&pIn->stInVars, pIn->eMode, false, nResultSec0 && nResult2, pResult, NO_DEBOUNCE);

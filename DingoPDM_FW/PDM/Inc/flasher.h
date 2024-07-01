@@ -5,6 +5,6 @@
 #include "stm32f4xx_hal.h"
 #include "pdm_config.h"
 
-void EvaluateFlasher(PdmConfig_Flasher_t* pFlasher, uint16_t pResult[PDM_NUM_OUTPUTS]);
+void EvaluateFlasher(uint32_t nNow, PdmConfig_Flasher_t* pFlasher, uint16_t* pResult);
 
 #endif /* INC_FLASHER_H_ */
