@@ -236,9 +236,9 @@ void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], 
         pConfig->stOutput[nIndex].nCurrentLimit = stMsgRx->nRxData[3] * 10;
         pConfig->stOutput[nIndex].eResetMode = (stMsgRx->nRxData[4] & 0x0F);
         pConfig->stOutput[nIndex].nResetLimit = (stMsgRx->nRxData[4] & 0xF0) >> 4;
-        pConfig->stOutput[nIndex].nResetTime = stMsgRx->nRxData[5] * 10;
+        pConfig->stOutput[nIndex].nResetTime = stMsgRx->nRxData[5] * 100;
         pConfig->stOutput[nIndex].nInrushLimit = stMsgRx->nRxData[6] * 10;
-        pConfig->stOutput[nIndex].nInrushTime = stMsgRx->nRxData[7] * 10;
+        pConfig->stOutput[nIndex].nInrushTime = stMsgRx->nRxData[7] * 100;
         pConfig->stOutput[nIndex].pInput = pVariableMap[pConfig->stOutput[nIndex].nInput];
 
         //Copy config values to profet
@@ -258,9 +258,9 @@ void SetOutputs(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE], 
       stMsgTx.nTxData[2] = pConfig->stOutput[nIndex].nInput;
       stMsgTx.nTxData[3] = (uint8_t)(pConfig->stOutput[nIndex].nCurrentLimit / 10);
       stMsgTx.nTxData[4] = ((pConfig->stOutput[nIndex].nResetLimit & 0x0F) << 4) + (pConfig->stOutput[nIndex].eResetMode & 0x0F);
-      stMsgTx.nTxData[5] = (uint8_t)(pConfig->stOutput[nIndex].nResetTime / 10);
+      stMsgTx.nTxData[5] = (uint8_t)(pConfig->stOutput[nIndex].nResetTime / 100);
       stMsgTx.nTxData[6] = (uint8_t)(pConfig->stOutput[nIndex].nInrushLimit / 10);
-      stMsgTx.nTxData[7] = (uint8_t)(pConfig->stOutput[nIndex].nInrushTime / 10);
+      stMsgTx.nTxData[7] = (uint8_t)(pConfig->stOutput[nIndex].nInrushTime / 100);
 
       stMsgTx.stTxHeader.StdId = pConfig->stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
       osMessageQueuePut(*qMsgQueueTx, &stMsgTx, 0U, 0U);
@@ -449,8 +449,8 @@ void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE],
         pConfig->stFlasher[nIndex].nSingleCycle = (stMsgRx->nRxData[1] & 0x02) >> 1;
         pConfig->stFlasher[nIndex].nInput = stMsgRx->nRxData[2];
         pConfig->stFlasher[nIndex].nOutput = stMsgRx->nRxData[3];
-        pConfig->stFlasher[nIndex].nFlashOnTime = stMsgRx->nRxData[4] * 10;
-        pConfig->stFlasher[nIndex].nFlashOffTime = stMsgRx->nRxData[5] * 10;
+        pConfig->stFlasher[nIndex].nFlashOnTime = stMsgRx->nRxData[4] * 100;
+        pConfig->stFlasher[nIndex].nFlashOffTime = stMsgRx->nRxData[5] * 100;
         pConfig->stFlasher[nIndex].pInput = pVariableMap[pConfig->stFlasher[nIndex].nInput];
       }
       stMsgTx.stTxHeader.DLC = 6;
@@ -460,8 +460,8 @@ void SetFlashers(PdmConfig_t* pConfig, uint16_t* pVariableMap[PDM_VAR_MAP_SIZE],
                               (pConfig->stFlasher[nIndex].nEnabled & 0x01);
       stMsgTx.nTxData[2] = pConfig->stFlasher[nIndex].nInput;
       stMsgTx.nTxData[3] = pConfig->stFlasher[nIndex].nOutput;
-      stMsgTx.nTxData[4] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOnTime / 10);
-      stMsgTx.nTxData[5] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOffTime / 10);
+      stMsgTx.nTxData[4] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOnTime / 100);
+      stMsgTx.nTxData[5] = (uint8_t)(pConfig->stFlasher[nIndex].nFlashOffTime / 100);
       stMsgTx.nTxData[6] = 0;
       stMsgTx.nTxData[7] = 0;
 
