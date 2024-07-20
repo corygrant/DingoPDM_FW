@@ -168,23 +168,21 @@ uint32_t nAllOutputsOffTime = 0;
 uint8_t nTXBeforeSleep = 0;
 
 //========================================================================
+// Messages
+//========================================================================
+bool bLastRunInfoMsg = false;
+bool bLastOvertempMsg = false;
+bool bLastCritTempMsg = false;
+bool bLastBattLowMsg = false;
+bool bLastBattHighMsg = false;
+
+//========================================================================
 // Local Function Prototypes
 //========================================================================
 void InputLogic();
 void OutputLogic();
 void Profet_Default_Init();
-void SendMsg17(CAN_HandleTypeDef * hcan);
-void SendMsg16(CAN_HandleTypeDef *hcan);
-void SendMsg15(CAN_HandleTypeDef *hcan);
-void SendMsg14(CAN_HandleTypeDef *hcan);
-void SendMsg13(CAN_HandleTypeDef *hcan);
-void SendMsg12(CAN_HandleTypeDef *hcan);
-void SendMsg11(CAN_HandleTypeDef *hcan);
-void SendMsg10(CAN_HandleTypeDef *hcan);
-void SendMsg9(CAN_HandleTypeDef *hcan);
-void SendMsg8(CAN_HandleTypeDef *hcan);
-void SendMsg7(CAN_HandleTypeDef *hcan);
-void SendMsg6(CAN_HandleTypeDef *hcan);
+void SendKeypadMsg(CAN_HandleTypeDef *hcan);
 void SendMsg5(CAN_HandleTypeDef *hcan);
 void SendMsg4(CAN_HandleTypeDef *hcan);
 void SendMsg3(CAN_HandleTypeDef *hcan);
@@ -192,7 +190,7 @@ void SendMsg2(CAN_HandleTypeDef *hcan);
 void SendMsg1(CAN_HandleTypeDef *hcan);
 void SendMsg0(CAN_HandleTypeDef *hcan);
 void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay);
-void NewTxMsg(MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3);
+void NewTxMsg(bool bState, bool* bLastState, MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3);
 
 /*
   * @brief  USB Receive Callback
@@ -228,7 +226,7 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 
   if(HAL_CAN_GetRxMessage(hcan, CAN_RX_FIFO0, &stCanRxHeader, nCanRxData) != HAL_OK)
   {
-    NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_CAN, 0, 0, 0);
+    NewTxMsg(true, false, MSG_TYPE_WARNING, MSG_SRC_CAN, 0, 0, 0);
   }
 
   //Store latest receive time
@@ -258,13 +256,13 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     switch (eDeviceState)
     {
     case DEVICE_POWER_ON:
-      NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_POWER_ON, 0, 0, 0);
+      NewTxMsg(true, false, MSG_TYPE_INFO, MSG_SRC_STATE_POWER_ON, 0, 0, 0);
       eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_STARTING;
       break;
 
     case DEVICE_STARTING:
-      NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_STARTING, 0, 0, 0);
+      NewTxMsg(true, false, MSG_TYPE_INFO, MSG_SRC_STATE_STARTING, 0, 0, 0);
       //=====================================================================================================
       // USB initialization
       //=====================================================================================================
@@ -320,12 +318,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       break;
 
     case DEVICE_RUN:
-      if (eLastDeviceState != DEVICE_RUN)
-      {
-        eLastDeviceState = eDeviceState;
-        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_RUN, 0, 0, 0);
-      }
-
+      eLastDeviceState = eDeviceState;
+      NewTxMsg((eLastDeviceState != DEVICE_RUN), &bLastRunInfoMsg, MSG_TYPE_INFO, MSG_SRC_STATE_RUN, 0, 0, 0);
 
       if(bAnyOutputOvercurrent && !bAnyOutputFault){
         LedBlink(HAL_GetTick(), &StatusLed);
@@ -342,29 +336,23 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         LedSetSteady(&ErrorLed, false);
       }
 
+      NewTxMsg((bDeviceOverTemp && !bDeviceCriticalTemp), &bLastOvertempMsg, MSG_TYPE_WARNING, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       if (bDeviceOverTemp && !bDeviceCriticalTemp)
       {
-        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
         eLastDeviceState = eDeviceState;
         eDeviceState = DEVICE_OVERTEMP;
       }
 
+      NewTxMsg(bDeviceCriticalTemp, &bLastCritTempMsg, MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       if (bDeviceCriticalTemp)
       {
-        NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
         nDeviceError = FATAL_ERROR_TEMP;
       }
 
-      if (nBattSense < 100)
-      {
-        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
-      }
+      NewTxMsg((nBattSense < 100), &bLastBattLowMsg, MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
 
-      if (nBattSense > 160)
-      {
-        NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
-      }
-
+      NewTxMsg((nBattSense > 160), &bLastBattHighMsg, MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
+      
       if(ENABLE_SLEEP){
 
         if(bSleepMsgReceived){
@@ -407,9 +395,9 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       if (eLastDeviceState != DEVICE_SLEEP)
       {
         eLastDeviceState = eDeviceState;
-        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_SLEEP, 0, 0, 0);
+        NewTxMsg(true, false, MSG_TYPE_INFO, MSG_SRC_STATE_SLEEP, 0, 0, 0);
       }
-      
+              
       //Wait for messages to TX
       //Must be more than 1 in case state changed in the middle of last TX
       if(nTXBeforeSleep > 1){
@@ -434,7 +422,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       HAL_GPIO_WritePin(EXTRA3_GPIO_Port, EXTRA3_Pin, GPIO_PIN_RESET);
       HAL_GPIO_WritePin(CAN_STBY_GPIO_Port, CAN_STBY_Pin, GPIO_PIN_RESET);
       LedSetSteady(&StatusLed, true);
-      NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_WAKE, 0, 0, 0);
+      NewTxMsg(true, false, MSG_TYPE_INFO, MSG_SRC_STATE_WAKE, 0, 0, 0);
       eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_RUN;
       break;
@@ -444,15 +432,15 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       if (eLastDeviceState != DEVICE_OVERTEMP)
       {
         eLastDeviceState = eDeviceState;
-        NewTxMsg(MSG_TYPE_INFO, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+        NewTxMsg(true, false, MSG_TYPE_INFO, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       }
 
       LedBlink(HAL_GetTick(), &StatusLed);
       LedBlink(HAL_GetTick(), &ErrorLed);
 
+      NewTxMsg(bDeviceCriticalTemp, &bLastCritTempMsg, MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       if (bDeviceCriticalTemp)
       {
-        NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
         nDeviceError = FATAL_ERROR_TEMP;
       }
 
@@ -468,7 +456,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       //Error LED - flash error code
       //No way to recover, must power cycle
       //Gets trapped in FatalError
-      NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_STATE_ERROR, nDeviceError, 0, 0);
+      NewTxMsg(true, false, MSG_TYPE_ERROR, MSG_SRC_STATE_ERROR, nDeviceError, 0, 0);
       LedSetSteady(&StatusLed, false);
       FatalError(nDeviceError);
 
@@ -563,14 +551,14 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       if (pf[i].eState == OVERCURRENT){
         bAnyOutputOvercurrent = true;
         if (pf[i].eLastState != OVERCURRENT){
-          NewTxMsg(MSG_TYPE_WARNING, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+          NewTxMsg(true, false, MSG_TYPE_WARNING, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
         }
       }
 
       if (pf[i].eState == FAULT){
         bAnyOutputFault = true;
         if (pf[i].eLastState != FAULT){
-          NewTxMsg(MSG_TYPE_ERROR, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
+          NewTxMsg(true, false, MSG_TYPE_ERROR, MSG_SRC_OVERCURRENT, i, pf[i].nIL, 0);
         }
       }
     }
@@ -791,6 +779,8 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
       SendMsg3(hcan);
       SendMsg4(hcan);
       SendMsg5(hcan);
+
+      //SendKeypadMsg(hcan);
     }
 
     nTXBeforeSleep++;
@@ -804,6 +794,47 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
     
     osDelay(stPdmConfig.stCanOutput.nUpdateTime);
   }
+}
+
+void SendKeypadMsg(CAN_HandleTypeDef *hcan)
+{
+  //Solid color
+  stCanTxHeader.StdId = 0x215;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  //Red 1-8
+  nCanTxData[0] = 0;
+  //Green 1-4, Red 9-12
+  nCanTxData[1] = ((pf[3].eState == ON)<<7) + ((pf[2].eState == ON)<<6) + ((pf[1].eState == ON)<<5) + ((pf[0].eState == ON)<<4);
+  //Green 5-12
+  nCanTxData[2] = ((pf[7].eState == ON)<<3) + ((pf[6].eState == ON)<<2) + ((pf[5].eState == ON)<<1) + (pf[4].eState == ON);
+  //Blue 1-8
+  nCanTxData[3] = ((pf[7].eState == OVERCURRENT)<<7) + ((pf[6].eState == OVERCURRENT)<<6) + ((pf[5].eState == OVERCURRENT)<<5) + ((pf[4].eState == OVERCURRENT)<<4) + ((pf[3].eState == OVERCURRENT)<<3) + ((pf[2].eState == OVERCURRENT)<<2) + ((pf[1].eState == OVERCURRENT)<<1) + (pf[0].eState == OVERCURRENT);
+  //Blue 9-12
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan, true);
+
+  //Flashing color
+  stCanTxHeader.StdId = 0x315;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  //Red 1-8
+  nCanTxData[0] = ((pf[7].eState == FAULT)<<7) + ((pf[6].eState == FAULT)<<6) + ((pf[5].eState == FAULT)<<5) + ((pf[4].eState == FAULT)<<4) + ((pf[3].eState == FAULT)<<3) + ((pf[2].eState == FAULT)<<2) + ((pf[1].eState == FAULT)<<1) + (pf[0].eState == FAULT);
+  //Green 1-4, Red 9-12
+  nCanTxData[1] = 0;
+  //Green 5-12
+  nCanTxData[2] = 0;
+  //Blue 1-8
+  nCanTxData[3] = 0;
+  //Blue 9-12
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+
+  SendMsg(hcan, true);
 }
 
 void SendMsg5(CAN_HandleTypeDef *hcan)
@@ -989,6 +1020,8 @@ void InputLogic(){
 
 /*
 * @brief Send a new CAN message to the TX queue
+* @param bState: Current state of the message, set to true to always send
+* @param bLastState: Last state of the message, set to false to always send
 * @param eType: Message type
 * @param nId: Message ID
 * @param nParam1: Message parameter 1
@@ -996,24 +1029,27 @@ void InputLogic(){
 * @param nParam3: Message parameter 3
 * @retval None
 */
-void NewTxMsg(MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3){
-    MsgQueueTx_t stMsgTx;
+void NewTxMsg(bool bState, bool* bLastState, MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3){
+    if(bState && !*bLastState){
+      MsgQueueTx_t stMsgTx;
 
-    stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_MSG_ID_OFFSET;
-    stMsgTx.stTxHeader.ExtId = 0;
-    stMsgTx.stTxHeader.IDE = CAN_ID_STD;
-    stMsgTx.stTxHeader.RTR = CAN_RTR_DATA;
-    stMsgTx.stTxHeader.DLC = 5;
-    stMsgTx.nTxData[0] = eType;
-    stMsgTx.nTxData[1] = eSrc;
-    stMsgTx.nTxData[2] = nParam1;
-    stMsgTx.nTxData[3] = nParam2;
-    stMsgTx.nTxData[4] = nParam3;
-    stMsgTx.nTxData[5] = 0;
-    stMsgTx.nTxData[6] = 0;
-    stMsgTx.nTxData[7] = 0;
-    
-    osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0, 0);
+      stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_MSG_ID_OFFSET;
+      stMsgTx.stTxHeader.ExtId = 0;
+      stMsgTx.stTxHeader.IDE = CAN_ID_STD;
+      stMsgTx.stTxHeader.RTR = CAN_RTR_DATA;
+      stMsgTx.stTxHeader.DLC = 5;
+      stMsgTx.nTxData[0] = eType;
+      stMsgTx.nTxData[1] = eSrc;
+      stMsgTx.nTxData[2] = nParam1;
+      stMsgTx.nTxData[3] = nParam2;
+      stMsgTx.nTxData[4] = nParam3;
+      stMsgTx.nTxData[5] = 0;
+      stMsgTx.nTxData[6] = 0;
+      stMsgTx.nTxData[7] = 0;
+      
+      osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0, 0);
+    }
+    *bLastState = bState;
 }
 
 /*
