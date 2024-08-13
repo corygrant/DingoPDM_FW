@@ -63,6 +63,7 @@ target_sources(${CMAKE_PROJECT_NAME} PRIVATE
     PDM/Src/usb.c
     PDM/Src/virtual_input.c
     PDM/Src/wipers.c
+    PDM/Src/blink_keypad.c
 )
 
 # Add include paths

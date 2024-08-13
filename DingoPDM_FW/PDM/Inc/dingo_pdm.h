@@ -6,9 +6,7 @@
 #include "stdio.h"
 #include "cmsis_os.h"
 #include "main.h"
-
 #include "can.h"
-
 #include "pdm_config.h"
 #include "can_input.h"
 #include "input.h"
@@ -24,6 +22,7 @@
 #include "status_led.h"
 #include "usb.h"
 #include "error.h"
+#include "blink_keypad.h"
 
 //#define MEAS_HEAP_USE
 

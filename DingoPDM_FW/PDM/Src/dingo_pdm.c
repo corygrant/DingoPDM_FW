@@ -177,6 +177,11 @@ bool bLastBattLowMsg = false;
 bool bLastBattHighMsg = false;
 
 //========================================================================
+// Blink Keypad
+//========================================================================
+BlinkMarineKeypad_t stKeypad;
+
+//========================================================================
 // Local Function Prototypes
 //========================================================================
 void InputLogic();
@@ -190,7 +195,7 @@ void SendMsg2(CAN_HandleTypeDef *hcan);
 void SendMsg1(CAN_HandleTypeDef *hcan);
 void SendMsg0(CAN_HandleTypeDef *hcan);
 void SendMsg(CAN_HandleTypeDef *hcan, bool bDelay);
-void NewTxMsg(bool bState, bool* bLastState, MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3);
+bool NewTxMsg(bool bState, bool bLastState, MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3);
 
 /*
   * @brief  USB Receive Callback
@@ -259,6 +264,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       NewTxMsg(true, false, MSG_TYPE_INFO, MSG_SRC_STATE_POWER_ON, 0, 0, 0);
       eLastDeviceState = eDeviceState;
       eDeviceState = DEVICE_STARTING;
+      
       break;
 
     case DEVICE_STARTING:
@@ -319,7 +325,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
 
     case DEVICE_RUN:
       eLastDeviceState = eDeviceState;
-      NewTxMsg((eLastDeviceState != DEVICE_RUN), &bLastRunInfoMsg, MSG_TYPE_INFO, MSG_SRC_STATE_RUN, 0, 0, 0);
+      bLastRunInfoMsg = NewTxMsg((eLastDeviceState != DEVICE_RUN), bLastRunInfoMsg, MSG_TYPE_INFO, MSG_SRC_STATE_RUN, 0, 0, 0);
 
       if(bAnyOutputOvercurrent && !bAnyOutputFault){
         LedBlink(HAL_GetTick(), &StatusLed);
@@ -336,23 +342,23 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         LedSetSteady(&ErrorLed, false);
       }
 
-      NewTxMsg((bDeviceOverTemp && !bDeviceCriticalTemp), &bLastOvertempMsg, MSG_TYPE_WARNING, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+      bLastOvertempMsg = NewTxMsg((bDeviceOverTemp && !bDeviceCriticalTemp), bLastOvertempMsg, MSG_TYPE_WARNING, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       if (bDeviceOverTemp && !bDeviceCriticalTemp)
       {
         eLastDeviceState = eDeviceState;
         eDeviceState = DEVICE_OVERTEMP;
       }
 
-      NewTxMsg(bDeviceCriticalTemp, &bLastCritTempMsg, MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+      bLastCritTempMsg = NewTxMsg(bDeviceCriticalTemp, bLastCritTempMsg, MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       if (bDeviceCriticalTemp)
       {
         nDeviceError = FATAL_ERROR_TEMP;
       }
 
-      NewTxMsg((nBattSense < 100), &bLastBattLowMsg, MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
+      bLastBattLowMsg = NewTxMsg((nBattSense < 100), bLastBattLowMsg, MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
 
-      NewTxMsg((nBattSense > 160), &bLastBattHighMsg, MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
-      
+      bLastBattHighMsg = NewTxMsg((nBattSense > 160), bLastBattHighMsg, MSG_TYPE_WARNING, MSG_SRC_VOLTAGE, nBattSense, 0, 0);
+
       if(ENABLE_SLEEP){
 
         if(bSleepMsgReceived){
@@ -438,7 +444,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
       LedBlink(HAL_GetTick(), &StatusLed);
       LedBlink(HAL_GetTick(), &ErrorLed);
 
-      NewTxMsg(bDeviceCriticalTemp, &bLastCritTempMsg, MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
+      bLastCritTempMsg = NewTxMsg(bDeviceCriticalTemp, bLastCritTempMsg, MSG_TYPE_ERROR, MSG_SRC_STATE_OVERTEMP, nBoardTempC, 0, 0);
       if (bDeviceCriticalTemp)
       {
         nDeviceError = FATAL_ERROR_TEMP;
@@ -486,7 +492,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     nVREFINT = nAdc1Data[ADC_1_VREF_INT];
     nVREFINTCAL = *STM32_VREF_INT_CAL;
     fVDDA = (float)((3.3 * (float)(*STM32_VREF_INT_CAL)) / nVREFINT);
-
+    
     //=====================================================================================================
     // Set Profet
     // DSEL to channel 1
@@ -502,7 +508,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     HAL_GPIO_WritePin(PF_DSEL7_8_GPIO_Port, PF_DSEL7_8_Pin, GPIO_PIN_SET);
     //Wait for DSEL changeover (up to 60us)
     osDelay(1);
-
+    
     //=====================================================================================================
     // Update output current
     //=====================================================================================================
@@ -742,6 +748,9 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
   stCanTxHeader.DLC = 8;
   stCanTxHeader.TransmitGlobalTime = DISABLE;
 
+  //Configure Blink keypad
+  //BlinkMarineKeypad_Init(PKP_2600_SI, &stKeypad);
+
   for(;;){
     HAL_GPIO_WritePin(EXTRA2_GPIO_Port, EXTRA2_Pin, GPIO_PIN_SET);
 
@@ -768,6 +777,7 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
             osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
           }
         }
+        
         //Pause for preemption - TX is not that important
         osDelay(CAN_TX_MSG_SPLIT);
       }while(stStatus == osOK);
@@ -798,6 +808,39 @@ void CanTxTask(osThreadId_t* thisThreadId, CAN_HandleTypeDef* hcan)
 
 void SendKeypadMsg(CAN_HandleTypeDef *hcan)
 {
+  stKeypad.eBacklightColor = BL_YELLOW;
+  stKeypad.nBacklightBrightness = 0x20;
+  stKeypad.nButtonBrightness = 0x3F;
+
+  //Backlight color
+  stCanTxHeader.StdId = 0x515;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  //Backlight brightness 0x00 to 0x3F
+  nCanTxData[0] = stKeypad.nBacklightBrightness;
+  //Backlight color
+  nCanTxData[1] = stKeypad.eBacklightColor;
+  nCanTxData[2] = 0;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+  SendMsg(hcan, true);
+
+  //Button brightness
+  stCanTxHeader.StdId = 0x415;
+  stCanTxHeader.DLC = 8; // Bytes to send
+  //Button brightness 0x00 to 0x3F
+  nCanTxData[0] = stKeypad.nButtonBrightness;
+  nCanTxData[1] = 0;
+  nCanTxData[2] = 0;
+  nCanTxData[3] = 0;
+  nCanTxData[4] = 0;
+  nCanTxData[5] = 0;
+  nCanTxData[6] = 0;
+  nCanTxData[7] = 0;
+  SendMsg(hcan, true);
+
   //Solid color
   stCanTxHeader.StdId = 0x215;
   stCanTxHeader.DLC = 8; // Bytes to send
@@ -814,7 +857,6 @@ void SendKeypadMsg(CAN_HandleTypeDef *hcan)
   nCanTxData[5] = 0;
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
-
   SendMsg(hcan, true);
 
   //Flashing color
@@ -833,7 +875,6 @@ void SendKeypadMsg(CAN_HandleTypeDef *hcan)
   nCanTxData[5] = 0;
   nCanTxData[6] = 0;
   nCanTxData[7] = 0;
-
   SendMsg(hcan, true);
 }
 
@@ -1029,8 +1070,8 @@ void InputLogic(){
 * @param nParam3: Message parameter 3
 * @retval None
 */
-void NewTxMsg(bool bState, bool* bLastState, MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3){
-    if(bState && !*bLastState){
+bool NewTxMsg(bool bState, bool bLastState, MsgType_t eType, MsgSrc_t eSrc, uint8_t nParam1, uint8_t nParam2, uint8_t nParam3){
+    if(bState && !bLastState){
       MsgQueueTx_t stMsgTx;
 
       stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_MSG_ID_OFFSET;
@@ -1049,7 +1090,7 @@ void NewTxMsg(bool bState, bool* bLastState, MsgType_t eType, MsgSrc_t eSrc, uin
       
       osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0, 0);
     }
-    *bLastState = bState;
+    return bState;
 }
 
 /*
