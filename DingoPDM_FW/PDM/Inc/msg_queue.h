@@ -26,7 +26,8 @@ typedef enum
   MSG_RX_SET_STARTER = 'D',
   MSG_RX_SET_CAN_INPUTS = 'N',
   MSG_RX_GET_VERSION = 'V',
-  MSG_RX_GET_TEMP = 'F'
+  MSG_RX_GET_TEMP = 'F',
+  MSG_RX_BOOTLOADER = '~'
 } MsgQueueRxCmd_t;
 
 typedef enum
@@ -44,7 +45,8 @@ typedef enum
   MSG_TX_SET_STARTER = 'd',
   MSG_TX_SET_CAN_INPUTS = 'n',
   MSG_TX_GET_VERSION = 'v',
-  MSG_TX_GET_TEMP = 'f'
+  MSG_TX_GET_TEMP = 'f',
+  MSG_TX_BOOTLOADER = '`'
 } MsgQueueTxCmd_t;
 
 typedef enum

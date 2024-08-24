@@ -666,7 +666,36 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
             }
           }
         }
-      
+
+        //Bootloader
+        // '~
+        if((MsgQueueRxCmd_t)stMsgRx.nRxData[0] == MSG_RX_BOOTLOADER){
+
+          //Check special sequence 'BOOTL'
+          if(stMsgRx.nRxLen == 6){
+            if((stMsgRx.nRxData[1] == 66) && (stMsgRx.nRxData[2] == 79) && (stMsgRx.nRxData[3] == 79) && (stMsgRx.nRxData[4] == 84) && (stMsgRx.nRxData[5] == 76)){
+              MsgQueueTx_t stMsgTx;
+
+              stMsgTx.stTxHeader.DLC = 2;
+
+              stMsgTx.nTxData[0] = MSG_TX_BOOTLOADER;
+              stMsgTx.nTxData[1] = 1;
+              stMsgTx.nTxData[2] = 0;
+              stMsgTx.nTxData[3] = 0;
+              stMsgTx.nTxData[4] = 0;
+              stMsgTx.nTxData[5] = 0;
+              stMsgTx.nTxData[6] = 0;
+              stMsgTx.nTxData[7] = 0;
+
+              stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
+
+              osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
+
+              JumpToBootloader();
+            }
+          }
+        }
+
         //Check for config change or request message
         PdmConfig_Set(&stPdmConfig, pVariableMap, pf, &stWiper, &stMsgRx, &qMsgQueueTx);
       }
@@ -691,8 +720,6 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
 
     osDelay(MAIN_TASK_DELAY);
-
-    JumpToBootloader();
   }
 }
 
