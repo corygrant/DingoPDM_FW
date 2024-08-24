@@ -161,6 +161,59 @@ void Error_Handler(PdmFatalError_t eErrorCode)
   FatalError(eErrorCode);
 }
 
+//=======================================================
+// Jump to bootloader
+//=======================================================
+#define BOOT_ADDR  0x1FFF0000
+
+struct boot_vectable_{
+  uint32_t Initial_SP;
+  void (*Reset_Handler)(void);
+};
+
+#define BOOTVTAB ((struct boot_vectable_*)BOOT_ADDR)
+ void JumpToBootloader(void)
+ {
+    //Disable all interrupts
+    __disable_irq();
+
+    // Reset USB
+    USB_OTG_FS->GRSTCTL |= USB_OTG_GRSTCTL_CSRST;
+
+    //De-init all peripherals
+    HAL_ADC_DeInit(&hadc1);
+    HAL_CAN_DeInit(&hcan1);
+    HAL_CRC_DeInit(&hcrc);
+    HAL_I2C_DeInit(&hi2c1);
+
+    //Disable systick timer
+    SysTick->CTRL = 0;
+    SysTick->LOAD = 0;
+    SysTick->VAL = 0;
+
+    //Set the clock to the default state
+    HAL_RCC_DeInit();
+
+    //Clear interrupt enable register and interrupt pending register
+    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
+    {
+      NVIC->ICER[i] = 0xFFFFFFFF;
+      NVIC->ICPR[i] = 0xFFFFFFFF;
+    }
+
+    //Remap system memory to address 0x0000 0000
+    SYSCFG->MEMRMP = 0x01;
+
+    //Re-enable all interrupts
+    __enable_irq();
+
+    //Set the MSP
+    __set_MSP(BOOTVTAB->Initial_SP);
+
+    //Jump to bootloader
+    BOOTVTAB->Reset_Handler();
+ }
+
 #ifdef  USE_FULL_ASSERT
 /**
   * @brief  Reports the name of the source file and the source line number

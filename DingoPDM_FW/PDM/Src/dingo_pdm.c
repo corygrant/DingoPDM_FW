@@ -691,6 +691,8 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
     HAL_GPIO_WritePin(EXTRA1_GPIO_Port, EXTRA1_Pin, GPIO_PIN_RESET);
 
     osDelay(MAIN_TASK_DELAY);
+
+    JumpToBootloader();
   }
 }
 
@@ -1342,5 +1344,4 @@ uint8_t InitPdmConfig(I2C_HandleTypeDef* hi2c1)
 
   return PDM_OK;
 }
-
 

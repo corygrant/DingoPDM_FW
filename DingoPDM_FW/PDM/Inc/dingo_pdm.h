@@ -1,7 +1,7 @@
 #ifndef INC_DINGO_PDM_H_
 #define INC_DINGO_PDM_H_
 
-
+#include "stm32f446xx.h"
 #include <stdbool.h>
 #include "stdio.h"
 #include "cmsis_os.h"
