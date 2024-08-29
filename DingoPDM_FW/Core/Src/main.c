@@ -8,8 +8,13 @@
 #include "usb_device.h"
 #include "gpio.h"
 
+#define BOOTLOADER_FLAG_ADDRESS 0x40024000   // Backup SRAM address to store bootloader flag
+#define BOOTLOADER_MAGIC_CODE   0xDEADBEEF  // Magic code to indicate bootloader request
+
 void SystemClock_Config(void);
 void MX_FREERTOS_Init(void);
+void JumpToBootloader(void);
+void CheckBootloaderFlag(void);
 
 #if( configGENERATE_RUN_TIME_STATS == 1)
 void IncrementRuntimeStats(void);
@@ -17,9 +22,10 @@ void IncrementRuntimeStats(void);
 
 int main(void)
 {
-  
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+
+  CheckBootloaderFlag();
 
   /* Configure the system clock */
   SystemClock_Config();
@@ -223,6 +229,36 @@ struct boot_vectable_{
     BOOTVTAB->Reset_Handler();
  }
 
+void RequestBootloader(void)
+{
+    __HAL_RCC_PWR_CLK_ENABLE();
+    HAL_PWR_EnableBkUpAccess();
+    __HAL_RCC_BKPSRAM_CLK_ENABLE();
+
+    // Set the magic code in the reserved SRAM location
+    *(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS = BOOTLOADER_MAGIC_CODE;
+
+    // Reset the microcontroller to start the bootloader on next boot
+    HAL_NVIC_SystemReset();
+    
+    // No further code will execute after this point
+}
+
+void CheckBootloaderFlag(void)
+{
+    // Enable access to Backup SRAM
+    __HAL_RCC_PWR_CLK_ENABLE();
+    HAL_PWR_EnableBkUpAccess();
+    __HAL_RCC_BKPSRAM_CLK_ENABLE();
+    
+    if (*(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS == BOOTLOADER_MAGIC_CODE) {
+        // Clear the flag
+        *(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS = 0;
+        
+        // Enter bootloader
+        JumpToBootloader();
+    }
+}
 
 
 #ifdef  USE_FULL_ASSERT

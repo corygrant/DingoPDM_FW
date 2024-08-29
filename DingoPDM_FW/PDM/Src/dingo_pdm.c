@@ -695,7 +695,7 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
               //HAL_ADC_Stop_DMA(hadc1);
               USB_Stop();
               
-              JumpToBootloader();
+              RequestBootloader();
             }
           }
         }

@@ -66,7 +66,7 @@ typedef enum{
 /* Exported functions prototypes ---------------------------------------------*/
 void Error_Handler(PdmFatalError_t EErrorCode);
 void EnterStopMode(CanSpeed_t eSpeed);
-void JumpToBootloader(void);
+void RequestBootloader(void);
 /* USER CODE BEGIN EFP */
 
 /* USER CODE END EFP */
