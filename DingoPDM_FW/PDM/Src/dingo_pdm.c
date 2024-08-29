@@ -668,12 +668,13 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
         }
 
         //Bootloader
-        // '~
+        // '~'
         if((MsgQueueRxCmd_t)stMsgRx.nRxData[0] == MSG_RX_BOOTLOADER){
 
           //Check special sequence 'BOOTL'
           if(stMsgRx.nRxLen == 6){
             if((stMsgRx.nRxData[1] == 66) && (stMsgRx.nRxData[2] == 79) && (stMsgRx.nRxData[3] == 79) && (stMsgRx.nRxData[4] == 84) && (stMsgRx.nRxData[5] == 76)){
+              /*
               MsgQueueTx_t stMsgTx;
 
               stMsgTx.stTxHeader.DLC = 2;
@@ -690,7 +691,10 @@ void PdmMainTask(osThreadId_t* thisThreadId, ADC_HandleTypeDef* hadc1, I2C_Handl
               stMsgTx.stTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + CAN_TX_SETTING_ID_OFFSET;
 
               osMessageQueuePut(qMsgQueueTx, &stMsgTx, 0U, 0U);
-
+              */
+              //HAL_ADC_Stop_DMA(hadc1);
+              USB_Stop();
+              
               JumpToBootloader();
             }
           }

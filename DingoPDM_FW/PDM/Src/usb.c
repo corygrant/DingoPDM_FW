@@ -53,6 +53,11 @@ uint8_t USB_Init(rcvCallback_t cb)
     return USBD_OK;
 }
 
+uint8_t USB_Stop()
+{
+    return USBD_Stop(&hUSBD);
+}
+
 /**
   * @brief  Initializes the CDC media low layer over the FS USB IP
   * @retval USBD_OK if all operations are OK else USBD_FAIL

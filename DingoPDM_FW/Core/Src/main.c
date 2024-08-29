@@ -164,6 +164,7 @@ void Error_Handler(PdmFatalError_t eErrorCode)
 //=======================================================
 // Jump to bootloader
 //=======================================================
+
 #define BOOT_ADDR  0x1FFF0000
 
 struct boot_vectable_{
@@ -178,6 +179,7 @@ struct boot_vectable_{
     __disable_irq();
 
     // Reset USB
+    USB_OTG_FS->GOTGCTL |= USB_OTG_DCTL_SDIS;
     USB_OTG_FS->GRSTCTL |= USB_OTG_GRSTCTL_CSRST;
 
     //De-init all peripherals
@@ -185,14 +187,18 @@ struct boot_vectable_{
     HAL_CAN_DeInit(&hcan1);
     HAL_CRC_DeInit(&hcrc);
     HAL_I2C_DeInit(&hi2c1);
+    HAL_GPIO_DeInit(GPIOA, GPIO_PIN_All);
+    HAL_GPIO_DeInit(GPIOB, GPIO_PIN_All);
+    HAL_GPIO_DeInit(GPIOC, GPIO_PIN_All);
+    HAL_GPIO_DeInit(GPIOD, GPIO_PIN_All);
+
+    //Set the clock to the default state
+    HAL_RCC_DeInit();
 
     //Disable systick timer
     SysTick->CTRL = 0;
     SysTick->LOAD = 0;
     SysTick->VAL = 0;
-
-    //Set the clock to the default state
-    HAL_RCC_DeInit();
 
     //Clear interrupt enable register and interrupt pending register
     for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
@@ -202,17 +208,22 @@ struct boot_vectable_{
     }
 
     //Remap system memory to address 0x0000 0000
-    SYSCFG->MEMRMP = 0x01;
+    //SYSCFG->MEMRMP = 0x01;
+    __HAL_RCC_SYSCFG_CLK_ENABLE();
+    __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
 
     //Re-enable all interrupts
     __enable_irq();
 
     //Set the MSP
+    __set_PSP(BOOTVTAB->Initial_SP);
     __set_MSP(BOOTVTAB->Initial_SP);
 
     //Jump to bootloader
     BOOTVTAB->Reset_Handler();
  }
+
+
 
 #ifdef  USE_FULL_ASSERT
 /**
