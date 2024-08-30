@@ -85,7 +85,6 @@ int main(void)
     HAL_GPIO_DeInit(GPIOB, GPIO_PIN_9);
 
     HAL_CAN_MspInit(&hcan1);
-    //CAN_Init(&hcan1, eSpeed);
  }
  
 
@@ -213,8 +212,7 @@ struct boot_vectable_{
       NVIC->ICPR[i] = 0xFFFFFFFF;
     }
 
-    //Remap system memory to address 0x0000 0000
-    //SYSCFG->MEMRMP = 0x01;
+    //Remap system memory
     __HAL_RCC_SYSCFG_CLK_ENABLE();
     __HAL_SYSCFG_REMAPMEMORY_SYSTEMFLASH();
 
@@ -238,7 +236,9 @@ void RequestBootloader(void)
     // Set the magic code in the reserved SRAM location
     *(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS = BOOTLOADER_MAGIC_CODE;
 
-    // Reset the microcontroller to start the bootloader on next boot
+    // -Reset the microcontroller to start the bootloader on next boot
+    // -Using this approach solves the issue of tracking down every possible 
+    // peripheral that could be enabled and preventing entering the bootloader properly
     HAL_NVIC_SystemReset();
     
     // No further code will execute after this point

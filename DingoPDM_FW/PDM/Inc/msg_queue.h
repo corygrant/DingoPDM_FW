@@ -45,8 +45,7 @@ typedef enum
   MSG_TX_SET_STARTER = 'd',
   MSG_TX_SET_CAN_INPUTS = 'n',
   MSG_TX_GET_VERSION = 'v',
-  MSG_TX_GET_TEMP = 'f',
-  MSG_TX_BOOTLOADER = '`'
+  MSG_TX_GET_TEMP = 'f'
 } MsgQueueTxCmd_t;
 
 typedef enum
