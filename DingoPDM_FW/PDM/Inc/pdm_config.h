@@ -11,6 +11,8 @@
 #include "profet.h"
 #include "wipers.h"
 
+#define PDM_TYPE 0 //0 = PDM, 1 = PDM-MAX
+
 #define PDM_MAJOR_VERSION 0
 #define PDM_MINOR_VERSION 3
 #define PDM_BUILD 4
