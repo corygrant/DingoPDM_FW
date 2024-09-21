@@ -1009,7 +1009,7 @@ void SendMsg0(CAN_HandleTypeDef *hcan)
   stCanTxHeader.StdId = stPdmConfig.stCanOutput.nBaseId + 0;
   stCanTxHeader.DLC = 8; // Bytes to send
   nCanTxData[0] = (nPdmInputs[1] << 1) + nPdmInputs[0];
-  nCanTxData[1] = eDeviceState;
+  nCanTxData[1] = eDeviceState + (PDM_TYPE << 4);
   nCanTxData[2] = nILTotal >> 8;
   nCanTxData[3] = nILTotal;
   nCanTxData[4] = nBattSense >> 8;
