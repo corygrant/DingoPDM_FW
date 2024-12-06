@@ -1,0 +1,32 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "clean",
+            "type": "shell",
+            "command": "make",
+            "args": ["clean"],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "problemMatcher": [],
+            "detail": "Clean dingoPDM"
+        },
+        {
+            "label": "build",
+            "type": "shell",
+            "command": "make -j 16",
+            "args": [],
+            "options": {
+                "cwd": "${workspaceFolder}"
+            },
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": "clean",
+            "problemMatcher": ["$gcc"],
+            "detail": "Debug dingoPDM (firmware)"
+        }
+    ]
+}

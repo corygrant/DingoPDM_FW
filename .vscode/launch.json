@@ -1,0 +1,21 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "cwd": "${workspaceFolder}",
+            "executable": "${workspaceFolder}/build/dingoPDM.elf",
+            "name": "Debug with OpenOCD",
+            "request": "launch",
+            "type": "cortex-debug",
+            "servertype": "openocd",
+            "configFiles": ["interface/stlink.cfg", 
+						    "target/stm32f4x.cfg"],
+            "showDevDebugOutput": "raw",
+            "svdFile": "${workspaceFolder}STM32F446.svd",
+            "rtos": "auto",
+            "v1": false,
+            "runToEntryPoint": "main",
+
+        }
+    ]
+}
