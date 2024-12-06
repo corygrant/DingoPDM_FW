@@ -3,8 +3,7 @@
 #include <cstdint>
 #include "port.h"
 #include "enums.h"
-
-#define MAILBOX_SIZE 64
+#include "mailbox.h"
 
 CANTxFrame GetMsg0();
 CANTxFrame GetMsg1();
@@ -20,12 +19,6 @@ CANTxFrame GetMsg5();
     GetMsg3,
     GetMsg4,
     GetMsg5};
-
-void InitMailbox();
-msg_t PostTxFrame(CANTxFrame *frame);
-msg_t FetchTxFrame(CANTxFrame *frame);
-msg_t PostRxFrame(CANRxFrame *frame);
-msg_t FetchRxFrame(CANRxFrame *frame);
 
 class InfoMsg
 {

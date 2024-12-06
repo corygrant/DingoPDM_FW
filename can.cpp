@@ -4,6 +4,7 @@
 #include "analog.h"
 #include "input.h"
 #include "dingopdm_config.h"
+#include "mailbox.h"
 #include "msg.h"
 
 #include <iterator>

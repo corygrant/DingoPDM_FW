@@ -14,6 +14,7 @@
 #include "starter.h"
 #include "flasher.h"
 #include "led.h"
+#include "mailbox.h"
 #include "msg.h"
 #include "hardware/mcp9808.h"
 
