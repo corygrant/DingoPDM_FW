@@ -68,5 +68,3 @@ private:
     uint16_t nOcCount;       // Number of overcurrents
     uint32_t nOcTriggerTime; // Time of overcurrent
 };
-
-extern Profet pf[PDM_NUM_OUTPUTS];

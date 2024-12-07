@@ -46,7 +46,6 @@ Led statusLed = Led(LedType::Status);
 Led errorLed = Led(LedType::Error);
 
 PdmState eState = PdmState::PowerOn;
-PdmState eLastState;
 
 uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 
@@ -211,21 +210,14 @@ void StateMachine()
         break;
 
     case PdmState::OverTemp:
-
         statusLed.Blink(chVTGetSystemTimeX());
         errorLed.Blink(chVTGetSystemTimeX());
 
-        /*
-        check for critical temp
-
-        */
+        if (bDeviceCriticalTemp)
+            eState = PdmState::Error;
 
         if (!bDeviceOverTemp)
-        {
-            statusLed.Solid(true);
-            eLastState = eState;
             eState = PdmState::Run;
-        }
 
         break;
 
@@ -458,6 +450,82 @@ bool GetAnyFault()
     }
 
     return false;
+}
+
+bool GetInputVal(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_INPUTS)
+        return false;
+
+    return in[nInput].nVal;
+}
+
+uint16_t GetOutputCurrent(uint8_t nOutput)
+{
+    if (nOutput >= PDM_NUM_OUTPUTS)
+        return 0;
+
+    return pf[nOutput].GetCurrent();
+}
+
+ProfetState GetOutputState(uint8_t nOutput)
+{
+    if (nOutput >= PDM_NUM_OUTPUTS)
+        return ProfetState::Off;
+
+    return pf[nOutput].GetState();
+}
+
+uint8_t GetOutputOcCount(uint8_t nOutput)
+{
+    if (nOutput >= PDM_NUM_OUTPUTS)
+        return 0;
+
+    return pf[nOutput].GetOcCount();
+}
+
+bool GetCanInVal(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_CAN_INPUTS)
+        return false;
+
+    return canIn[nInput].nVal;
+}
+
+bool GetVirtInVal(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_VIRT_INPUTS)
+        return false;
+
+    return virtIn[nInput].nVal;
+}
+
+bool GetWiperFastOut()
+{
+    return wiper.nFastOut;
+}
+
+bool GetWiperSlowOut()
+{
+    return wiper.nSlowOut;
+}
+
+WiperState GetWiperState()
+{
+    return wiper.GetState();
+}
+
+WiperSpeed GetWiperSpeed()
+{
+    return wiper.GetSpeed();
+}
+
+bool GetFlasherVal(uint8_t nFlasher)
+{
+    if (nFlasher >= PDM_NUM_FLASHERS)
+        return false;
+
+    return flasher[nFlasher].nVal;
 }
 
 void CheckStateMsgs()

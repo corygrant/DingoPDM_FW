@@ -49,5 +49,3 @@ private:
     bool bCheck;
     uint32_t nLastTrigTime;
 };
-
-extern Digital in[PDM_NUM_INPUTS];
