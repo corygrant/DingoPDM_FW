@@ -5,6 +5,33 @@
 #include "pdm.h"
 #include "analog.h"
 
+void InfoMsg::Send(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2)
+{
+    if (!bTrigger)
+    {
+        bSent = false;
+        return;
+    }
+
+    if (bSent)
+        return;
+
+    CANTxFrame tx;
+    tx.DLC = 5;
+
+    tx.data8[0] = static_cast<uint8_t>(m_type);
+    tx.data8[1] = static_cast<uint8_t>(m_src);
+    tx.data8[2] = *nData0;
+    tx.data8[3] = *nData1;
+    tx.data8[4] = *nData2;
+
+    tx.SID = nId + TX_MSG_ID_OFFSET;
+    tx.IDE = CAN_IDE_STD;
+    PostTxFrame(&tx);
+
+    bSent = true;
+}
+
 CANTxFrame GetMsg0()
 {
     CANTxFrame stMsg;
@@ -67,13 +94,13 @@ CANTxFrame GetMsg3()
     stMsg.data8[2] = (static_cast<uint8_t>(pf[5].GetState()) << 4) + static_cast<uint8_t>(pf[4].GetState());
     stMsg.data8[3] = (static_cast<uint8_t>(pf[7].GetState()) << 4) + static_cast<uint8_t>(pf[6].GetState());
     stMsg.data32[1] = 3;
-    //stMsg.data8[4] = (*pVariableMap[60] << 1) + *pVariableMap[59];
-    //stMsg.data8[5] = (stWiper.eState << 4) + stWiper.eSelectedSpeed;
-    //stMsg.data8[6] = ((nFlashers[3] & 0x01) << 3) + ((nFlashers[2] & 0x01) << 2) +
-    //                 ((nFlashers[1] & 0x01) << 1) + (nFlashers[0] & 0x01) +
-    //                 ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 7) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 6) +
-    //                 ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 5) + ((*stPdmConfig.stFlasher[0].pInput & 0x01) << 4);
-    //stMsg.data8[7] = 0;
+    // stMsg.data8[4] = (*pVariableMap[60] << 1) + *pVariableMap[59];
+    // stMsg.data8[5] = (stWiper.eState << 4) + stWiper.eSelectedSpeed;
+    // stMsg.data8[6] = ((nFlashers[3] & 0x01) << 3) + ((nFlashers[2] & 0x01) << 2) +
+    //                  ((nFlashers[1] & 0x01) << 1) + (nFlashers[0] & 0x01) +
+    //                  ((*stPdmConfig.stFlasher[3].pInput & 0x01) << 7) + ((*stPdmConfig.stFlasher[2].pInput & 0x01) << 6) +
+    //                  ((*stPdmConfig.stFlasher[1].pInput & 0x01) << 5) + ((*stPdmConfig.stFlasher[0].pInput & 0x01) << 4);
+    // stMsg.data8[7] = 0;
 
     return stMsg;
 }
@@ -127,8 +154,8 @@ CANTxFrame GetMsg5()
                      ((nVirtInputs[12] & 0x01) << 4) + ((nVirtInputs[11] & 0x01) << 3) + ((nVirtInputs[10] & 0x01) << 2) +
                      ((nVirtInputs[9] & 0x01) << 1) + (nVirtInputs[8] & 0x01);
                      */
-    //stMsg.data8[6] = 0;
-    //stMsg.data8[7] = 0;
+    // stMsg.data8[6] = 0;
+    // stMsg.data8[7] = 0;
 
     return stMsg;
 }

@@ -4,6 +4,7 @@
 #include "port.h"
 #include "enums.h"
 #include "mailbox.h"
+#include "dingopdm_config.h"    
 
 CANTxFrame GetMsg0();
 CANTxFrame GetMsg1();
@@ -24,38 +25,14 @@ class InfoMsg
 {
 public:
     InfoMsg(MsgType type, MsgSrc src)
-        : m_type(type), m_src(src) {
+        : m_type(type), m_src(src){
           };
 
     /*
      * Send a message if the trigger is true and the message hasn't been sent yet
      */
 
-    void Send(bool bTrigger, uint32_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2)
-    {
-        if (!bTrigger)
-        {
-            bSent = false;
-            return;
-        }
-
-        if (bSent)
-            return;
-
-        CANTxFrame tx;
-        tx.DLC = 5;
-
-        tx.data8[0] = static_cast<uint8_t>(m_type);
-        tx.data8[1] = static_cast<uint8_t>(m_src);
-        tx.data8[2] = *nData0;
-        tx.data8[3] = *nData1;
-        tx.data8[4] = *nData2;
-
-        tx.SID = nId;
-        PostTxFrame(&tx);
-
-        bSent = true;
-    }
+    void Send(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2);
 
 private:
     const MsgType m_type;
@@ -64,3 +41,4 @@ private:
     bool bSent;
     bool bLastTrig;
 };
+

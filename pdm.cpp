@@ -66,6 +66,13 @@ bool framOk;
 
 MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
 
+InfoMsg InfoStatePowerOnMsg(MsgType::Info, MsgSrc::State_PowerOn);
+InfoMsg InfoStateStartingMsg(MsgType::Info, MsgSrc::State_Starting);
+InfoMsg InfoStateRunMsg(MsgType::Info, MsgSrc::State_Run);
+InfoMsg InfoStateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
+InfoMsg InfoStateWakeMsg(MsgType::Info, MsgSrc::State_Wake);
+InfoMsg InfoStateErrorMsg(MsgType::Info, MsgSrc::State_Error);
+
 void InitVarMap();
 void ApplyConfig();
 void SetConfig(MsgCmdRx eCmd);
@@ -143,16 +150,19 @@ void StateMachine()
 
     case PdmState::PowerOn:
         //Nothing to do...yet
+        InfoStatePowerOnMsg.Send(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
         eState = PdmState::Starting;
         break;
 
     case PdmState::Starting:
         //Nothing to do...yet
+        InfoStateStartingMsg.Send(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
         eState = PdmState::Run;
         break;
 
     case PdmState::Run:
         // TODO: Send run message, once
+        InfoStateRunMsg.Send(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
 
         if (GetAnyOvercurrent() && !GetAnyFault())
         {
