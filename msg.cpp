@@ -5,7 +5,7 @@
 #include "pdm.h"
 #include "analog.h"
 
-void InfoMsg::Send(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2)
+void InfoMsg::Check(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2)
 {
     if (!bTrigger)
     {

@@ -66,19 +66,14 @@ bool framOk;
 
 MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
 
-InfoMsg InfoStatePowerOnMsg(MsgType::Info, MsgSrc::State_PowerOn);
-InfoMsg InfoStateStartingMsg(MsgType::Info, MsgSrc::State_Starting);
-InfoMsg InfoStateRunMsg(MsgType::Info, MsgSrc::State_Run);
-InfoMsg InfoStateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
-InfoMsg InfoStateWakeMsg(MsgType::Info, MsgSrc::State_Wake);
-InfoMsg InfoStateErrorMsg(MsgType::Info, MsgSrc::State_Error);
-
 void InitVarMap();
 void ApplyConfig();
 void SetConfig(MsgCmdRx eCmd);
 
 void CyclicUpdate();
 void StateMachine();
+
+void CheckStateMsgs();
 
 bool GetAnyOvercurrent();
 bool GetAnyFault();
@@ -145,24 +140,22 @@ void InitPdm()
 
 void StateMachine()
 {
+    CheckStateMsgs();
+
     switch (eState)
     {
 
     case PdmState::PowerOn:
-        //Nothing to do...yet
-        InfoStatePowerOnMsg.Send(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+        // Nothing to do...yet
         eState = PdmState::Starting;
         break;
 
     case PdmState::Starting:
-        //Nothing to do...yet
-        InfoStateStartingMsg.Send(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+        // Nothing to do...yet
         eState = PdmState::Run;
         break;
 
     case PdmState::Run:
-        // TODO: Send run message, once
-        InfoStateRunMsg.Send(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
 
         if (GetAnyOvercurrent() && !GetAnyFault())
         {
@@ -202,7 +195,6 @@ void StateMachine()
         break;
 
     case PdmState::Sleep:
-        // TODO: Send sleep message, once
 
         /*
         perform necessary tasks to put the PDM to sleep
@@ -212,7 +204,6 @@ void StateMachine()
         break;
 
     case PdmState::Wake:
-        // TODO: Send wake message, once
         /*
         perform necessary tasks to wake the PDM
         */
@@ -220,7 +211,6 @@ void StateMachine()
         break;
 
     case PdmState::OverTemp:
-        // TODO: Send overtemp message, once
 
         statusLed.Blink(chVTGetSystemTimeX());
         errorLed.Blink(chVTGetSystemTimeX());
@@ -240,7 +230,6 @@ void StateMachine()
         break;
 
     case PdmState::Error:
-        // TODO: Send error message, once
         statusLed.Solid(false);
         /*
         send fatal error message
@@ -377,7 +366,7 @@ void SetConfig(MsgCmdRx eCmd)
 {
     if (eCmd == MsgCmdRx::Can)
     {
-        //TODO: Change CAN speed
+        // TODO: Change CAN speed
     }
 
     if (eCmd == MsgCmdRx::Inputs)
@@ -469,4 +458,23 @@ bool GetAnyFault()
     }
 
     return false;
+}
+
+void CheckStateMsgs()
+{
+    static InfoMsg StatePowerOnMsg(MsgType::Info, MsgSrc::State_PowerOn);
+    static InfoMsg StateStartingMsg(MsgType::Info, MsgSrc::State_Starting);
+    static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
+    static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
+    static InfoMsg StateWakeMsg(MsgType::Info, MsgSrc::State_Wake);
+    static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
+    static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
+
+    StatePowerOnMsg.Check(eState == PdmState::PowerOn, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateStartingMsg.Check(eState == PdmState::Starting, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateRunMsg.Check(eState == PdmState::Run, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateSleepMsg.Check(eState == PdmState::Sleep, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateWakeMsg.Check(eState == PdmState::Wake, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateOvertempMsg.Check(eState == PdmState::OverTemp, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateErrorMsg.Check(eState == PdmState::Error, stConfig.stCanOutput.nBaseId, 0, 0, 0);
 }

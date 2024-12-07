@@ -32,7 +32,7 @@ public:
      * Send a message if the trigger is true and the message hasn't been sent yet
      */
 
-    void Send(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2);
+    void Check(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2);
 
 private:
     const MsgType m_type;
@@ -41,4 +41,3 @@ private:
     bool bSent;
     bool bLastTrig;
 };
-
