@@ -20,6 +20,7 @@ MsgCmdRx CanMsg(CANRxFrame *frame)
     {
         CANTxFrame tx;
         tx.DLC = 5;
+        tx.IDE = CAN_IDE_STD;
 
         tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Can);
         tx.data8[1] = ((static_cast<uint8_t>(stConfig.stDevConfig.eCanSpeed) & 0x0F) << 4) +
@@ -65,6 +66,7 @@ MsgCmdRx InputMsg(CANRxFrame *frame)
 
             CANTxFrame tx;
             tx.DLC = 4;
+            tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Inputs);
             tx.data8[1] = ((nIndex & 0x0F) << 4) + ((stConfig.stInput[nIndex].bInvert & 0x01) << 3) +
@@ -112,6 +114,7 @@ MsgCmdRx OutputMsg(CANRxFrame *frame)
 
             CANTxFrame tx;
             tx.DLC = 8;
+            tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Outputs);
             tx.data8[1] = ((nIndex & 0x0F) << 4) + (stConfig.stOutput[nIndex].bEnabled & 0x01);
@@ -166,6 +169,7 @@ MsgCmdRx CanInputMsg(CANRxFrame *frame)
 
             CANTxFrame tx;
             tx.DLC = 7;
+            tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::CanInputs);
             tx.data8[1] = ((static_cast<uint8_t>(stConfig.stCanInput[nIndex].eOperator) & 0x0F) << 4) +
@@ -221,6 +225,7 @@ MsgCmdRx VirtualInputMsg(CANRxFrame *frame)
 
             CANTxFrame tx;
             tx.DLC = 7;
+            tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::VirtualInputs);
             tx.data8[1] = ((stConfig.stVirtualInput[nIndex].bNot2 & 0x01) << 3) +
@@ -271,6 +276,7 @@ MsgCmdRx WiperMsg(CANRxFrame *frame)
 
         CANTxFrame tx;
         tx.DLC = 8;
+        tx.IDE = CAN_IDE_STD;
 
         tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Wiper);
         tx.data8[1] = ((stConfig.stWiper.nWashWipeCycles & 0x0F) << 4) +
@@ -318,6 +324,7 @@ MsgCmdRx WiperSpeedMsg(CANRxFrame *frame)
 
         CANTxFrame tx;
         tx.DLC = 7;
+        tx.IDE = CAN_IDE_STD;
 
         tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::WiperSpeed);
         tx.data8[1] = stConfig.stWiper.nSwipeInput;
@@ -362,6 +369,7 @@ MsgCmdRx WiperDelaysMsg(CANRxFrame *frame)
 
         CANTxFrame tx;
         tx.DLC = 7;
+        tx.IDE = CAN_IDE_STD;
 
         tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::WiperDelays);
         tx.data8[1] = stConfig.stWiper.nIntermitTime[0] / 100;
@@ -405,6 +413,7 @@ MsgCmdRx FlasherMsg(CANRxFrame *frame)
 
             CANTxFrame tx;
             tx.DLC = 6;
+            tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Flashers);
             tx.data8[1] = ((nIndex & 0x0F) << 4) +
@@ -452,6 +461,7 @@ MsgCmdRx StarterMsg(CANRxFrame *frame)
 
         CANTxFrame tx;
         tx.DLC = 4;
+        tx.IDE = CAN_IDE_STD;
 
         tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Starter);
         tx.data8[1] = (stConfig.stStarter.bEnabled & 0x01);

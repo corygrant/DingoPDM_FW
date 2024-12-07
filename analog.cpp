@@ -13,12 +13,12 @@ adcsample_t adc1_samples[ADC1_NUM_CHANNELS] = {0};
 //7 = VRefInt
 
 static const ADCConversionGroup adc1_cfg = {
-    .circular = false,
+    .circular = true,
     .num_channels = ADC1_NUM_CHANNELS,
     .end_cb = NULL,
     .error_cb = NULL,
     .cr1 = 0,
-    .cr2 = ADC_CR2_SWSTART,
+    .cr2 = ADC_CR2_SWSTART | ADC_CR2_CONT,
     .smpr1 = ADC_SMPR1_SMP_AN12(ADC_SAMPLE_56)   |
              ADC_SMPR1_SMP_AN13(ADC_SAMPLE_56)   |
              ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_56) |
@@ -40,28 +40,14 @@ static const ADCConversionGroup adc1_cfg = {
             ADC_SQR3_SQ6_N(ADC_CHANNEL_IN3)                   
     };
 
-
-struct AdcThread : chibios_rt::BaseStaticThread<256>
-{
-    void main()
-    {
-        while (true)
-        {
-            adcConvert(&ADCD1, &adc1_cfg, adc1_samples, ADC1_BUF_DEPTH);
-
-            chThdSleepMilliseconds(10);
-        }
-    }
-};
-
-static AdcThread adcThread;
-
 void InitAdc()
 {
     adcStart(&ADCD1, NULL);
     adcSTM32EnableTSVREFE(); //Enable temp sensor and vref
 
-    adcThread.start(NORMALPRIO);
+    //Need to continuous conversion to read both channels of the BTS7008-2EPA
+    //Requires 2 channels to be read with a 100us delay between them
+    adcStartConversion(&ADCD1, &adc1_cfg, adc1_samples, ADC1_BUF_DEPTH);
 }
 
 uint16_t GetAdcRaw(AnalogChannel channel)

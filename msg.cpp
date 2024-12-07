@@ -15,9 +15,9 @@ CANTxFrame GetMsg0()
     stMsg.DLC = 8; // Bytes to send
     stMsg.data8[0] = (in[1].nVal << 1) + in[0].nVal;
     stMsg.data8[1] = static_cast<uint8_t>(GetPdmState()) + (PDM_TYPE << 4);
-    stMsg.data16[1] = (uint16_t)(GetTotalCurrent() * 10);
+    stMsg.data16[1] = (uint16_t)GetTotalCurrent();
     stMsg.data16[2] = (uint16_t)(GetBattVolt() * 10);
-    stMsg.data16[3] = (uint16_t)(GetBoardTemp());
+    stMsg.data16[3] = (uint16_t)GetBoardTemp();
 
     return stMsg;
 }
