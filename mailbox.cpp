@@ -39,7 +39,7 @@ msg_t FetchTxFrame(CANTxFrame *frame)
 {
     CANTxFrame *txFrame;
     // Fetch a pointer from the mailbox
-    msg_t result = txMb.fetch(&txFrame, TIME_IMMEDIATE);
+    msg_t result = txMb.fetch(&txFrame, TIME_INFINITE);
     if (result == MSG_OK) {
         // Mark the slot in memory as free
         for (int i = 0; i < MAILBOX_SIZE; i++) {
