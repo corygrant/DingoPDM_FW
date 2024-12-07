@@ -80,7 +80,7 @@ void Profet::Update(bool bOutEnabled)
         }
 
         // Overcurrent
-        if (nIS > pConfig->nCurrentLimit && !bInRushActive)
+        if (nCurrent > pConfig->nCurrentLimit && !bInRushActive)
         {
             nOcTriggerTime = chVTGetSystemTimeX();
             nOcCount++;
@@ -88,7 +88,7 @@ void Profet::Update(bool bOutEnabled)
         }
 
         // Inrush overcurrent
-        if (nIS > pConfig->nInrushLimit && bInRushActive)
+        if (nCurrent > pConfig->nInrushLimit && bInRushActive)
         {
             nOcTriggerTime = chVTGetSystemTimeX();
             nOcCount++;
