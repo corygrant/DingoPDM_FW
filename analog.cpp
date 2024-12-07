@@ -47,6 +47,7 @@ void InitAdc()
 
     //Need to continuous conversion to read both channels of the BTS7008-2EPA
     //Requires 2 channels to be read with a 100us delay between them
+    //Profet DSEL pin toggled in profet.cpp
     adcStartConversion(&ADCD1, &adc1_cfg, adc1_samples, ADC1_BUF_DEPTH);
 }
 

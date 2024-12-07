@@ -34,8 +34,8 @@ void Profet::Update(bool bOutEnabled)
         chThdSleepMicroseconds(100);
     }
 
-    // Update current value
     // Calculate current at ADC, multiply by kILIS ratio to get output current
+    // Analog value must be ready before reading to allow for conversion after DSEL change
     // Use the measured VDDA value to calculate volts/step
     // Current = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
     nIS = GetAdcRaw(m_ain);
