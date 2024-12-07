@@ -32,7 +32,7 @@ void InfoMsg::Check(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData
     bSent = true;
 }
 
-CANTxFrame GetMsg0()
+CANTxFrame TxMsg0()
 {
     CANTxFrame stMsg;
     //=======================================================
@@ -49,7 +49,7 @@ CANTxFrame GetMsg0()
     return stMsg;
 }
 
-CANTxFrame GetMsg1()
+CANTxFrame TxMsg1()
 {
     CANTxFrame stMsg;
     //=======================================================
@@ -65,7 +65,7 @@ CANTxFrame GetMsg1()
     return stMsg;
 }
 
-CANTxFrame GetMsg2()
+CANTxFrame TxMsg2()
 {
     CANTxFrame stMsg;
     //=======================================================
@@ -81,7 +81,7 @@ CANTxFrame GetMsg2()
     return stMsg;
 }
 
-CANTxFrame GetMsg3()
+CANTxFrame TxMsg3()
 {
     CANTxFrame stMsg;
     //=======================================================
@@ -102,7 +102,7 @@ CANTxFrame GetMsg3()
     return stMsg;
 }
 
-CANTxFrame GetMsg4()
+CANTxFrame TxMsg4()
 {
     CANTxFrame stMsg;
     //=======================================================
@@ -122,7 +122,7 @@ CANTxFrame GetMsg4()
     return stMsg;
 }
 
-CANTxFrame GetMsg5()
+CANTxFrame TxMsg5()
 {
     CANTxFrame stMsg;
     //=======================================================

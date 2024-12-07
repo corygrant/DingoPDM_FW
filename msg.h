@@ -6,20 +6,20 @@
 #include "mailbox.h"
 #include "dingopdm_config.h"    
 
-CANTxFrame GetMsg0();
-CANTxFrame GetMsg1();
-CANTxFrame GetMsg2();
-CANTxFrame GetMsg3();
-CANTxFrame GetMsg4();
-CANTxFrame GetMsg5();
+CANTxFrame TxMsg0();
+CANTxFrame TxMsg1();
+CANTxFrame TxMsg2();
+CANTxFrame TxMsg3();
+CANTxFrame TxMsg4();
+CANTxFrame TxMsg5();
 
-[[maybe_unused]] static CANTxFrame (*GetTxMsgs[PDM_NUM_TX_MSGS])() = {
-    GetMsg0,
-    GetMsg1,
-    GetMsg2,
-    GetMsg3,
-    GetMsg4,
-    GetMsg5};
+[[maybe_unused]] static CANTxFrame (*TxMsgs[PDM_NUM_TX_MSGS])() = {
+    TxMsg0,
+    TxMsg1,
+    TxMsg2,
+    TxMsg3,
+    TxMsg4,
+    TxMsg5};
 
 class InfoMsg
 {

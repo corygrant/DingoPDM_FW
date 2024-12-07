@@ -39,7 +39,7 @@ void CanTxThread(void*)
         //Send cyclic messages
         for(uint8_t i=0; i<PDM_NUM_TX_MSGS; i++)
         {
-            msg = GetTxMsgs[i]();
+            msg = TxMsgs[i]();
             canTryTransmitI(&CAND1, CAN_ANY_MAILBOX, &msg); //Don't care if msg isn't sent
             chThdSleepMilliseconds(CAN_TX_MSG_SPLIT);    
         }
