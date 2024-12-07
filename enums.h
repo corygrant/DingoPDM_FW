@@ -17,7 +17,6 @@ enum class MsgCmdRx : uint8_t
     Starter = 'D',
     CanInputs = 'N',
     GetVersion = 'V',
-    GetTemp = 'F',
     Bootloader = '~',
     Null = 0
 };
@@ -36,8 +35,7 @@ enum class MsgCmdTx : uint8_t
     Flashers = 'h',
     Starter = 'd',
     CanInputs = 'n',
-    GetVersion = 'v',
-    GetTemp = 'f'
+    GetVersion = 'v'
 };
 
 enum class MsgType : uint8_t

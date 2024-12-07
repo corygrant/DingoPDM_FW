@@ -73,6 +73,7 @@ void CyclicUpdate();
 void StateMachine();
 
 void CheckStateMsgs();
+void CheckRequestMsgs(CANRxFrame *frame);
 
 bool GetAnyOvercurrent();
 bool GetAnyFault();
@@ -235,7 +236,6 @@ void StateMachine()
 void CyclicUpdate()
 {
     CANRxFrame rxMsg;
-    CANTxFrame txMsg;
 
     msg_t res = FetchRxFrame(&rxMsg);
     if (res == MSG_OK)
@@ -243,41 +243,7 @@ void CyclicUpdate()
         for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
             canIn[i].CheckMsg(rxMsg);
 
-        // Check for sleep request
-        if (rxMsg.data8[0] == static_cast<uint8_t>(MsgCmdRx::Sleep))
-        {
-            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
-            txMsg.DLC = 2;
-            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::Sleep);
-            txMsg.data8[1] = 1;
-
-            PostTxFrame(&txMsg);
-
-            // TODO: Set sleep state
-        }
-
-        // Check for burn request
-        if (rxMsg.data8[0] == static_cast<uint8_t>(MsgCmdRx::BurnSettings))
-        {
-            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
-            txMsg.DLC = 2;
-            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::BurnSettings);
-            txMsg.data8[1] = WriteConfig();
-
-            PostTxFrame(&txMsg);
-        }
-
-        // Check for bootloader request
-        if (rxMsg.data8[0] == static_cast<uint8_t>(MsgCmdRx::Bootloader))
-        {
-            // TODO: Enter bootloader
-        }
-
-        // Check for temp sensor request
-
-        // Check for version request
-
-        // Check for config request
+        CheckRequestMsgs(&rxMsg);
         SetConfig(ConfigHandler(&rxMsg));
     }
 
@@ -400,6 +366,78 @@ void SetConfig(MsgCmdRx eCmd)
         for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
             flasher[i].SetConfig(&stConfig.stFlasher[i], pVarMap);
     }
+}
+
+void CheckRequestMsgs(CANRxFrame *frame)
+{
+        // Check for sleep request
+        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Sleep))
+        {
+            CANTxFrame txMsg;
+            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
+            txMsg.IDE = CAN_IDE_STD;
+            txMsg.DLC = 2;
+            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::Sleep);
+            txMsg.data8[1] = 1;
+
+            PostTxFrame(&txMsg);
+
+            // TODO: Set sleep state
+        }
+
+        // Check for burn request
+        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::BurnSettings))
+        {
+            CANTxFrame txMsg;
+            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
+            txMsg.IDE = CAN_IDE_STD;
+            txMsg.DLC = 2;
+            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::BurnSettings);
+            txMsg.data8[1] = WriteConfig();
+
+            PostTxFrame(&txMsg);
+        }
+
+        // Check for bootloader request
+        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Bootloader))
+        {
+            // TODO: Enter bootloader
+        }
+
+        // Check for version request
+        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::GetVersion))
+        {
+            CANTxFrame txMsg;
+            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
+            txMsg.IDE = CAN_IDE_STD;
+            txMsg.DLC = 5;
+            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::GetVersion);
+            txMsg.data8[1] = MAJOR_VERSION;
+            txMsg.data8[2] = MINOR_VERSION;
+            txMsg.data8[3] = BUILD >> 8;
+            txMsg.data8[4] = BUILD & 0xFF;
+
+            PostTxFrame(&txMsg);
+        }
+}
+
+void CheckStateMsgs()
+{
+    static InfoMsg StatePowerOnMsg(MsgType::Info, MsgSrc::State_PowerOn);
+    static InfoMsg StateStartingMsg(MsgType::Info, MsgSrc::State_Starting);
+    static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
+    static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
+    static InfoMsg StateWakeMsg(MsgType::Info, MsgSrc::State_Wake);
+    static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
+    static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
+
+    StatePowerOnMsg.Check(eState == PdmState::PowerOn, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateStartingMsg.Check(eState == PdmState::Starting, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateRunMsg.Check(eState == PdmState::Run, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateSleepMsg.Check(eState == PdmState::Sleep, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateWakeMsg.Check(eState == PdmState::Wake, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateOvertempMsg.Check(eState == PdmState::OverTemp, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateErrorMsg.Check(eState == PdmState::Error, stConfig.stCanOutput.nBaseId, 0, 0, 0);
 }
 
 PdmState GetPdmState()
@@ -526,23 +564,4 @@ bool GetFlasherVal(uint8_t nFlasher)
         return false;
 
     return flasher[nFlasher].nVal;
-}
-
-void CheckStateMsgs()
-{
-    static InfoMsg StatePowerOnMsg(MsgType::Info, MsgSrc::State_PowerOn);
-    static InfoMsg StateStartingMsg(MsgType::Info, MsgSrc::State_Starting);
-    static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
-    static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
-    static InfoMsg StateWakeMsg(MsgType::Info, MsgSrc::State_Wake);
-    static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
-    static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
-
-    StatePowerOnMsg.Check(eState == PdmState::PowerOn, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateStartingMsg.Check(eState == PdmState::Starting, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateRunMsg.Check(eState == PdmState::Run, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateSleepMsg.Check(eState == PdmState::Sleep, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateWakeMsg.Check(eState == PdmState::Wake, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateOvertempMsg.Check(eState == PdmState::OverTemp, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateErrorMsg.Check(eState == PdmState::Error, stConfig.stCanOutput.nBaseId, 0, 0, 0);
 }
