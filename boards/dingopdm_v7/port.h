@@ -24,8 +24,9 @@
 #define ADC1_NUM_CHANNELS 8
 #define ADC1_BUF_DEPTH 1
 
-#define BTS7002_1EPP_KILIS 229421
-#define BTS7008_2EPA_KILIS 59481
+#define BTS7002_1EPP_KILIS 229500
+#define BTS7008_2EPA_KILIS 59500
+#define BTS70012_1ESP_KILIS 350000
 
 enum class AnalogChannel
 {
@@ -37,12 +38,6 @@ enum class AnalogChannel
     BattVolt,
     TempSensor,
     VRefInt
-};
-
-enum class DigitalChannel
-{
-    In1,
-    In2
 };
 
 enum class LedType
@@ -58,3 +53,4 @@ const I2CConfig i2cConfig = {
     400000,
     FAST_DUTY_CYCLE_2,
 };
+

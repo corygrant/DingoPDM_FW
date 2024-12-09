@@ -1,6 +1,7 @@
 #include "pdm.h"
 #include "ch.hpp"
 #include "hal.h"
+#include "port.h"
 #include "dingopdm_config.h"
 #include "config.h"
 #include "config_handler.h"
@@ -32,8 +33,8 @@ Profet pf[PDM_NUM_OUTPUTS] = {
     Profet(8, ProfetModel::BTS7008_2EPA_CH2, LINE_PF8_IN, LINE_PF7_8_DEN, LINE_PF7_8_DSEL, AnalogChannel::IS7_8)};
 
 Digital in[PDM_NUM_INPUTS] = {
-    Digital(DigitalChannel::In1),
-    Digital(DigitalChannel::In2)};
+    Digital(LINE_DI1),
+    Digital(LINE_DI2)};
 
 CanInput canIn[PDM_NUM_CAN_INPUTS];
 VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];

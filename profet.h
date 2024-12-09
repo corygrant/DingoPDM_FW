@@ -2,8 +2,8 @@
 
 #include <cstdint>
 #include "port.h"
-#include "enums.h"
 #include "config.h"
+#include "enums.h"
 
 class Profet
 {
@@ -17,14 +17,14 @@ public:
         switch (model)
         {
         case ProfetModel::BTS7002_1EPP:
-            fKILIS = 229500;
+            fKILIS = BTS7002_1EPP_KILIS;
             break;
         case ProfetModel::BTS7008_2EPA_CH1:
         case ProfetModel::BTS7008_2EPA_CH2:
-            fKILIS = 59500;
+            fKILIS = BTS7008_2EPA_KILIS;
             break;
         case ProfetModel::BTS70012_1ESP:
-            fKILIS = 350000;
+            fKILIS = BTS70012_1ESP_KILIS;
             break;
         }
     }

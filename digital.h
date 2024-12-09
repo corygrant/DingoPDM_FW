@@ -8,19 +8,9 @@
 class Digital
 {
 public:
-    Digital(DigitalChannel channel)
-        : m_channel(channel)
-    {
-        switch (channel)
-        {
-        case DigitalChannel::In1:
-            m_line = LINE_DI1;
-            break;
-        case DigitalChannel::In2:
-            m_line = LINE_DI2;
-            break;
-        }
-    }
+    Digital(ioline_t line)
+        : m_line(line)
+    {};
 
     uint16_t nVal;
 
@@ -34,9 +24,7 @@ public:
     }
 
 private:
-    const DigitalChannel m_channel;
-
-    ioline_t m_line;
+    const ioline_t m_line;
 
     void SetPull(InputPull pull);
 
