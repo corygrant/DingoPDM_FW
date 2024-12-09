@@ -153,15 +153,18 @@ void InitConfig()
         
         //Write default for next power cycle
         SetDefaultConfig();
-        //if(!WriteConfig()){
-        //    if(fram.GetErrors() != 0)
-        //    {
-        //        Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
-        //    }
-        //}
-        //else{
-        //    Error::SetFatalError(FatalErrorType::ErrConfig, MsgSrc::Config);
-        //}
+        if(!WriteConfig()){
+            //Couldn't write default config
+            //FRAM issue 
+            if(fram.GetErrors() != 0)
+                Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
+        }
+        else
+        {
+            //Wrote default config
+            //Error to force power cycle
+            Error::SetFatalError(FatalErrorType::ErrConfig, MsgSrc::Config);
+        }
     }
 
 }

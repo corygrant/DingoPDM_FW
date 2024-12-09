@@ -115,19 +115,8 @@ void InitPdm()
 {
     Error::Initialize(&statusLed, &errorLed);
 
-    InitVarMap(); // Set val pointers
-
     if (!i2cStart(&I2CD1, &i2cConfig) == HAL_RET_SUCCESS)
-        Error::SetFatalError(FatalErrorType::ErrI2C, MsgSrc::Init);
-
-    InitConfig(); // Read config from FRAM
-    ApplyConfig();
-
-    InitAdc();
-    InitCan(); // Starts CAN threads
-
-    if(!tempSensor.Init())
-        Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
+            Error::SetFatalError(FatalErrorType::ErrI2C, MsgSrc::Init);
 
     slowThread.start(NORMALPRIO);
     pdmThread.start(NORMALPRIO);
@@ -140,8 +129,19 @@ void StateMachine()
     switch (eState)
     {
 
-    case PdmState::PowerOn:
-        // Nothing to do...yet
+    case PdmState::PowerOn:    
+
+        InitVarMap(); // Set val pointers
+
+        InitConfig(); // Read config from FRAM
+        ApplyConfig();
+
+        InitAdc();
+        InitCan(); // Starts CAN threads
+
+        if (!tempSensor.Init())
+            Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
+
         eState = PdmState::Starting;
         break;
 
@@ -218,7 +218,7 @@ void StateMachine()
         break;
 
     case PdmState::Error:
-        //Not required?
+        // Not required?
         Error::SetFatalError(eError, MsgSrc::State_Error);
         break;
     }
@@ -361,55 +361,55 @@ void SetConfig(MsgCmdRx eCmd)
 
 void CheckRequestMsgs(CANRxFrame *frame)
 {
-        // Check for sleep request
-        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Sleep))
-        {
-            CANTxFrame txMsg;
-            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
-            txMsg.IDE = CAN_IDE_STD;
-            txMsg.DLC = 2;
-            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::Sleep);
-            txMsg.data8[1] = 1;
+    // Check for sleep request
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Sleep))
+    {
+        CANTxFrame txMsg;
+        txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
+        txMsg.IDE = CAN_IDE_STD;
+        txMsg.DLC = 2;
+        txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::Sleep);
+        txMsg.data8[1] = 1;
 
-            PostTxFrame(&txMsg);
+        PostTxFrame(&txMsg);
 
-            // TODO: Set sleep state
-        }
+        // TODO: Set sleep state
+    }
 
-        // Check for burn request
-        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::BurnSettings))
-        {
-            CANTxFrame txMsg;
-            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
-            txMsg.IDE = CAN_IDE_STD;
-            txMsg.DLC = 2;
-            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::BurnSettings);
-            txMsg.data8[1] = WriteConfig();
+    // Check for burn request
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::BurnSettings))
+    {
+        CANTxFrame txMsg;
+        txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
+        txMsg.IDE = CAN_IDE_STD;
+        txMsg.DLC = 2;
+        txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::BurnSettings);
+        txMsg.data8[1] = WriteConfig();
 
-            PostTxFrame(&txMsg);
-        }
+        PostTxFrame(&txMsg);
+    }
 
-        // Check for bootloader request
-        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Bootloader))
-        {
-            // TODO: Enter bootloader
-        }
+    // Check for bootloader request
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Bootloader))
+    {
+        // TODO: Enter bootloader
+    }
 
-        // Check for version request
-        if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::GetVersion))
-        {
-            CANTxFrame txMsg;
-            txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
-            txMsg.IDE = CAN_IDE_STD;
-            txMsg.DLC = 5;
-            txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::GetVersion);
-            txMsg.data8[1] = MAJOR_VERSION;
-            txMsg.data8[2] = MINOR_VERSION;
-            txMsg.data8[3] = BUILD >> 8;
-            txMsg.data8[4] = BUILD & 0xFF;
+    // Check for version request
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::GetVersion))
+    {
+        CANTxFrame txMsg;
+        txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
+        txMsg.IDE = CAN_IDE_STD;
+        txMsg.DLC = 5;
+        txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::GetVersion);
+        txMsg.data8[1] = MAJOR_VERSION;
+        txMsg.data8[2] = MINOR_VERSION;
+        txMsg.data8[3] = BUILD >> 8;
+        txMsg.data8[4] = BUILD & 0xFF;
 
-            PostTxFrame(&txMsg);
-        }
+        PostTxFrame(&txMsg);
+    }
 }
 
 void CheckStateMsgs()
