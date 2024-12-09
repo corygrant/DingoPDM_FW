@@ -71,7 +71,7 @@ void CheckRequestMsgs(CANRxFrame *frame);
 bool GetAnyOvercurrent();
 bool GetAnyFault();
 
-struct PdmThread : chibios_rt::BaseStaticThread<256>
+struct PdmThread : chibios_rt::BaseStaticThread<512>
 {
     void main()
     {
@@ -113,10 +113,20 @@ static SlowThread slowThread;
 
 void InitPdm()
 {
-    Error::Initialize(&statusLed, &errorLed);
+    InitVarMap(); // Set val pointers
 
     if (!i2cStart(&I2CD1, &i2cConfig) == HAL_RET_SUCCESS)
-            Error::SetFatalError(FatalErrorType::ErrI2C, MsgSrc::Init);
+        Error::SetFatalError(FatalErrorType::ErrI2C, MsgSrc::Init);
+
+    InitConfig(); // Read config from FRAM
+
+    ApplyConfig();
+
+    InitAdc();
+    InitCan(); // Starts CAN threads
+
+    if(!tempSensor.Init())
+        Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
     slowThread.start(NORMALPRIO);
     pdmThread.start(NORMALPRIO);
@@ -130,18 +140,7 @@ void StateMachine()
     {
 
     case PdmState::PowerOn:    
-
-        InitVarMap(); // Set val pointers
-
-        InitConfig(); // Read config from FRAM
-        ApplyConfig();
-
-        InitAdc();
-        InitCan(); // Starts CAN threads
-
-        if (!tempSensor.Init())
-            Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
-
+        // Nothing to do...yet
         eState = PdmState::Starting;
         break;
 
