@@ -1,4 +1,5 @@
 #include "config.h"
+#include "error.h"
 
 MB85RC fram(I2CD1, MB85RC_I2CADDR_DEFAULT);
 
@@ -143,27 +144,23 @@ void SetDefaultConfig()
 void InitConfig()
 {
     if(!fram.CheckId())
-    {
-        //TODO: set FRAM error, no continue
-    }
+        Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
 
     if(!ReadConfig())
     {
         if(fram.GetErrors() != 0)
-        {
-            //TODO: set FRAM error, no continue
-        }
+            Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
         
         //Write default for next power cycle
         SetDefaultConfig();
         //if(!WriteConfig()){
         //    if(fram.GetErrors() != 0)
         //    {
-                //TODO: set FRAM error, no continue
+        //        Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
         //    }
         //}
         //else{
-            //TODO: set config error, no continue
+        //    Error::SetFatalError(FatalErrorType::ErrConfig, MsgSrc::Config);
         //}
     }
 

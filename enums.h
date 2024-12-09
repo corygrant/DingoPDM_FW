@@ -64,7 +64,8 @@ enum class MsgSrc : uint8_t
   Analog,
   I2C,
   TempSensor,
-  USBConnection
+  USBConnection,
+  Init
  };
 
 enum class Operator : uint8_t
@@ -176,4 +177,22 @@ enum class MotorSpeed : uint8_t
     Off = 0,
     Slow = 1,
     Fast = 2
+};
+
+enum class FatalErrorType : uint8_t
+{
+  NoError = 0,
+  ErrIWDG,
+  ErrMailbox,
+  ErrTask,
+  ErrConfig,
+  ErrFRAM,
+  ErrADC,
+  ErrTempSensor,
+  ErrUSB,
+  ErrCAN,
+  ErrCRC,
+  ErrI2C,
+  ErrRCC,
+  ErrTemp
 };

@@ -3,6 +3,12 @@
 
 void Digital::Update()
 {
+    if(!pConfig->bEnabled)
+    {
+        nVal = 0;
+        return;
+    }
+
     bool bIn;
 
     bIn = palReadLine(m_line);

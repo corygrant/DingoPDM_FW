@@ -16,9 +16,8 @@
 #include "led.h"
 #include "mailbox.h"
 #include "msg.h"
+#include "error.h"
 #include "hardware/mcp9808.h"
-
-uint16_t nAlwaysTrue = 1;
 
 PdmConfig stConfig;
 
@@ -45,36 +44,29 @@ Flasher flasher[PDM_NUM_FLASHERS];
 Led statusLed = Led(LedType::Status);
 Led errorLed = Led(LedType::Error);
 
+MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
+
 PdmState eState = PdmState::PowerOn;
+
+FatalErrorType eError = FatalErrorType::NoError;
 
 uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 
+uint16_t nAlwaysTrue = 1;
 float fBattVolt;
-float fVref;
-float fTemp;
 float fTempSensor;
-int16_t signedTemp;
-uint16_t rawTemp;
-bool tempSensorOk;
 bool bDeviceOverTemp;
 bool bDeviceCriticalTemp;
-
-uint8_t testRead[100];
-uint8_t testWrite[3];
-bool framOk;
-
-MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
+bool bSleepRequest;
+bool bBootloaderRequest;
 
 void InitVarMap();
 void ApplyConfig();
 void SetConfig(MsgCmdRx eCmd);
-
 void CyclicUpdate();
 void StateMachine();
-
 void CheckStateMsgs();
 void CheckRequestMsgs(CANRxFrame *frame);
-
 bool GetAnyOvercurrent();
 bool GetAnyFault();
 
@@ -104,8 +96,6 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
             //=================================================================
 
             fBattVolt = GetBattVolt();
-            fVref = GetVDDA();
-            fTemp = GetTemperature();
 
             // Temp sensor is I2C, takes a while to read
             // Don't want to slow down main thread
@@ -122,17 +112,21 @@ static SlowThread slowThread;
 
 void InitPdm()
 {
+    Error::Initialize(&statusLed, &errorLed);
+
     InitVarMap(); // Set val pointers
 
-    i2cStart(&I2CD1, &i2cConfig);
+    if (!i2cStart(&I2CD1, &i2cConfig) == HAL_RET_SUCCESS)
+        Error::SetFatalError(FatalErrorType::ErrI2C, MsgSrc::Init);
 
     InitConfig(); // Read config from FRAM
     ApplyConfig();
 
-    InitAdc(); // Start ADC thread
-    InitCan(); // Start CAN thread
+    InitAdc();
+    InitCan(); // Starts CAN threads
 
-    tempSensorOk = tempSensor.Init();
+    if(!tempSensor.Init())
+        Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
     slowThread.start(NORMALPRIO);
     pdmThread.start(NORMALPRIO);
@@ -215,7 +209,7 @@ void StateMachine()
         errorLed.Blink(chVTGetSystemTimeX());
 
         if (bDeviceCriticalTemp)
-            eState = PdmState::Error;
+            Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
 
         if (!bDeviceOverTemp)
             eState = PdmState::Run;
@@ -223,12 +217,8 @@ void StateMachine()
         break;
 
     case PdmState::Error:
-        statusLed.Solid(false);
-        /*
-        send fatal error message
-        set led flashing code
-        trap execution, requires power cycle
-        */
+        //Not required?
+        Error::SetFatalError(eError, MsgSrc::State_Error);
         break;
     }
 }

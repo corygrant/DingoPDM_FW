@@ -11,10 +11,8 @@ int main(void) {
   chSysInit();
 
   InitPdm();
+  
   while (true) {
-    palSetLine(LINE_LED_STATUS);
-    chThdSleepMilliseconds(500);
-    palClearLine(LINE_LED_STATUS);
     chThdSleepMilliseconds(500);
   }
 }
