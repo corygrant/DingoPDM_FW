@@ -71,7 +71,7 @@ void CheckRequestMsgs(CANRxFrame *frame);
 bool GetAnyOvercurrent();
 bool GetAnyFault();
 
-struct PdmThread : chibios_rt::BaseStaticThread<512>
+struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
     void main()
     {
