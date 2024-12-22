@@ -15,6 +15,12 @@
 	"files.associations": {
 		"*.inc": "cpp",
 		"hal.h": "c",
-		"cstdint": "cpp"
+		"cstdint": "cpp",
+		"optional": "cpp",
+		"functional": "cpp",
+		"random": "cpp",
+		"ostream": "cpp",
+		"streambuf": "cpp",
+		"system_error": "cpp"
 	},
 }

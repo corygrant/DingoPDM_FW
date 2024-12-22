@@ -63,7 +63,7 @@ endif
 # Stack size to be allocated to the Cortex-M process stack. This stack is
 # the stack used by the main() thread.
 ifeq ($(USE_PROCESS_STACKSIZE),)
-  USE_PROCESS_STACKSIZE = 0x800
+  USE_PROCESS_STACKSIZE = 0x1000
 endif
 
 # Stack size to the allocated to the Cortex-M main/exceptions stack. This
@@ -143,6 +143,7 @@ CPPSRC = $(ALLCPPSRC) \
          pdm.cpp \
          profet.cpp \
          starter.cpp \
+         usb.cpp \
          virtual_input.cpp \
          wiper.cpp \
          hardware/mcp9808.cpp \

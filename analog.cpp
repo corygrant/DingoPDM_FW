@@ -51,6 +51,12 @@ void InitAdc()
     adcStartConversion(&ADCD1, &adc1_cfg, adc1_samples, ADC1_BUF_DEPTH);
 }
 
+void DeInitAdc()
+{
+    adcStopConversion(&ADCD1);
+    adcStop(&ADCD1);
+}
+
 uint16_t GetAdcRaw(AnalogChannel channel)
 {
     switch (channel)
