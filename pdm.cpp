@@ -569,53 +569,22 @@ bool GetFlasherVal(uint8_t nFlasher)
 
 void EnterStopMode()
 {
-    //chThdTerminate(slowThreadRef.getInner());
-    //while (!chThdTerminatedX(slowThreadRef.getInner()))
-    //    chThdSleepMilliseconds(10);
+    __disable_irq();
 
-    //Stop CAN threads
-    //DeInitCan();
-    rccDisableCAN1();
+    SysTick->CTRL = 0;
+	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
+	PWR->CR &= ~PWR_CR_PDDS;	// cleared PDDS means stop mode (not standby) 
+	PWR->CR |= PWR_CR_FPDS;	    // turn off flash in stop mode
+    PWR->CR |= PWR_CR_LPDS;	    // regulator in low power mode
 
-    //i2cStop(&I2CD1);
-    //rccDisableI2C1();
-
-    //DeInitAdc();
-    //rccDisableADC1();
-
+    //Set wakeup sources
+    palEnableLineEvent(LINE_DI1, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
+    palEnableLineEvent(LINE_DI2, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
     palSetLineMode(LINE_CAN_RX, PAL_MODE_INPUT);
-    palSetLineMode(LINE_CAN_TX, PAL_MODE_INPUT);
+    palEnableLineEvent(LINE_CAN_RX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
 
-    // Enable events on digital inputs and CAN lines
-    // To wake up device
-    palSetLineMode(LINE_DI1, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
-    palSetLineMode(LINE_DI2, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
-    palSetLineMode(LINE_CAN_RX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
-    palSetLineMode(LINE_CAN_TX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
+    __WFI();
 
-    chSysDisable();
-    PWR->CR &= ~(PWR_CR_PDDS | PWR_CR_LPDS); // Clear the Power Down Deep Sleep and Low Power Deep Sleep bits
-    PWR->CR |= (PWR_CR_CWUF | PWR_CR_CSBF | PWR_CR_LPDS); // Clear the Wake-Up flag, enable Low Power Deep Sleep
-    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-    __WFE();
-
-     // Execution will resume here after wakeup
-    SCB->SCR &= ~SCB_SCR_SLEEPDEEP_Msk;
-    chSysEnable();
-
-    stm32_clock_init();
-
-    palSetLineMode(LINE_DI1, PAL_MODE_INPUT_PULLUP);
-    palSetLineMode(LINE_DI2, PAL_MODE_INPUT_PULLUP);
-    palSetLineMode(LINE_CAN_RX, PAL_MODE_ALTERNATE(9));
-    palSetLineMode(LINE_CAN_TX, PAL_MODE_ALTERNATE(9));
-
-    //if (!i2cStart(&I2CD1, &i2cConfig) == HAL_RET_SUCCESS)
-    //    Error::SetFatalError(FatalErrorType::ErrI2C, MsgSrc::Init);
-
-    //InitAdc();
-
-    //InitCan();
-    StopCan();
-    StartCan();
+    // Resume here after wakeup
+    NVIC_SystemReset();
 }
