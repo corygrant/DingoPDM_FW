@@ -48,7 +48,7 @@ Led errorLed = Led(LedType::Error);
 
 MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
 
-PdmState eState = PdmState::PowerOn;
+PdmState eState = PdmState::Run;
 
 FatalErrorType eError = FatalErrorType::NoError;
 
@@ -153,16 +153,6 @@ void StateMachine()
     switch (eState)
     {
 
-    case PdmState::PowerOn:
-        // Nothing to do...yet
-        eState = PdmState::Starting;
-        break;
-
-    case PdmState::Starting:
-        // Nothing to do...yet
-        eState = PdmState::Run;
-        break;
-
     case PdmState::Run:
 
         if (GetAnyOvercurrent() && !GetAnyFault())
@@ -208,15 +198,6 @@ void StateMachine()
     case PdmState::Sleep:
         bSleepRequest = false;
         EnterStopMode();
-
-        eState = PdmState::Wake;
-        break;
-
-    case PdmState::Wake:
-        /*
-        perform necessary tasks to wake the PDM
-        */
-        eState = PdmState::Run;
         break;
 
     case PdmState::OverTemp:
@@ -428,19 +409,13 @@ void CheckRequestMsgs(CANRxFrame *frame)
 
 void CheckStateMsgs()
 {
-    static InfoMsg StatePowerOnMsg(MsgType::Info, MsgSrc::State_PowerOn);
-    static InfoMsg StateStartingMsg(MsgType::Info, MsgSrc::State_Starting);
     static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
     static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
-    static InfoMsg StateWakeMsg(MsgType::Info, MsgSrc::State_Wake);
     static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
     static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
 
-    StatePowerOnMsg.Check(eState == PdmState::PowerOn, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateStartingMsg.Check(eState == PdmState::Starting, stConfig.stCanOutput.nBaseId, 0, 0, 0);
     StateRunMsg.Check(eState == PdmState::Run, stConfig.stCanOutput.nBaseId, 0, 0, 0);
     StateSleepMsg.Check(eState == PdmState::Sleep, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateWakeMsg.Check(eState == PdmState::Wake, stConfig.stCanOutput.nBaseId, 0, 0, 0);
     StateOvertempMsg.Check(eState == PdmState::OverTemp, stConfig.stCanOutput.nBaseId, 0, 0, 0);
     StateErrorMsg.Check(eState == PdmState::Error, stConfig.stCanOutput.nBaseId, 0, 0, 0);
 }

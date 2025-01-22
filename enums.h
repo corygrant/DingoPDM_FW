@@ -108,11 +108,8 @@ enum class InputPull : uint8_t
 
 enum class PdmState : uint8_t
 {
-    PowerOn,
-    Starting,
     Run,
     Sleep,
-    Wake,
     OverTemp,
     Error
 };
