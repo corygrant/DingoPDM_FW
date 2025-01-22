@@ -148,8 +148,7 @@ void InitPdm()
 
 void StateMachine()
 {
-    CheckStateMsgs();
-
+    
     switch (eState)
     {
 
@@ -217,6 +216,8 @@ void StateMachine()
         Error::SetFatalError(eError, MsgSrc::State_Error);
         break;
     }
+
+    CheckStateMsgs();
 }
 
 void CyclicUpdate()
