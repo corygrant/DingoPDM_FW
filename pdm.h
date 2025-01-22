@@ -2,6 +2,7 @@
 
 #include "enums.h"
 
+void CheckBootloaderRequest();
 void InitPdm();
 PdmState GetPdmState();
 float GetBoardTemp();

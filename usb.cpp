@@ -442,3 +442,8 @@ void InitUsb()
     chThdCreateStatic(waUsbTxThread, sizeof(waUsbTxThread), NORMALPRIO + 1, UsbTxThread, nullptr);
     chThdCreateStatic(waUsbRxThread, sizeof(waUsbRxThread), NORMALPRIO + 1, UsbRxThread, nullptr);
 }
+
+bool GetUsbConnected()
+{
+    return usbGetDriverStateI(&USBD1) == USB_ACTIVE;
+}

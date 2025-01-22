@@ -62,6 +62,10 @@ bool bDeviceCriticalTemp;
 bool bSleepRequest;
 bool bBootloaderRequest;
 
+uint8_t nNumOutputsOn;
+uint8_t nLastNumOutputsOn;
+uint32_t nAllOutputsOffTime;
+
 void InitVarMap();
 void ApplyConfig();
 void SetConfig(MsgCmdRx eCmd);
@@ -71,7 +75,7 @@ void CheckStateMsgs();
 void CheckRequestMsgs(CANRxFrame *frame);
 bool GetAnyOvercurrent();
 bool GetAnyFault();
-void EnterStopMode();
+bool CheckEnterSleep();
 
 struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
@@ -163,13 +167,13 @@ void StateMachine()
 
         if (GetAnyOvercurrent() && !GetAnyFault())
         {
-            statusLed.Blink(chVTGetSystemTimeX());
+            statusLed.Blink(SYS_TIME);
             errorLed.Solid(false);
         }
 
         if (GetAnyFault())
         {
-            statusLed.Blink(chVTGetSystemTimeX());
+            statusLed.Blink(SYS_TIME);
             errorLed.Solid(true);
         }
 
@@ -196,13 +200,13 @@ void StateMachine()
         check for sleep request
         */
 
-        if (bSleepRequest)
+        if (CheckEnterSleep())
             eState = PdmState::Sleep;
 
         break;
 
     case PdmState::Sleep:
-
+        bSleepRequest = false;
         EnterStopMode();
 
         eState = PdmState::Wake;
@@ -216,8 +220,8 @@ void StateMachine()
         break;
 
     case PdmState::OverTemp:
-        statusLed.Blink(chVTGetSystemTimeX());
-        errorLed.Blink(chVTGetSystemTimeX());
+        statusLed.Blink(SYS_TIME);
+        errorLed.Blink(SYS_TIME);
 
         if (bDeviceCriticalTemp)
             Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
@@ -257,12 +261,12 @@ void CyclicUpdate()
     for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
         virtIn[i].Update();
 
-    wiper.Update(chVTGetSystemTimeX());
+    wiper.Update(SYS_TIME);
 
     starter.Update();
 
     for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
-        flasher[i].Update(chVTGetSystemTimeX());
+        flasher[i].Update(SYS_TIME);
 }
 
 void InitVarMap()
@@ -402,7 +406,7 @@ void CheckRequestMsgs(CANRxFrame *frame)
     // Check for bootloader request
     if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Bootloader))
     {
-        // TODO: Enter bootloader
+        RequestBootloader();
     }
 
     // Check for version request
@@ -567,24 +571,33 @@ bool GetFlasherVal(uint8_t nFlasher)
     return flasher[nFlasher].nVal;
 }
 
-void EnterStopMode()
+bool CheckEnterSleep()
 {
-    __disable_irq();
+    bool bEnterSleep = false;
 
-    SysTick->CTRL = 0;
-	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-	PWR->CR &= ~PWR_CR_PDDS;	// cleared PDDS means stop mode (not standby) 
-	PWR->CR |= PWR_CR_FPDS;	    // turn off flash in stop mode
-    PWR->CR |= PWR_CR_LPDS;	    // regulator in low power mode
+    // Count number of outputs on
+    nNumOutputsOn = 0;
+    for (int i = 0; i < PDM_NUM_OUTPUTS; i++)
+    {
+        if (pf[i].GetState() != ProfetState::Off)
+            nNumOutputsOn++;
+    }
 
-    //Set wakeup sources
-    palEnableLineEvent(LINE_DI1, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
-    palEnableLineEvent(LINE_DI2, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
-    palSetLineMode(LINE_CAN_RX, PAL_MODE_INPUT);
-    palEnableLineEvent(LINE_CAN_RX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
+    // All outputs just turned off, save time
+    if ((nNumOutputsOn == 0) && (nLastNumOutputsOn > 0))
+    {
+        nAllOutputsOffTime = SYS_TIME;
+    }
+    nLastNumOutputsOn = nNumOutputsOn;
 
-    __WFI();
+    // No outputs on, no CAN msgs received and no USB connected
+    // Go to sleep after timeout
+    bEnterSleep = ENABLE_SLEEP &&
+                  (nNumOutputsOn == 0) && 
+                  (nLastNumOutputsOn == 0) && 
+                  !GetUsbConnected() &&
+                  ((SYS_TIME- nAllOutputsOffTime) > SLEEP_TIMEOUT) &&
+                  ((SYS_TIME - GetLastCanRxTime()) > SLEEP_TIMEOUT);
 
-    // Resume here after wakeup
-    NVIC_SystemReset();
+    return bEnterSleep || bSleepRequest;
 }

@@ -12,6 +12,8 @@ int main(void) {
   halInit();
   chSysInit();
 
+  CheckBootloaderRequest();
+  
   InitPdm();
   
   while (true) {

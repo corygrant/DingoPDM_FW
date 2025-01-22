@@ -28,6 +28,14 @@
 #define BTS7008_2EPA_KILIS 59500
 #define BTS70012_1ESP_KILIS 350000
 
+#define ENABLE_SLEEP 1
+#define SLEEP_TIMEOUT 30000
+
+#define BOOTLOADER_FLAG_ADDRESS 0x40024000   // Backup SRAM address to store bootloader flag
+#define BOOTLOADER_MAGIC_CODE   0xDEADBEEF  // Magic code to indicate bootloader request
+
+#define SYS_TIME TIME_I2MS(chVTGetSystemTimeX())
+
 enum class AnalogChannel
 {
     IS1 = 0,
@@ -54,3 +62,6 @@ const I2CConfig i2cConfig = {
     FAST_DUTY_CYCLE_2,
 };
 
+void EnterStopMode();
+void RequestBootloader();
+void CheckBootloaderRequest(void);
