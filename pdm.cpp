@@ -148,7 +148,7 @@ void InitPdm()
 
 void StateMachine()
 {
-    
+
     switch (eState)
     {
 
@@ -224,14 +224,17 @@ void CyclicUpdate()
 {
     CANRxFrame rxMsg;
 
-    msg_t res = FetchRxFrame(&rxMsg);
-    if (res == MSG_OK)
+    while (!RxFramesEmpty())
     {
-        for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
-            canIn[i].CheckMsg(rxMsg);
+        msg_t res = FetchRxFrame(&rxMsg);
+        if (res == MSG_OK)
+        {
+            for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
+                canIn[i].CheckMsg(rxMsg);
 
-        CheckRequestMsgs(&rxMsg);
-        SetConfig(ConfigHandler(&rxMsg));
+            CheckRequestMsgs(&rxMsg);
+            SetConfig(ConfigHandler(&rxMsg));
+        }
     }
 
     for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
@@ -569,10 +572,10 @@ bool CheckEnterSleep()
     // No outputs on, no CAN msgs received and no USB connected
     // Go to sleep after timeout
     bEnterSleep = ENABLE_SLEEP &&
-                  (nNumOutputsOn == 0) && 
-                  (nLastNumOutputsOn == 0) && 
+                  (nNumOutputsOn == 0) &&
+                  (nLastNumOutputsOn == 0) &&
                   !GetUsbConnected() &&
-                  ((SYS_TIME- nAllOutputsOffTime) > SLEEP_TIMEOUT) &&
+                  ((SYS_TIME - nAllOutputsOffTime) > SLEEP_TIMEOUT) &&
                   ((SYS_TIME - GetLastCanRxTime()) > SLEEP_TIMEOUT);
 
     return bEnterSleep || bSleepRequest;

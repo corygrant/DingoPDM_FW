@@ -55,14 +55,14 @@ void CanTxThread(void *)
                 if (txOk) // Returns true if mailbox full
                     PostTxFrame(&msg);
 
-                chThdSleepMilliseconds(CAN_TX_MSG_SPLIT);
+                chThdSleepMicroseconds(CAN_TX_MSG_SPLIT);
             }
         } while (res == MSG_OK);
 
         if (chThdShouldTerminateX())
             chThdExit(MSG_OK);
 
-        chThdSleepMilliseconds(1);
+        chThdSleepMicroseconds(30);
     }
 }
 
@@ -88,7 +88,7 @@ void CanRxThread(void *)
         if (chThdShouldTerminateX())
             chThdExit(MSG_OK);
 
-        chThdSleepMilliseconds(1);
+        chThdSleepMicroseconds(30);
     }
 }
 
