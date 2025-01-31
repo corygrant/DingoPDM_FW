@@ -190,8 +190,12 @@ void StateMachine()
         */
 
         if (CheckEnterSleep())
+        {
+            statusLed.Solid(false);
+            errorLed.Solid(false);
             eState = PdmState::Sleep;
-
+        }
+        
         break;
 
     case PdmState::Sleep:

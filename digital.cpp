@@ -33,15 +33,16 @@ void Digital::Update()
 
 void Digital::SetPull(InputPull pull)
 {
-    // TODO: Implement pull-up and pull-down
-
     switch (pull)
     {
     case InputPull::None:
+        palSetLineMode(m_line, PAL_MODE_INPUT);
         break;
     case InputPull::Up:
+        palSetLineMode(m_line, PAL_MODE_INPUT_PULLUP);
         break;
     case InputPull::Down:
+        palSetLineMode(m_line, PAL_MODE_INPUT_PULLDOWN);
         break;
     }
 }

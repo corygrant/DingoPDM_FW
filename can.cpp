@@ -79,7 +79,7 @@ void CanRxThread(void *)
         msg_t res = canReceiveTimeout(&CAND1, CAN_ANY_MAILBOX, &msg, TIME_IMMEDIATE);
         if (res == MSG_OK)
         {
-            nLastCanRxTime = chVTGetSystemTimeX();
+            nLastCanRxTime = SYS_TIME;
 
             res = PostRxFrame(&msg);
             // TODO:What to do if mailbox is full?
