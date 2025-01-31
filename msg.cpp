@@ -17,7 +17,7 @@ void InfoMsg::Check(bool bTrigger, uint16_t nId, uint16_t nData0, uint16_t nData
         return;
 
     CANTxFrame tx;
-    tx.DLC = 5;
+    tx.DLC = 8;
 
     tx.data8[0] = static_cast<uint8_t>(m_type);
     tx.data8[1] = static_cast<uint8_t>(m_src);
