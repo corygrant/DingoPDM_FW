@@ -5,7 +5,7 @@
 #include "pdm.h"
 #include "analog.h"
 
-void InfoMsg::Check(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData1, uint8_t *nData2)
+void InfoMsg::Check(bool bTrigger, uint16_t nId, uint16_t nData0, uint16_t nData1, uint16_t nData2)
 {
     if (!bTrigger)
     {
@@ -21,9 +21,9 @@ void InfoMsg::Check(bool bTrigger, uint16_t nId, uint8_t *nData0, uint8_t *nData
 
     tx.data8[0] = static_cast<uint8_t>(m_type);
     tx.data8[1] = static_cast<uint8_t>(m_src);
-    tx.data8[2] = *nData0;
-    tx.data8[3] = *nData1;
-    tx.data8[4] = *nData2;
+    tx.data16[1] = nData0;
+    tx.data16[2] = nData1;
+    tx.data16[3] = nData2;
 
     tx.SID = nId + TX_MSG_ID_OFFSET;
     tx.IDE = CAN_IDE_STD;
