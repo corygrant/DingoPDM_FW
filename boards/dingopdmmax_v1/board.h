@@ -200,16 +200,16 @@
  */
 #define LINE_PF1_IS                 PAL_LINE(GPIOC, 3U)
 #define LINE_PF1_IN                 PAL_LINE(GPIOB, 14U)
-#define LINE PF1_DEN                PAL_LINE(GPIOB, 2U)
+#define LINE_PF1_DEN                PAL_LINE(GPIOB, 2U)
 #define LINE_PF2_IS                 PAL_LINE(GPIOC, 2U)
 #define LINE_PF2_IN                 PAL_LINE(GPIOC, 7U)
-#define LINE PF2_DEN                PAL_LINE(GPIOC, 6U)
+#define LINE_PF2_DEN                PAL_LINE(GPIOC, 6U)
 #define LINE_PF3_IS                 PAL_LINE(GPIOA, 0U)
 #define LINE_PF3_IN                 PAL_LINE(GPIOB, 0U)
-#define LINE PF3_DEN                PAL_LINE(GPIOC, 5U)
+#define LINE_PF3_DEN                PAL_LINE(GPIOC, 5U)
 #define LINE_PF4_IS                 PAL_LINE(GPIOA, 1U)
 #define LINE_PF4_IN                 PAL_LINE(GPIOC, 4U)
-#define LINE PF4_DEN                PAL_LINE(GPIOA, 5U)
+#define LINE_PF4_DEN                PAL_LINE(GPIOA, 5U)
 #define LINE_DI1                    PAL_LINE(GPIOA, 10U)
 #define LINE_DI2                    PAL_LINE(GPIOC, 9U)
 #define LINE_LED_ERROR              PAL_LINE(GPIOC, 0U)
@@ -229,7 +229,7 @@
 #define LINE_E1                     PAL_LINE(GPIOC, 10U)
 #define LINE_E2                     PAL_LINE(GPIOC, 11U)
 #define LINE_E3                     PAL_LINE(GPIOC, 13U)
-
+#define LINE_UNUSED                 PAL_LINE(GPIOA, 15U)
 
 /*===========================================================================*/
 /* Driver pre-compile time settings.                                         */

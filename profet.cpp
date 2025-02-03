@@ -1,5 +1,4 @@
 #include "profet.h"
-#include "analog.h"
 
 void Profet::Update(bool bOutEnabled)
 {

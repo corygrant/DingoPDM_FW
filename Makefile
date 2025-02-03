@@ -5,7 +5,7 @@
 
 ifeq ($(BOARD),)
   BOARD = dingopdm_v7
-  # BOARD = dingopdmmax_v1
+  #BOARD = dingopdmmax_v1
 endif
 
 BOARDDIR = boards/$(BOARD)
@@ -93,7 +93,7 @@ endif
 
 # Define project name here
 PROJECT = dingoPDM
-# PROJECT = dingoPDMMax
+#PROJECT = dingoPDMMax
 
 # Target settings.
 MCU  = cortex-m4
@@ -134,7 +134,6 @@ CPPSRC = $(ALLCPPSRC) \
          $(BOARDDIR)/port.cpp \
          $(MCUDIR)/mcu_utils.cpp \
          msg.cpp \
-         analog.cpp \
          can_input.cpp \
          can.cpp \
          config.cpp \

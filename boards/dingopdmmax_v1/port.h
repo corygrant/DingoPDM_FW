@@ -52,3 +52,10 @@ const I2CConfig i2cConfig = {
     400000,
     FAST_DUTY_CYCLE_2,
 };
+
+void InitAdc();
+void DeInitAdc();
+uint16_t GetAdcRaw(AnalogChannel channel);
+float GetBattVolt();
+float GetTemperature();
+float GetVDDA();

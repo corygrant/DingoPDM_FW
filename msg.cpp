@@ -3,7 +3,6 @@
 #include "profet.h"
 #include "digital.h"
 #include "pdm.h"
-#include "analog.h"
 
 void InfoMsg::Check(bool bTrigger, uint16_t nId, uint16_t nData0, uint16_t nData1, uint16_t nData2)
 {

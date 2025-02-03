@@ -7,7 +7,6 @@
 #include "config.h"
 #include "config_handler.h"
 #include "hw_devices.h"
-#include "analog.h"
 #include "can.h"
 #include "can_input.h"
 #include "virtual_input.h"
