@@ -5,7 +5,7 @@
 
 ifeq ($(BOARD),)
   BOARD = dingopdm_v7
-  #BOARD = dingopdmmax_v1
+  #BOARD = dingopdm-max_v1
 endif
 
 BOARDDIR = boards/$(BOARD)
@@ -92,8 +92,7 @@ endif
 #
 
 # Define project name here
-PROJECT = dingoPDM
-#PROJECT = dingoPDMMax
+PROJECT = $(BOARD)
 
 # Target settings.
 MCU  = cortex-m4
@@ -185,7 +184,7 @@ UDEFS =
 UADEFS =
 
 # List all user directories here
-UINCDIR = ./boards/cortex-m4
+UINCDIR = ./boards/$(MCU)
 
 # List the user directory to look for the libraries here
 ULIBDIR =
