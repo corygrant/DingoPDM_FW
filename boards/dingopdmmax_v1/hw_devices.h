@@ -1,10 +1,10 @@
 #pragma once
 
-#include "port.h"
+#include "dingopdmmax_v1\port.h"
 #include "profet.h"
 #include "digital.h"
 #include "led.h"
-#include "hardware/mcp9808.h"
+#include "mcp9808.h"
 
 extern Profet pf[PDM_NUM_OUTPUTS];
 extern Digital in[PDM_NUM_INPUTS];

@@ -2,7 +2,7 @@
 
 #include "hal.h"
 
-#define PDM_TYPE 0 //0 = PDM, 1 = PDM-MAX 
+#define PDM_TYPE 1 //0 = PDM, 1 = PDM-MAX 
 
 #define PDM_NUM_OUTPUTS 4
 #define PDM_NUM_INPUTS 2
@@ -32,9 +32,8 @@ enum class AnalogChannel
 {
     IS1 = 0,
     IS2,
-    IS3_4,
-    IS5_6,
-    IS7_8,
+    IS3,
+    IS4,
     BattVolt,
     TempSensor,
     VRefInt

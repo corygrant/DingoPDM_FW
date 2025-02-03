@@ -1,5 +1,6 @@
 #include "hw_devices.h"
 
+#if PDM_TYPE == 0
 Profet pf[PDM_NUM_OUTPUTS] = {
     Profet(1, ProfetModel::BTS7002_1EPP, LINE_PF1_IN, LINE_PF1_DEN, LINE_UNUSED, AnalogChannel::IS1),
     Profet(2, ProfetModel::BTS7002_1EPP, LINE_PF2_IN, LINE_PF2_DEN, LINE_UNUSED, AnalogChannel::IS2),
@@ -18,3 +19,5 @@ Led statusLed = Led(LedType::Status);
 Led errorLed = Led(LedType::Error);
 
 MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
+
+#endif

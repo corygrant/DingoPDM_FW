@@ -292,7 +292,7 @@
  * PA7  - PF7_IN                    (output pushpull pulldown).
  * PA8  -                           (input pullup).
  * PA9  - USB_VBUS                  (input pulldown).
- * PA10 - DIG_IN1                   (alternate 15, event out).
+ * PA10 - DIG_IN1                   (input).
  * PA11 - USB_DM                    (alternate 10, usb dm).
  * PA12 - USB_DP                    (alternate 10, usb dp).
  * PA13 - SWDIO                     (alternate 0, swdio).
@@ -309,9 +309,9 @@
                                      PIN_MODE_OUTPUT(GPIOA_PIN7) |          \
                                      PIN_MODE_INPUT(GPIOA_PIN8) |           \
                                      PIN_MODE_INPUT(GPIOA_VBUS) |           \
-                                     PIN_MODE_INPUT(GPIOA_PIN10) |      \
-                                     PIN_MODE_ALTERNATE(GPIOA_USB_DM) |      \
-                                     PIN_MODE_ALTERNATE(GPIOA_USB_DP) |      \
+                                     PIN_MODE_INPUT(GPIOA_PIN10) |          \
+                                     PIN_MODE_ALTERNATE(GPIOA_USB_DM) |     \
+                                     PIN_MODE_ALTERNATE(GPIOA_USB_DP) |     \
                                      PIN_MODE_ALTERNATE(GPIOA_SWDIO) |      \
                                      PIN_MODE_ALTERNATE(GPIOA_SWCLK) |      \
                                      PIN_MODE_INPUT(GPIOA_PIN15))  
@@ -326,8 +326,8 @@
                                      PIN_OTYPE_PUSHPULL(GPIOA_PIN8) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOA_VBUS) |       \
                                      PIN_OTYPE_PUSHPULL(GPIOA_PIN10) |      \
-                                     PIN_OTYPE_PUSHPULL(GPIOA_USB_DM) |      \
-                                     PIN_OTYPE_PUSHPULL(GPIOA_USB_DP) |      \
+                                     PIN_OTYPE_PUSHPULL(GPIOA_USB_DM) |     \
+                                     PIN_OTYPE_PUSHPULL(GPIOA_USB_DP) |     \
                                      PIN_OTYPE_PUSHPULL(GPIOA_SWDIO) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOA_SWCLK) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOA_PIN15))  
@@ -525,7 +525,7 @@
  * PC6  - PF3_IN                    (output pushpull pulldown).
  * PC7  - PF2_DEN                   (output pushpull pulldown).
  * PC8  - PF2_IN                    (output pushpull pulldown).
- * PC9  - DIG_IN2                   (alternate 15, event out).
+ * PC9  - DIG_IN2                   (input).
  * PC10 - E1                        (output pushpull pulldown).
  * PC11 - E2                        (output pushpull pulldown).
  * PC12 - CAN_STANDBY               (output pushpull pulldown).
@@ -542,7 +542,7 @@
                                      PIN_MODE_OUTPUT(GPIOC_PIN6) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN7) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN8) |          \
-                                     PIN_MODE_INPUT(GPIOC_PIN9) |       \
+                                     PIN_MODE_INPUT(GPIOC_PIN9) |           \
                                      PIN_MODE_OUTPUT(GPIOC_PIN10) |         \
                                      PIN_MODE_OUTPUT(GPIOC_PIN11) |         \
                                      PIN_MODE_OUTPUT(GPIOC_PIN12) |         \
@@ -622,7 +622,7 @@
                                      PIN_AFIO_AF(GPIOC_PIN6, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN7, 0U))
 #define VAL_GPIOC_AFRH              (PIN_AFIO_AF(GPIOC_PIN8, 0U) |          \
-                                     PIN_AFIO_AF(GPIOC_PIN9, 0U) |         \
+                                     PIN_AFIO_AF(GPIOC_PIN9, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN10, 0U) |         \
                                      PIN_AFIO_AF(GPIOC_PIN11, 0U) |         \
                                      PIN_AFIO_AF(GPIOC_PIN12, 0U) |         \

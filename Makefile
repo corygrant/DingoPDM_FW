@@ -5,6 +5,7 @@
 
 ifeq ($(BOARD),)
   BOARD = dingopdm_v7
+  # BOARD = dingopdmmax_v1
 endif
 
 BOARDDIR = boards/$(BOARD)
@@ -92,6 +93,7 @@ endif
 
 # Define project name here
 PROJECT = dingoPDM
+# PROJECT = dingoPDMMax
 
 # Target settings.
 MCU  = cortex-m4
