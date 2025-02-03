@@ -1,6 +1,7 @@
 #include "analog.h"
 #include "ch.hpp"
 #include "hal.h"
+#include "mcu_utils.h"
 
 adcsample_t adc1_samples[ADC1_NUM_CHANNELS] = {0};
 //0 = OutIS1

@@ -2,11 +2,11 @@
 #include "ch.hpp"
 #include "hal.h"
 #include "port.h"
+#include "mcu_utils.h"
 #include "dingopdm_config.h"
 #include "config.h"
 #include "config_handler.h"
-#include "profet.h"
-#include "digital.h"
+#include "hw_devices.h"
 #include "analog.h"
 #include "can.h"
 #include "can_input.h"
@@ -14,28 +14,10 @@
 #include "wiper.h"
 #include "starter.h"
 #include "flasher.h"
-#include "led.h"
 #include "mailbox.h"
 #include "msg.h"
 #include "error.h"
-#include "hardware/mcp9808.h"
 #include "usb.h"
-
-PdmConfig stConfig;
-
-Profet pf[PDM_NUM_OUTPUTS] = {
-    Profet(1, ProfetModel::BTS7002_1EPP, LINE_PF1_IN, LINE_PF1_DEN, LINE_UNUSED, AnalogChannel::IS1),
-    Profet(2, ProfetModel::BTS7002_1EPP, LINE_PF2_IN, LINE_PF2_DEN, LINE_UNUSED, AnalogChannel::IS2),
-    Profet(3, ProfetModel::BTS7008_2EPA_CH1, LINE_PF3_IN, LINE_PF3_4_DEN, LINE_PF3_4_DSEL, AnalogChannel::IS3_4),
-    Profet(4, ProfetModel::BTS7008_2EPA_CH2, LINE_PF4_IN, LINE_PF3_4_DEN, LINE_PF3_4_DSEL, AnalogChannel::IS3_4),
-    Profet(5, ProfetModel::BTS7008_2EPA_CH1, LINE_PF5_IN, LINE_PF5_6_DEN, LINE_PF5_6_DSEL, AnalogChannel::IS5_6),
-    Profet(6, ProfetModel::BTS7008_2EPA_CH2, LINE_PF6_IN, LINE_PF5_6_DEN, LINE_PF5_6_DSEL, AnalogChannel::IS5_6),
-    Profet(7, ProfetModel::BTS7008_2EPA_CH1, LINE_PF7_IN, LINE_PF7_8_DEN, LINE_PF7_8_DSEL, AnalogChannel::IS7_8),
-    Profet(8, ProfetModel::BTS7008_2EPA_CH2, LINE_PF8_IN, LINE_PF7_8_DEN, LINE_PF7_8_DSEL, AnalogChannel::IS7_8)};
-
-Digital in[PDM_NUM_INPUTS] = {
-    Digital(LINE_DI1),
-    Digital(LINE_DI2)};
 
 CanInput canIn[PDM_NUM_CAN_INPUTS];
 VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];
@@ -43,15 +25,10 @@ Wiper wiper;
 Starter starter;
 Flasher flasher[PDM_NUM_FLASHERS];
 
-Led statusLed = Led(LedType::Status);
-Led errorLed = Led(LedType::Error);
-
-MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
-
 PdmState eState = PdmState::Run;
-
 FatalErrorType eError = FatalErrorType::NoError;
 
+PdmConfig stConfig;
 uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 
 uint16_t nAlwaysTrue = 1;

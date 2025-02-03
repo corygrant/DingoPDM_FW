@@ -16,11 +16,6 @@
 
 #define PDM_NUM_TX_MSGS 6
 
-#define STM32_TEMP_3V3_30C *((uint16_t *)0x1FFF7A2C)
-#define STM32_TEMP_3V3_110C *((uint16_t *)0x1FFF7A2E)
-
-#define STM32_VREF_INT_CAL *((uint16_t *)0x1FFF7A2A)
-
 #define ADC1_NUM_CHANNELS 8
 #define ADC1_BUF_DEPTH 1
 
@@ -30,9 +25,6 @@
 
 #define ENABLE_SLEEP 1
 #define SLEEP_TIMEOUT 30000
-
-#define BOOTLOADER_FLAG_ADDRESS 0x40024000   // Backup SRAM address to store bootloader flag
-#define BOOTLOADER_MAGIC_CODE   0xDEADBEEF  // Magic code to indicate bootloader request
 
 #define SYS_TIME TIME_I2MS(chVTGetSystemTimeX())
 
@@ -61,7 +53,3 @@ const I2CConfig i2cConfig = {
     400000,
     FAST_DUTY_CYCLE_2,
 };
-
-void EnterStopMode();
-void RequestBootloader();
-void CheckBootloaderRequest(void);

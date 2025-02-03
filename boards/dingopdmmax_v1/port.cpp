@@ -12,3 +12,4 @@ static const CANConfig canConfig500 =
 const CANConfig& GetCanConfig() {
     return canConfig500;
 }
+

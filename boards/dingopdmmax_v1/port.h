@@ -2,9 +2,54 @@
 
 #include "hal.h"
 
-#define PDM_TYPE 1 //0 = PDM, 1 = PDM-MAX 
+#define PDM_TYPE 0 //0 = PDM, 1 = PDM-MAX 
 
-#define STM32_TEMP_3V3_30C  *((uint16_t*)0x1FFFF7B8)
-#define STM32_TEMP_3V3_110C *((uint16_t*)0x1FFFF7C2)
+#define PDM_NUM_OUTPUTS 4
+#define PDM_NUM_INPUTS 2
+#define PDM_NUM_VIRT_INPUTS 16
+#define PDM_NUM_CAN_INPUTS 32
+#define PDM_NUM_FLASHERS 4
+#define PDM_NUM_WIPER_INTER_DELAYS 6
+#define PDM_NUM_WIPER_SPEED_MAP 8
 
-const CANConfig& GetCanConfig();
+#define PDM_VAR_MAP_SIZE 66
+
+#define PDM_NUM_TX_MSGS 6
+
+#define ADC1_NUM_CHANNELS 8
+#define ADC1_BUF_DEPTH 1
+
+#define BTS7002_1EPP_KILIS 229500
+#define BTS7008_2EPA_KILIS 59500
+#define BTS70012_1ESP_KILIS 350000
+
+#define ENABLE_SLEEP 1
+#define SLEEP_TIMEOUT 30000
+
+#define SYS_TIME TIME_I2MS(chVTGetSystemTimeX())
+
+enum class AnalogChannel
+{
+    IS1 = 0,
+    IS2,
+    IS3_4,
+    IS5_6,
+    IS7_8,
+    BattVolt,
+    TempSensor,
+    VRefInt
+};
+
+enum class LedType
+{
+    Status,
+    Error
+};
+
+const CANConfig &GetCanConfig();
+
+const I2CConfig i2cConfig = {
+    OPMODE_I2C,
+    400000,
+    FAST_DUTY_CYCLE_2,
+};

@@ -102,6 +102,8 @@ CONFDIR  := ./cfg
 BUILDDIR := ./build
 DEPDIR   := ./.dep
 
+MCUDIR := boards/$(MCU)
+
 # Licensing files.
 include $(CHIBIOS)/os/license/license.mk
 
@@ -128,6 +130,7 @@ CSRC = $(ALLCSRC)
 # setting.
 CPPSRC = $(ALLCPPSRC) \
          $(BOARDDIR)/port.cpp \
+         $(MCUDIR)/mcu_utils.cpp \
          msg.cpp \
          analog.cpp \
          can_input.cpp \
@@ -142,6 +145,7 @@ CPPSRC = $(ALLCPPSRC) \
          mailbox.cpp \
          pdm.cpp \
          profet.cpp \
+         hw_devices.cpp \
          starter.cpp \
          usb.cpp \
          virtual_input.cpp \
@@ -180,7 +184,7 @@ UDEFS =
 UADEFS =
 
 # List all user directories here
-UINCDIR =
+UINCDIR = ./boards/cortex-m4
 
 # List the user directory to look for the libraries here
 ULIBDIR =
