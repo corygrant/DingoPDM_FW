@@ -52,7 +52,7 @@ class MCP9808
         {
         }
 
-        bool Init();
+        bool Init(float upperLimit, float critLimit);
         bool CheckId();
         float GetTemp();
         int16_t GetTempInt();

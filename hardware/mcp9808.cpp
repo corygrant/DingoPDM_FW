@@ -1,6 +1,6 @@
 #include "mcp9808.h"
 
-bool MCP9808::Init()
+bool MCP9808::Init(float upperLimit, float critLimit)
 {
     if (!CheckId())
         return false;
@@ -8,10 +8,10 @@ bool MCP9808::Init()
     if (!SetResolution(MCP9808_RESOLUTION_0_5DEG))
         return false;
 
-    if (!SetLimit(MCP9808_REG_CRIT_TEMP, 80.0))
+    if (!SetLimit(MCP9808_REG_CRIT_TEMP, critLimit))
         return false;
 
-    if (!SetLimit(MCP9808_REG_UPPER_TEMP, 50.0))
+    if (!SetLimit(MCP9808_REG_UPPER_TEMP, upperLimit))
         return false;
 
     if (!SetLimit(MCP9808_REG_LOWER_TEMP, 0.0))

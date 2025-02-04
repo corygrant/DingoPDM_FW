@@ -20,10 +20,12 @@ void Profet::Update(bool bOutEnabled)
 
     //Set DSEL pin to select the appropriate IS channel
     //Only valid on 2 channel devices
+    //Wait for DSEL changeover (up to 60us)
+    //Deviates by ~60us, wait for 200us to ensure changeover finishes
     if(m_model == ProfetModel::BTS7008_2EPA_CH1)
     {
         palClearLine(m_dsel);
-        //Wait for DSEL changeover (up to 60us)
+        
         chThdSleepMicroseconds(200);
     }
     else if(m_model == ProfetModel::BTS7008_2EPA_CH2)

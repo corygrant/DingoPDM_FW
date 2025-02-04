@@ -10,32 +10,39 @@ void Led::Solid(bool bOn)
     bState = bOn;
 }
 
-void Led::Code(uint32_t nTimeNow, uint8_t nCode)
+void Led::Code(uint8_t nCode)
 {
+    uint32_t nNow = SYS_TIME;
+
+    if(bFirst){
+      nUntil = nNow;
+      bFirst = false;
+    }
+
     //Blinking code
     if (nBlinkState == 0){
       //Blink until code is done
       if (nBlinkCount <= nCode){
 
         //This blink done
-        if(nTimeNow > nUntil){
+        if(SYS_TIME > nUntil){
           //On, turn off
           if(bState){
             Led::Solid(false);
-            nUntil = nTimeNow + (LED_BLINK_SPLIT*2);
+            nUntil = SYS_TIME + (LED_BLINK_SPLIT*2);
           }
           //Off, turn on
           else{
             Led::Solid(true);
             nBlinkCount++;
-            nUntil = nTimeNow + (LED_BLINK_SPLIT*2);
+            nUntil = SYS_TIME + (LED_BLINK_SPLIT*2);
           }
         }
       }
       else{
         //Pause after code
         nBlinkCount = 0;
-        nUntil = nTimeNow + LED_BLINK_PAUSE;
+        nUntil = SYS_TIME + LED_BLINK_PAUSE;
         nBlinkState = 1;
       }
     }
@@ -44,23 +51,23 @@ void Led::Code(uint32_t nTimeNow, uint8_t nCode)
       Led::Solid(true);
 
       //Done pausing, back to blinking
-      if (nTimeNow > nUntil){
+      if (SYS_TIME > nUntil){
         nBlinkState = 0;
       }
     }
 }
 
-void Led::Blink(uint32_t nTimeNow){
+void Led::Blink(){
 
-    if(nTimeNow > nUntil){
+    if(SYS_TIME > nUntil){
       if(bState){
         Solid(false);
-        nUntil = nTimeNow + LED_BLINK_SPLIT;
+        nUntil = SYS_TIME + LED_BLINK_SPLIT;
       }
       else{
         Solid(true);
         nBlinkCount++;
-        nUntil = nTimeNow + LED_BLINK_SPLIT;
+        nUntil = SYS_TIME + LED_BLINK_SPLIT;
       }
     }
 }

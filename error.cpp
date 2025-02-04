@@ -2,22 +2,22 @@
 #include "config.h"
 #include "msg.h"
 
-Led* Error::m_status = nullptr;
-Led* Error::m_error = nullptr;
+Led* Error::statusLed = nullptr;
+Led* Error::errorLed = nullptr;
 
 void Error::Initialize(Led *status, Led *error)
 {
-    m_status = status;
-    m_error = error;
+    statusLed = status;
+    errorLed = error;
 }
 
 void Error::SetFatalError(FatalErrorType err, MsgSrc src)
 {
     static InfoMsg FatalErrorMsg(MsgType::Error, src);
-    FatalErrorMsg.Check(true, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    m_status->Solid(false);
+    FatalErrorMsg.Check(true, stConfig.stCanOutput.nBaseId, static_cast<uint8_t>(err), 0, 0);
+    statusLed->Solid(false);
     while (true)
     {
-        m_error->Code(SYS_TIME, static_cast<uint8_t>(err));
+        errorLed->Code(static_cast<uint8_t>(err));
     }
 }

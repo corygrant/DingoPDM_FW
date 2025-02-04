@@ -10,6 +10,6 @@ public:
     static void SetFatalError(FatalErrorType err, MsgSrc src);
 
 private:
-    static Led *m_status;
-    static Led *m_error;
+    static Led *statusLed;
+    static Led *errorLed;
 };

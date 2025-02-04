@@ -22,14 +22,15 @@ public:
     };
 
     void Solid(bool bState);
-    void Code(uint32_t nTimeNow, uint8_t nCode);
-    void Blink(uint32_t nTimeNow);
+    void Code(uint8_t nCode);
+    void Blink();
 
     private:
         ioline_t m_line;
 
         bool bState; //Current state of the LED
-        uint32_t nUntil;
+        uint32_t nUntil = 0;
         uint8_t nBlinkCount;
         uint8_t nBlinkState; //0 = blinking code, 1 = pause between blinks
+        bool bFirst = true;
 };

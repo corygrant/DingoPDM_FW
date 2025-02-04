@@ -47,12 +47,24 @@ void InitVarMap();
 void ApplyConfig();
 void SetConfig(MsgCmdRx eCmd);
 void CyclicUpdate();
-void StateMachine();
-void CheckStateMsgs();
+void States();
+void SendInfoMsgs();
+void InitInfoMsgs();
 void CheckRequestMsgs(CANRxFrame *frame);
 bool GetAnyOvercurrent();
 bool GetAnyFault();
 bool CheckEnterSleep();
+
+static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
+static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
+static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
+static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
+
+static InfoMsg BattOvervoltageMsg(MsgType::Warning, MsgSrc::Voltage);
+static InfoMsg BattUndervoltageMsg(MsgType::Warning, MsgSrc::Voltage);
+
+InfoMsg OutputOvercurrentMsg[PDM_NUM_OUTPUTS];
+InfoMsg OutputFaultMsg[PDM_NUM_OUTPUTS];
 
 struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
@@ -63,7 +75,7 @@ struct PdmThread : chibios_rt::BaseStaticThread<2048>
         while (true)
         {
             CyclicUpdate();
-            StateMachine();
+            States();
             palToggleLine(LINE_E1);
             chThdSleepMilliseconds(2);
         }
@@ -103,6 +115,8 @@ static chibios_rt::ThreadReference slowThreadRef;
 
 void InitPdm()
 {
+    Error::Initialize(&statusLed, &errorLed);
+
     InitVarMap(); // Set val pointers
 
     if (!i2cStart(&I2CD1, &i2cConfig) == HAL_RET_SUCCESS)
@@ -116,14 +130,16 @@ void InitPdm()
     InitCan(); // Starts CAN threads
     // InitUsb(); // Starts USB threads
 
-    if (!tempSensor.Init())
+    if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
+
+    InitInfoMsgs();
 
     slowThreadRef = slowThread.start(NORMALPRIO);
     pdmThread.start(NORMALPRIO);
 }
 
-void StateMachine()
+void States()
 {
 
     switch (eState)
@@ -131,15 +147,21 @@ void StateMachine()
 
     case PdmState::Run:
 
+        if (bDeviceCriticalTemp)
+            Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
+
+        if (bDeviceOverTemp)
+            eState = PdmState::OverTemp;
+
         if (GetAnyOvercurrent() && !GetAnyFault())
         {
-            statusLed.Blink(SYS_TIME);
+            statusLed.Blink();
             errorLed.Solid(false);
         }
 
         if (GetAnyFault())
         {
-            statusLed.Blink(SYS_TIME);
+            statusLed.Blink();
             errorLed.Solid(true);
         }
 
@@ -149,30 +171,13 @@ void StateMachine()
             errorLed.Solid(false);
         }
 
-        /*
-        if any overcurrent, send overcurrent message
-
-        if any fault, send fault message
-
-        if board overtemp, send overtemp message
-            set to overtemp state
-
-        if board overtemp, send overtemp message
-            set to error state
-
-        if battery voltage too low or too high
-            send error message
-
-        check for sleep request
-        */
-
         if (CheckEnterSleep())
         {
             statusLed.Solid(false);
             errorLed.Solid(false);
             eState = PdmState::Sleep;
         }
-        
+
         break;
 
     case PdmState::Sleep:
@@ -181,8 +186,8 @@ void StateMachine()
         break;
 
     case PdmState::OverTemp:
-        statusLed.Blink(SYS_TIME);
-        errorLed.Blink(SYS_TIME);
+        statusLed.Blink();
+        errorLed.Blink();
 
         if (bDeviceCriticalTemp)
             Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
@@ -198,7 +203,7 @@ void StateMachine()
         break;
     }
 
-    CheckStateMsgs();
+    SendInfoMsgs();
 }
 
 void CyclicUpdate()
@@ -396,17 +401,30 @@ void CheckRequestMsgs(CANRxFrame *frame)
     }
 }
 
-void CheckStateMsgs()
+void SendInfoMsgs()
 {
-    static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
-    static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
-    static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
-    static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
-
     StateRunMsg.Check(eState == PdmState::Run, stConfig.stCanOutput.nBaseId, 0, 0, 0);
     StateSleepMsg.Check(eState == PdmState::Sleep, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateOvertempMsg.Check(eState == PdmState::OverTemp, stConfig.stCanOutput.nBaseId, 0, 0, 0);
-    StateErrorMsg.Check(eState == PdmState::Error, stConfig.stCanOutput.nBaseId, 0, 0, 0);
+    StateOvertempMsg.Check(eState == PdmState::OverTemp, stConfig.stCanOutput.nBaseId, GetBoardTemp() * 10, 0, 0);
+    StateErrorMsg.Check(eState == PdmState::Error, stConfig.stCanOutput.nBaseId, GetBoardTemp() * 10, GetTotalCurrent() * 10, 0);
+
+    BattOvervoltageMsg.Check(fBattVolt > BATT_HIGH_VOLT, stConfig.stCanOutput.nBaseId, fBattVolt * 10, 0, 0);
+    BattUndervoltageMsg.Check(fBattVolt < BATT_LOW_VOLT, stConfig.stCanOutput.nBaseId, fBattVolt * 10, 0, 0);
+
+    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+    {
+        OutputOvercurrentMsg[i].Check(pf[i].GetState() == ProfetState::Overcurrent, stConfig.stCanOutput.nBaseId, i, pf[i].GetCurrent(), 0);
+        OutputFaultMsg[i].Check(pf[i].GetState() == ProfetState::Fault, stConfig.stCanOutput.nBaseId, i, pf[i].GetCurrent(), 0);
+    }
+}
+
+void InitInfoMsgs()
+{
+    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+    {
+        OutputOvercurrentMsg[i] = InfoMsg(MsgType::Warning, MsgSrc::Overcurrent);
+        OutputFaultMsg[i] = InfoMsg(MsgType::Error, MsgSrc::Overcurrent);
+    }
 }
 
 PdmState GetPdmState()
