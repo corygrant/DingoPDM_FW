@@ -18,6 +18,6 @@ void Error::SetFatalError(FatalErrorType err, MsgSrc src)
     m_status->Solid(false);
     while (true)
     {
-        m_error->Code(TIME_I2MS(chVTGetSystemTimeX()), static_cast<uint8_t>(err));
+        m_error->Code(SYS_TIME, static_cast<uint8_t>(err));
     }
 }

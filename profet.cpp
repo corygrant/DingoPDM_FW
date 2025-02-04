@@ -24,13 +24,13 @@ void Profet::Update(bool bOutEnabled)
     {
         palClearLine(m_dsel);
         //Wait for DSEL changeover (up to 60us)
-        chThdSleepMicroseconds(100);
+        chThdSleepMicroseconds(200);
     }
     else if(m_model == ProfetModel::BTS7008_2EPA_CH2)
     {
         palSetLine(m_dsel);
         //Wait for DSEL changeover (up to 60us)
-        chThdSleepMicroseconds(100);
+        chThdSleepMicroseconds(200);
     }
 
     // Calculate current at ADC, multiply by kILIS ratio to get output current
@@ -53,7 +53,7 @@ void Profet::Update(bool bOutEnabled)
         eState = ProfetState::Fault;
     }
 
-    bInRushActive = (pConfig->nInrushTime + nInRushOnTime) > chVTGetSystemTimeX();
+    bInRushActive = (pConfig->nInrushTime + nInRushOnTime) > SYS_TIME;
 
     switch (eState)
     {
@@ -64,7 +64,7 @@ void Profet::Update(bool bOutEnabled)
         // Check for turn on
         if (eReqState == ProfetState::On)
         {
-            nInRushOnTime = chVTGetSystemTimeX();
+            nInRushOnTime = SYS_TIME;
             eState = ProfetState::On;
         }
         break;
@@ -81,7 +81,7 @@ void Profet::Update(bool bOutEnabled)
         // Overcurrent
         if (nCurrent > pConfig->nCurrentLimit && !bInRushActive)
         {
-            nOcTriggerTime = chVTGetSystemTimeX();
+            nOcTriggerTime = SYS_TIME;
             nOcCount++;
             eState = ProfetState::Overcurrent;
         }
@@ -89,7 +89,7 @@ void Profet::Update(bool bOutEnabled)
         // Inrush overcurrent
         if (nCurrent > pConfig->nInrushLimit && bInRushActive)
         {
-            nOcTriggerTime = chVTGetSystemTimeX();
+            nOcTriggerTime = SYS_TIME;
             nOcCount++;
             eState = ProfetState::Overcurrent;
         }
@@ -113,9 +113,9 @@ void Profet::Update(bool bOutEnabled)
 
         // Overcurrent reset time exceeded
         // ResetEndless or ResetCount
-        if ((pConfig->nResetTime + nOcTriggerTime) < chVTGetSystemTimeX())
+        if ((pConfig->nResetTime + nOcTriggerTime) < SYS_TIME)
         {
-            nInRushOnTime = chVTGetSystemTimeX();
+            nInRushOnTime = SYS_TIME;
             eState = ProfetState::On;
         }
 

@@ -16,13 +16,13 @@ void Digital::Update()
     // Debounce input
     if (bIn != bLast)
     {
-        nLastTrigTime = chVTGetSystemTimeX();
+        nLastTrigTime = SYS_TIME;
         bCheck = true;
     }
 
     bLast = bIn;
 
-    if ((bCheck && ((chVTGetSystemTimeX() - nLastTrigTime) > pConfig->nDebounceTime)) || (!bInit))
+    if ((bCheck && ((SYS_TIME - nLastTrigTime) > pConfig->nDebounceTime)) || (!bInit))
     {
         bCheck = false;
         nVal = input.Check(pConfig->eMode, pConfig->bInvert, bIn);

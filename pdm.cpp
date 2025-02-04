@@ -30,6 +30,7 @@ FatalErrorType eError = FatalErrorType::NoError;
 PdmConfig stConfig;
 uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 
+uint16_t nAlwaysFalse = 0;
 uint16_t nAlwaysTrue = 1;
 float fBattVolt;
 float fTempSensor;
@@ -64,7 +65,7 @@ struct PdmThread : chibios_rt::BaseStaticThread<2048>
             CyclicUpdate();
             StateMachine();
             palToggleLine(LINE_E1);
-            chThdSleepMilliseconds(1);
+            chThdSleepMilliseconds(2);
         }
     }
 };
@@ -236,6 +237,10 @@ void CyclicUpdate()
 
 void InitVarMap()
 {
+    // 0
+    // Always false
+    pVarMap[0] = &nAlwaysFalse;
+
     // 1-2
     // Digital inputs
     pVarMap[1] = &in[0].nVal;
