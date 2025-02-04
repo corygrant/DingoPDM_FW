@@ -135,6 +135,8 @@ void InitPdm()
 
     InitInfoMsgs();
 
+    palClearLine(LINE_CAN_STANDBY); //CAN enabled
+
     slowThreadRef = slowThread.start(NORMALPRIO);
     pdmThread.start(NORMALPRIO);
 }
@@ -182,6 +184,7 @@ void States()
 
     case PdmState::Sleep:
         bSleepRequest = false;
+        palSetLine(LINE_CAN_STANDBY); //CAN disabled
         EnterStopMode();
         break;
 
