@@ -2,8 +2,6 @@
 #include "hal.h"
 #include "pdm.h"
 
-void EnterStopMode();
-
 /*
  * Application entry point.
  */
