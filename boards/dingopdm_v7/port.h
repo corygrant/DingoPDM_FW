@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal.h"
+#include "enums.h"
 
 #define PDM_TYPE 0 //0 = PDM, 1 = PDM-MAX 
 
@@ -46,7 +47,7 @@ enum class LedType
     Error
 };
 
-const CANConfig &GetCanConfig();
+const CANConfig &GetCanConfig(CanBitrate bitrate);
 
 const I2CConfig i2cConfig = {
     OPMODE_I2C,

@@ -125,9 +125,9 @@ void InitPdm()
     InitConfig(); // Read config from FRAM
 
     ApplyConfig();
-
+    
     InitAdc();
-    InitCan(); // Starts CAN threads
+    InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
     // InitUsb(); // Starts USB threads
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))

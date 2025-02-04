@@ -46,7 +46,8 @@
                 "${workspaceFolder}/hardware",
                 "${workspaceFolder}/boards/dingopdm_v7",
                 "${workspaceFolder}/boards/dingopdmmax_v1",
-                "${workspaceFolder}/boards/cortex-m4"
+                "${workspaceFolder}/boards/cortex-m4",
+                "${workspaceFolder}"
             ]
         }
     ],

@@ -1,6 +1,7 @@
 #pragma once
 
 #include "hal.h"
+#include "enums.h"
 
 #define PDM_TYPE 1 //0 = PDM, 1 = PDM-MAX 
 

@@ -96,10 +96,10 @@ static thread_t *canCyclicTxThreadRef;
 static thread_t *canTxThreadRef;
 static thread_t *canRxThreadRef;
 
-void InitCan()
+void InitCan(CanBitrate bitrate)
 {
     // No rx filtering, need to evaluate all incoming messages
-    canStart(&CAND1, &GetCanConfig());
+    canStart(&CAND1, &GetCanConfig(bitrate));
     canCyclicTxThreadRef = chThdCreateStatic(waCanCyclicTxThread, sizeof(waCanCyclicTxThread), NORMALPRIO + 1, CanCyclicTxThread, nullptr);
     canTxThreadRef = chThdCreateStatic(waCanTxThread, sizeof(waCanTxThread), NORMALPRIO + 1, CanTxThread, nullptr);
     canRxThreadRef = chThdCreateStatic(waCanRxThread, sizeof(waCanRxThread), NORMALPRIO + 1, CanRxThread, nullptr);
@@ -122,9 +122,9 @@ void DeInitCan()
         chThdSleepMilliseconds(10);
 }
 
-void StartCan()
+void StartCan(CanBitrate bitrate)
 {
-    canStart(&CAND1, &GetCanConfig());
+    canStart(&CAND1, &GetCanConfig(bitrate));
 }
 
 void StopCan()
