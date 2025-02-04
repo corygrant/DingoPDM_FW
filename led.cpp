@@ -12,13 +12,6 @@ void Led::Solid(bool bOn)
 
 void Led::Code(uint8_t nCode)
 {
-    uint32_t nNow = SYS_TIME;
-
-    if(bFirst){
-      nUntil = nNow;
-      bFirst = false;
-    }
-
     //Blinking code
     if (nBlinkState == 0){
       //Blink until code is done
