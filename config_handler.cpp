@@ -139,21 +139,21 @@ MsgCmdRx OutputMsg(CANRxFrame *frame)
 
 MsgCmdRx CanInputMsg(CANRxFrame *frame)
 {
-    // DLC 7 = Set CAN input settings
+    // DLC 8 = Set CAN input settings
     // DLC 2 = Get CAN input settings
 
-    if ((frame->DLC == 7) ||
+    if ((frame->DLC == 8) ||
         (frame->DLC == 2))
     {
         uint8_t nIndex;
-        if (frame->DLC == 7)
+        if (frame->DLC == 8)
             nIndex = frame->data8[2];
         else
             nIndex = frame->data8[1];
 
         if (nIndex < PDM_NUM_CAN_INPUTS)
         {
-            if (frame->DLC == 7)
+            if (frame->DLC == 8)
             {
                 stConfig.stCanInput[nIndex].bEnabled = (frame->data8[1] & 0x01);
                 stConfig.stCanInput[nIndex].eMode = static_cast<InputMode>((frame->data8[1] & 0x06) >> 1);
@@ -164,11 +164,11 @@ MsgCmdRx CanInputMsg(CANRxFrame *frame)
                 stConfig.stCanInput[nIndex].nStartingByte = (frame->data8[5] & 0x0F);
                 stConfig.stCanInput[nIndex].nDLC = (frame->data8[5] & 0xF0) >> 4;
 
-                stConfig.stCanInput[nIndex].nOnVal = frame->data8[6];
+                stConfig.stCanInput[nIndex].nOnVal = (frame->data8[6] << 8) + frame->data8[7];
             }
 
             CANTxFrame tx;
-            tx.DLC = 7;
+            tx.DLC = 8;
             tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::CanInputs);
@@ -180,12 +180,13 @@ MsgCmdRx CanInputMsg(CANRxFrame *frame)
             tx.data8[4] = (uint8_t)(stConfig.stCanInput[nIndex].nSID & 0xFF);
             tx.data8[5] = ((stConfig.stCanInput[nIndex].nDLC & 0xF) << 4) +
                           (stConfig.stCanInput[nIndex].nStartingByte & 0xF);
-            tx.data8[6] = (uint8_t)(stConfig.stCanInput[nIndex].nOnVal);
+            tx.data8[6] = (uint8_t)(stConfig.stCanInput[nIndex].nOnVal  >> 8);
+            tx.data8[7] = (uint8_t)(stConfig.stCanInput[nIndex].nOnVal & 0xFF);
 
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 7)
+            if(frame->DLC == 8)
                 return MsgCmdRx::CanInputs;
         }
     }

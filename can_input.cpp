@@ -7,10 +7,12 @@ bool CanInput::CheckMsg(CANRxFrame frame)
     if ((pConfig->nSID != frame.SID) &&
         (pConfig->nEID != frame.EID))
         return false;
+    if (pConfig->nDLC == 0)
+        return false;
 
     nData = 0;
-    for (int i = 0; i < pConfig->nDLC; ++i) {
-        nData |= frame.data8[pConfig->nStartingByte + i] << (8 * i);
+    for (int i = 0; i <= pConfig->nDLC; i++) {
+        nData |= frame.data8[pConfig->nStartingByte + i] << (8 * (pConfig->nDLC - i));
     }
 
     if(pConfig->eMode == InputMode::Num)
