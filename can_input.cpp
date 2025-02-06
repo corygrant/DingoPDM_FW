@@ -10,6 +10,8 @@ bool CanInput::CheckMsg(CANRxFrame frame)
     if (pConfig->nDLC == 0)
         return false;
 
+    nLastRxTime = SYS_TIME;
+
     nData = 0;
     for (int i = 0; i <= pConfig->nDLC; i++) {
         nData |= frame.data8[pConfig->nStartingByte + i] << (8 * (pConfig->nDLC - i));
@@ -69,4 +71,10 @@ bool CanInput::CheckMsg(CANRxFrame frame)
     }
 
     return true;
+}
+
+void CanInput::CheckTimeout()
+{
+    if (SYS_TIME - nLastRxTime > nTimeout)
+        nVal = 0;
 }
