@@ -2,7 +2,7 @@
 #include "msg.h"
 #include "dingopdm_config.h"    
 
-MsgCmdRx CanMsg(CANRxFrame *frame)
+MsgCmd CanMsg(CANRxFrame *frame)
 {
     // DLC 5 = Set CAN settings
     // DLC 1 = Get CAN settings
@@ -22,7 +22,7 @@ MsgCmdRx CanMsg(CANRxFrame *frame)
         tx.DLC = 5;
         tx.IDE = CAN_IDE_STD;
 
-        tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Can);
+        tx.data8[0] = static_cast<uint8_t>(MsgCmd::Can) + 128;
         tx.data8[1] = ((static_cast<uint8_t>(stConfig.stDevConfig.eCanSpeed) & 0x0F) << 4) +
                       ((stConfig.stCanOutput.bEnabled & 0x01) << 1) + 1;
         tx.data8[2] = (stConfig.stCanOutput.nBaseId & 0xFF00) >> 8;
@@ -37,13 +37,13 @@ MsgCmdRx CanMsg(CANRxFrame *frame)
 
         if(frame->DLC == 5)
         {
-            return MsgCmdRx::Can;
+            return MsgCmd::Can;
         }
     }
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx InputMsg(CANRxFrame *frame)
+MsgCmd InputMsg(CANRxFrame *frame)
 {
     // DLC 4 = Set input settings
     // DLC 2 = Get input settings
@@ -68,7 +68,7 @@ MsgCmdRx InputMsg(CANRxFrame *frame)
             tx.DLC = 4;
             tx.IDE = CAN_IDE_STD;
 
-            tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Inputs);
+            tx.data8[0] = static_cast<uint8_t>(MsgCmd::Inputs) + 128;
             tx.data8[1] = ((nIndex & 0x0F) << 4) + ((stConfig.stInput[nIndex].bInvert & 0x01) << 3) +
                           ((static_cast<uint8_t>(stConfig.stInput[nIndex].eMode) & 0x03) << 1) + (stConfig.stInput[nIndex].bEnabled & 0x01);
             tx.data8[2] = (uint8_t)(stConfig.stInput[nIndex].nDebounceTime / 10);
@@ -82,14 +82,14 @@ MsgCmdRx InputMsg(CANRxFrame *frame)
             PostTxFrame(&tx);
             
             if(frame->DLC == 4)
-                return MsgCmdRx::Inputs;
+                return MsgCmd::Inputs;
         }
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx OutputMsg(CANRxFrame *frame)
+MsgCmd OutputMsg(CANRxFrame *frame)
 {
     // DLC 8 = Set output settings
     // DLC 2 = Get output settings
@@ -116,7 +116,7 @@ MsgCmdRx OutputMsg(CANRxFrame *frame)
             tx.DLC = 8;
             tx.IDE = CAN_IDE_STD;
 
-            tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Outputs);
+            tx.data8[0] = static_cast<uint8_t>(MsgCmd::Outputs) + 128;
             tx.data8[1] = ((nIndex & 0x0F) << 4) + (stConfig.stOutput[nIndex].bEnabled & 0x01);
             tx.data8[2] = stConfig.stOutput[nIndex].nInput;
             tx.data8[3] = (uint8_t)(stConfig.stOutput[nIndex].nCurrentLimit / 10);
@@ -130,14 +130,14 @@ MsgCmdRx OutputMsg(CANRxFrame *frame)
             PostTxFrame(&tx);
 
             if(frame->DLC == 8)
-                return MsgCmdRx::Outputs;
+                return MsgCmd::Outputs;
         }
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx CanInputMsg(CANRxFrame *frame)
+MsgCmd CanInputMsg(CANRxFrame *frame)
 {
     // DLC 8 = Set CAN input settings
     // DLC 2 = Get CAN input settings
@@ -171,7 +171,7 @@ MsgCmdRx CanInputMsg(CANRxFrame *frame)
             tx.DLC = 8;
             tx.IDE = CAN_IDE_STD;
 
-            tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::CanInputs);
+            tx.data8[0] = static_cast<uint8_t>(MsgCmd::CanInputs) + 128;
             tx.data8[1] = ((static_cast<uint8_t>(stConfig.stCanInput[nIndex].eOperator) & 0x0F) << 4) +
                           ((static_cast<uint8_t>(stConfig.stCanInput[nIndex].eMode) & 0x03) << 1) +
                           (stConfig.stCanInput[nIndex].bEnabled & 0x01);
@@ -187,14 +187,14 @@ MsgCmdRx CanInputMsg(CANRxFrame *frame)
             PostTxFrame(&tx);
 
             if(frame->DLC == 8)
-                return MsgCmdRx::CanInputs;
+                return MsgCmd::CanInputs;
         }
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx VirtualInputMsg(CANRxFrame *frame)
+MsgCmd VirtualInputMsg(CANRxFrame *frame)
 {
     // DLC 7 = Set virtual input settings
     // DLC 2 = Get virtual input settings
@@ -228,7 +228,7 @@ MsgCmdRx VirtualInputMsg(CANRxFrame *frame)
             tx.DLC = 7;
             tx.IDE = CAN_IDE_STD;
 
-            tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::VirtualInputs);
+            tx.data8[0] = static_cast<uint8_t>(MsgCmd::VirtualInputs) + 128;
             tx.data8[1] = ((stConfig.stVirtualInput[nIndex].bNot2 & 0x01) << 3) +
                           ((stConfig.stVirtualInput[nIndex].bNot1 & 0x01) << 2) +
                           ((stConfig.stVirtualInput[nIndex].bNot0 & 0x01) << 1) +
@@ -246,14 +246,14 @@ MsgCmdRx VirtualInputMsg(CANRxFrame *frame)
             PostTxFrame(&tx);
 
             if(frame->DLC == 7)
-                return MsgCmdRx::VirtualInputs;
+                return MsgCmd::VirtualInputs;
         }
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx WiperMsg(CANRxFrame *frame)
+MsgCmd WiperMsg(CANRxFrame *frame)
 {
     // DLC 8 = Set wiper settings
     // DLC 1 = Get wiper settings
@@ -279,7 +279,7 @@ MsgCmdRx WiperMsg(CANRxFrame *frame)
         tx.DLC = 8;
         tx.IDE = CAN_IDE_STD;
 
-        tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Wiper);
+        tx.data8[0] = static_cast<uint8_t>(MsgCmd::Wiper) + 128;
         tx.data8[1] = ((stConfig.stWiper.nWashWipeCycles & 0x0F) << 4) +
                       ((stConfig.stWiper.bParkStopLevel & 0x01) << 3) +
                       ((static_cast<uint8_t>(stConfig.stWiper.eMode) & 0x03) << 2) +
@@ -295,13 +295,13 @@ MsgCmdRx WiperMsg(CANRxFrame *frame)
         PostTxFrame(&tx);
 
         if(frame->DLC == 8)
-            return MsgCmdRx::Wiper;
+            return MsgCmd::Wiper;
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx WiperSpeedMsg(CANRxFrame *frame)
+MsgCmd WiperSpeedMsg(CANRxFrame *frame)
 {
     // DLC 7 = Set wiper speed settings
     // DLC 1 = Get wiper speed settings
@@ -327,7 +327,7 @@ MsgCmdRx WiperSpeedMsg(CANRxFrame *frame)
         tx.DLC = 7;
         tx.IDE = CAN_IDE_STD;
 
-        tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::WiperSpeed);
+        tx.data8[0] = static_cast<uint8_t>(MsgCmd::WiperSpeed) + 128;
         tx.data8[1] = stConfig.stWiper.nSwipeInput;
         tx.data8[2] = stConfig.stWiper.nSpeedInput;
         tx.data8[3] = ((static_cast<uint8_t>(stConfig.stWiper.eSpeedMap[1]) & 0x0F) << 4) +
@@ -344,13 +344,13 @@ MsgCmdRx WiperSpeedMsg(CANRxFrame *frame)
         PostTxFrame(&tx);
 
         if(frame->DLC == 7)
-            return MsgCmdRx::WiperSpeed;
+            return MsgCmd::WiperSpeed;
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx WiperDelaysMsg(CANRxFrame *frame)
+MsgCmd WiperDelaysMsg(CANRxFrame *frame)
 {
     // DLC 7 = Set wiper delay settings
     // DLC 1 = Get wiper delay settings
@@ -372,7 +372,7 @@ MsgCmdRx WiperDelaysMsg(CANRxFrame *frame)
         tx.DLC = 7;
         tx.IDE = CAN_IDE_STD;
 
-        tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::WiperDelays);
+        tx.data8[0] = static_cast<uint8_t>(MsgCmd::WiperDelays) + 128;
         tx.data8[1] = stConfig.stWiper.nIntermitTime[0] / 100;
         tx.data8[2] = stConfig.stWiper.nIntermitTime[1] / 100;
         tx.data8[3] = stConfig.stWiper.nIntermitTime[2] / 100;
@@ -385,13 +385,13 @@ MsgCmdRx WiperDelaysMsg(CANRxFrame *frame)
         PostTxFrame(&tx);
 
         if(frame->DLC == 7)
-            return MsgCmdRx::WiperDelays;
+            return MsgCmd::WiperDelays;
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx FlasherMsg(CANRxFrame *frame)
+MsgCmd FlasherMsg(CANRxFrame *frame)
 {
     // DLC 6 = Set flasher settings
     // DLC 2 = Get flasher settings
@@ -416,7 +416,7 @@ MsgCmdRx FlasherMsg(CANRxFrame *frame)
             tx.DLC = 6;
             tx.IDE = CAN_IDE_STD;
 
-            tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Flashers);
+            tx.data8[0] = static_cast<uint8_t>(MsgCmd::Flashers) + 128;
             tx.data8[1] = ((nIndex & 0x0F) << 4) +
                           ((stConfig.stFlasher[nIndex].bSingleCycle & 0x01) << 1) +
                           (stConfig.stFlasher[nIndex].bEnabled & 0x01);
@@ -431,14 +431,14 @@ MsgCmdRx FlasherMsg(CANRxFrame *frame)
             PostTxFrame(&tx);
 
             if(frame->DLC == 6)
-                return MsgCmdRx::Flashers;
+                return MsgCmd::Flashers;
         }
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx StarterMsg(CANRxFrame *frame)
+MsgCmd StarterMsg(CANRxFrame *frame)
 {
     // DLC 4 = Set starter settings
     // DLC 1 = Get starter settings
@@ -464,7 +464,7 @@ MsgCmdRx StarterMsg(CANRxFrame *frame)
         tx.DLC = 4;
         tx.IDE = CAN_IDE_STD;
 
-        tx.data8[0] = static_cast<uint8_t>(MsgCmdTx::Starter);
+        tx.data8[0] = static_cast<uint8_t>(MsgCmd::StarterDisable) + 128;
         tx.data8[1] = (stConfig.stStarter.bEnabled & 0x01);
         tx.data8[2] = stConfig.stStarter.nInput;
         tx.data8[3] = ((stConfig.stStarter.bDisableOut[7] & 0x01) << 7) +
@@ -484,49 +484,49 @@ MsgCmdRx StarterMsg(CANRxFrame *frame)
         PostTxFrame(&tx);
 
         if(frame->DLC == 4)
-            return MsgCmdRx::Starter;
+            return MsgCmd::StarterDisable;
     }
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }
 
-MsgCmdRx ConfigHandler(CANRxFrame *frame)
+MsgCmd ConfigHandler(CANRxFrame *frame)
 {
     if ((frame->SID != stConfig.stCanOutput.nBaseId - 1) ||
         (frame->EID != stConfig.stCanOutput.nBaseId - 1))
     {
-        return MsgCmdRx::Null;
+        return MsgCmd::Null;
     }
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Can))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Can))
         return CanMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Inputs))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Inputs))
         return InputMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Outputs))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Outputs))
         return OutputMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::CanInputs))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::CanInputs))
         return CanInputMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::VirtualInputs))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::VirtualInputs))
         return VirtualInputMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Wiper))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Wiper))
         return WiperMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::WiperSpeed))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::WiperSpeed))
         return WiperSpeedMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::WiperDelays))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::WiperDelays))
         return WiperDelaysMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Flashers))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Flashers))
         return FlasherMsg(frame);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Starter))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::StarterDisable))
         return StarterMsg(frame);
 
-    return MsgCmdRx::Null;
+    return MsgCmd::Null;
 }

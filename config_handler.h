@@ -3,4 +3,4 @@
 #include <cstdint>
 #include "config.h"
 
-MsgCmdRx ConfigHandler(CANRxFrame *frame);
+MsgCmd ConfigHandler(CANRxFrame *frame);

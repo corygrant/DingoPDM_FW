@@ -45,7 +45,7 @@ uint32_t nAllOutputsOffTime;
 
 void InitVarMap();
 void ApplyConfig();
-void SetConfig(MsgCmdRx eCmd);
+void SetConfig(MsgCmd eCmd);
 void CyclicUpdate();
 void States();
 void SendInfoMsgs();
@@ -297,57 +297,57 @@ void InitVarMap()
 
 void ApplyConfig()
 {
-    SetConfig(MsgCmdRx::Inputs);
-    SetConfig(MsgCmdRx::CanInputs);
-    SetConfig(MsgCmdRx::VirtualInputs);
-    SetConfig(MsgCmdRx::Outputs);
-    SetConfig(MsgCmdRx::Wiper);
-    SetConfig(MsgCmdRx::Starter);
-    SetConfig(MsgCmdRx::Flashers);
+    SetConfig(MsgCmd::Inputs);
+    SetConfig(MsgCmd::CanInputs);
+    SetConfig(MsgCmd::VirtualInputs);
+    SetConfig(MsgCmd::Outputs);
+    SetConfig(MsgCmd::Wiper);
+    SetConfig(MsgCmd::StarterDisable);
+    SetConfig(MsgCmd::Flashers);
 }
 
-void SetConfig(MsgCmdRx eCmd)
+void SetConfig(MsgCmd eCmd)
 {
-    if (eCmd == MsgCmdRx::Can)
+    if (eCmd == MsgCmd::Can)
     {
         // TODO: Change CAN speed
     }
 
-    if (eCmd == MsgCmdRx::Inputs)
+    if (eCmd == MsgCmd::Inputs)
     {
         for (uint8_t i = 0; i < PDM_NUM_INPUTS; i++)
             in[i].SetConfig(&stConfig.stInput[i]);
     }
 
-    if (eCmd == MsgCmdRx::CanInputs)
+    if (eCmd == MsgCmd::CanInputs)
     {
         for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
             canIn[i].SetConfig(&stConfig.stCanInput[i]);
     }
 
-    if (eCmd == MsgCmdRx::VirtualInputs)
+    if (eCmd == MsgCmd::VirtualInputs)
     {
         for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
             virtIn[i].SetConfig(&stConfig.stVirtualInput[i], pVarMap);
     }
 
-    if (eCmd == MsgCmdRx::Outputs)
+    if (eCmd == MsgCmd::Outputs)
     {
         for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
             pf[i].SetConfig(&stConfig.stOutput[i], pVarMap);
     }
 
-    if ((eCmd == MsgCmdRx::Wiper) || (eCmd == MsgCmdRx::WiperSpeed) || (eCmd == MsgCmdRx::WiperDelays))
+    if ((eCmd == MsgCmd::Wiper) || (eCmd == MsgCmd::WiperSpeed) || (eCmd == MsgCmd::WiperDelays))
     {
         wiper.SetConfig(&stConfig.stWiper, pVarMap);
     }
 
-    if (eCmd == MsgCmdRx::Starter)
+    if (eCmd == MsgCmd::StarterDisable)
     {
         starter.SetConfig(&stConfig.stStarter, pVarMap);
     }
 
-    if (eCmd == MsgCmdRx::Flashers)
+    if (eCmd == MsgCmd::Flashers)
     {
         for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
             flasher[i].SetConfig(&stConfig.stFlasher[i], pVarMap);
@@ -357,13 +357,13 @@ void SetConfig(MsgCmdRx eCmd)
 void CheckRequestMsgs(CANRxFrame *frame)
 {
     // Check for sleep request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Sleep))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Sleep))
     {
         CANTxFrame txMsg;
         txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         txMsg.IDE = CAN_IDE_STD;
         txMsg.DLC = 2;
-        txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::Sleep);
+        txMsg.data8[0] = static_cast<uint8_t>(MsgCmd::Sleep) + 128;
         txMsg.data8[1] = 1;
 
         PostTxFrame(&txMsg);
@@ -372,32 +372,32 @@ void CheckRequestMsgs(CANRxFrame *frame)
     }
 
     // Check for burn request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::BurnSettings))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::BurnSettings))
     {
         CANTxFrame txMsg;
         txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         txMsg.IDE = CAN_IDE_STD;
         txMsg.DLC = 2;
-        txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::BurnSettings);
+        txMsg.data8[0] = static_cast<uint8_t>(MsgCmd::BurnSettings) + 128;
         txMsg.data8[1] = WriteConfig();
 
         PostTxFrame(&txMsg);
     }
 
     // Check for bootloader request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::Bootloader))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Bootloader))
     {
         RequestBootloader();
     }
 
     // Check for version request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmdRx::GetVersion))
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Version))
     {
         CANTxFrame txMsg;
         txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         txMsg.IDE = CAN_IDE_STD;
         txMsg.DLC = 5;
-        txMsg.data8[0] = static_cast<uint8_t>(MsgCmdTx::GetVersion);
+        txMsg.data8[0] = static_cast<uint8_t>(MsgCmd::Version) + 128;
         txMsg.data8[1] = MAJOR_VERSION;
         txMsg.data8[2] = MINOR_VERSION;
         txMsg.data8[3] = BUILD >> 8;

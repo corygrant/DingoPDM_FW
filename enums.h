@@ -2,40 +2,24 @@
 
 #include <cstdint>
 
-enum class MsgCmdRx : uint8_t
-{
-    BurnSettings = 'B',
-    Sleep = 'Q',
-    Can = 'C',
-    Inputs = 'I',
-    Outputs = 'O',
-    VirtualInputs = 'U',
-    Wiper = 'W',
-    WiperSpeed = 'P',
-    WiperDelays = 'Y',
-    Flashers = 'H',
-    Starter = 'D',
-    CanInputs = 'N',
-    GetVersion = 'V',
-    Bootloader = '~',
-    Null = 0
-};
-
-enum class MsgCmdTx : uint8_t
-{
-    BurnSettings = 'b',
-    Sleep = 'q',
-    Can = 'c',
-    Inputs = 'i',
-    Outputs = 'o',
-    VirtualInputs = 'u',
-    Wiper = 'w',
-    WiperSpeed = 'p',
-    WiperDelays = 'y',
-    Flashers = 'h',
-    Starter = 'd',
-    CanInputs = 'n',
-    GetVersion = 'v'
+enum class MsgCmd : uint8_t
+{   //Response Tx = MsgCmd + 128
+    Null = 0,
+    Can = 1,
+    Inputs = 5,
+    Outputs = 10,
+    VirtualInputs = 15,
+    Wiper = 20,
+    WiperSpeed = 21,
+    WiperDelays = 22,
+    Flashers = 25,
+    StarterDisable = 30,
+    CanInputs = 35,
+    CanInputsId = 36,
+    Version = 120,
+    Sleep = 121,
+    Bootloader = 125,
+    BurnSettings = 127
 };
 
 enum class MsgType : uint8_t
