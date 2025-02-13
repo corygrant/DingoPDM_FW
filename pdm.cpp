@@ -319,7 +319,7 @@ void SetConfig(MsgCmd eCmd)
             in[i].SetConfig(&stConfig.stInput[i]);
     }
 
-    if (eCmd == MsgCmd::CanInputs)
+    if ((eCmd == MsgCmd::CanInputs) || (eCmd == MsgCmd::CanInputsId))
     {
         for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
             canIn[i].SetConfig(&stConfig.stCanInput[i]);

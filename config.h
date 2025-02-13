@@ -74,6 +74,7 @@ struct Config_Starter{
 
 struct Config_CanInput{
   bool bEnabled;
+  uint8_t nIDE; //0=STD, 1=EXT
   uint32_t nSID:11;
   uint32_t nEID:29;
   uint16_t nDLC;
