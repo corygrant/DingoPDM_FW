@@ -4,8 +4,11 @@ bool CanInput::CheckMsg(CANRxFrame frame)
 {
     if (!pConfig->bEnabled)
         return false;
-    if ((pConfig->nSID != frame.SID) &&
+    if (pConfig->nIDE && 
         (pConfig->nEID != frame.EID))
+        return false;
+    if (!pConfig->nIDE && 
+        (pConfig->nSID != frame.SID))
         return false;
     if (pConfig->nDLC == 0)
         return false;
@@ -13,8 +16,8 @@ bool CanInput::CheckMsg(CANRxFrame frame)
     nLastRxTime = SYS_TIME;
 
     nData = 0;
-    for (int i = 0; i <= pConfig->nDLC; i++) {
-        nData |= frame.data8[pConfig->nStartingByte + i] << (8 * (pConfig->nDLC - i));
+    for (int i = 0; i <= (pConfig->nDLC - 1); i++) {
+        nData |= frame.data8[pConfig->nStartingByte + i] << (8 * ((pConfig->nDLC - 1) - i));
     }
 
     if(pConfig->eMode == InputMode::Num)
@@ -75,6 +78,9 @@ bool CanInput::CheckMsg(CANRxFrame frame)
 
 void CanInput::CheckTimeout()
 {
-    if (SYS_TIME - nLastRxTime > nTimeout)
+    if(!pConfig->bTimeoutEnabled)
+        return;
+
+    if (SYS_TIME - nLastRxTime > pConfig->nTimeout)
         nVal = 0;
 }

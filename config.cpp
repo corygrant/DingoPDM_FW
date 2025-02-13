@@ -127,6 +127,9 @@ void SetDefaultConfig()
     for(uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
     {
         stConfig.stCanInput[i].bEnabled = false;
+        stConfig.stCanInput[i].bTimeoutEnabled = true;
+        stConfig.stCanInput[i].nTimeout = 2000;
+        stConfig.stCanInput[i].nIDE = 0;
         stConfig.stCanInput[i].nSID = 0;
         stConfig.stCanInput[i].nEID = 0;
         stConfig.stCanInput[i].nDLC = 0;

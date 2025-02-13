@@ -14,7 +14,6 @@ public:
     bool CheckMsg(CANRxFrame frame);
 
     void SetConfig(Config_CanInput* config) { pConfig = config; }
-    void SetRxTimeout(uint32_t timeout) { nTimeout = timeout; }
     void CheckTimeout();
 
     uint16_t nVal;
@@ -26,5 +25,4 @@ private:
     Input input;
 
     uint32_t nLastRxTime;
-    uint32_t nTimeout = 2000; //ms
 };

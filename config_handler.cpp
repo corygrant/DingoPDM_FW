@@ -139,46 +139,50 @@ MsgCmd OutputMsg(CANRxFrame *frame)
 
 MsgCmd CanInputMsg(CANRxFrame *frame)
 {
-    // DLC 6 = Set CAN input settings
+    // DLC 7 = Set CAN input settings
     // DLC 2 = Get CAN input settings
 
-    if ((frame->DLC == 6) ||
+    if ((frame->DLC == 7) ||
         (frame->DLC == 2))
     {
         uint8_t nIndex = frame->data8[1];
 
         if (nIndex < PDM_NUM_CAN_INPUTS)
         {
-            if (frame->DLC == 6)
+            if (frame->DLC == 7)
             {
                 stConfig.stCanInput[nIndex].bEnabled = (frame->data8[2] & 0x01);
                 stConfig.stCanInput[nIndex].eMode = static_cast<InputMode>((frame->data8[2] & 0x06) >> 1);
+                stConfig.stCanInput[nIndex].bTimeoutEnabled = (frame->data8[2] & 0x08) >> 3;
                 stConfig.stCanInput[nIndex].eOperator = static_cast<Operator>((frame->data8[2] & 0xF0) >> 4);
 
                 stConfig.stCanInput[nIndex].nStartingByte = (frame->data8[3] & 0x0F);
                 stConfig.stCanInput[nIndex].nDLC = (frame->data8[3] & 0xF0) >> 4;
 
                 stConfig.stCanInput[nIndex].nOnVal = (frame->data8[4] << 8) + frame->data8[5];
+
+                stConfig.stCanInput[nIndex].nTimeout = (frame->data8[6] * 100);
             }
 
             CANTxFrame tx;
-            tx.DLC = 6;
+            tx.DLC = 7;
             tx.IDE = CAN_IDE_STD;
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmd::CanInputs) + 128;
             tx.data8[1] = nIndex;
             tx.data8[2] = ((static_cast<uint8_t>(stConfig.stCanInput[nIndex].eOperator) & 0x0F) << 4) +
                           ((static_cast<uint8_t>(stConfig.stCanInput[nIndex].eMode) & 0x03) << 1) +
+                          ((stConfig.stCanInput[nIndex].bTimeoutEnabled & 0x01) << 3) +
                           (stConfig.stCanInput[nIndex].bEnabled & 0x01);
             tx.data8[3] = ((stConfig.stCanInput[nIndex].nDLC & 0xF) << 4) +
                           (stConfig.stCanInput[nIndex].nStartingByte & 0xF);
-            tx.data8[4] = (uint8_t)(stConfig.stCanInput[nIndex].nOnVal  >> 8);
+            tx.data8[4] = (uint8_t)(stConfig.stCanInput[nIndex].nOnVal >> 8);
             tx.data8[5] = (uint8_t)(stConfig.stCanInput[nIndex].nOnVal & 0xFF);
-
+            tx.data8[6] = (uint8_t)(stConfig.stCanInput[nIndex].nTimeout / 100);
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 6)
+            if(frame->DLC == 7)
                 return MsgCmd::CanInputs;
         }
     }
@@ -214,11 +218,11 @@ MsgCmd CanInputIdMsg(CANRxFrame *frame)
             tx.data8[1] = nIndex;
             tx.data8[2] = ((stConfig.stCanInput[nIndex].nSID >> 8) & 0x07) + 
                           ((stConfig.stCanInput[nIndex].nIDE & 0x01) << 3);
-            tx.data8[3] = (uint8_t)(stConfig.stCanInput[nIndex].nSID && 0xFF);
-            tx.data8[4] = (uint8_t)(stConfig.stCanInput[nIndex].nEID << 24);
-            tx.data8[5] = (uint8_t)(stConfig.stCanInput[nIndex].nEID << 16);
-            tx.data8[6] = (uint8_t)(stConfig.stCanInput[nIndex].nEID << 8);
-            tx.data8[7] = (uint8_t)(stConfig.stCanInput[nIndex].nEID && 0xFF);
+            tx.data8[3] = (uint8_t)(stConfig.stCanInput[nIndex].nSID & 0xFF);
+            tx.data8[4] = (uint8_t)((stConfig.stCanInput[nIndex].nEID >> 24) & 0x1F);
+            tx.data8[5] = (uint8_t)((stConfig.stCanInput[nIndex].nEID >> 16) & 0xFF);
+            tx.data8[6] = (uint8_t)((stConfig.stCanInput[nIndex].nEID >> 8) & 0xFF);
+            tx.data8[7] = (uint8_t)(stConfig.stCanInput[nIndex].nEID & 0xFF);
 
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
@@ -529,8 +533,7 @@ MsgCmd StarterMsg(CANRxFrame *frame)
 
 MsgCmd ConfigHandler(CANRxFrame *frame)
 {
-    if ((frame->SID != stConfig.stCanOutput.nBaseId - 1) ||
-        (frame->EID != stConfig.stCanOutput.nBaseId - 1))
+    if (frame->SID != stConfig.stCanOutput.nBaseId - 1)
     {
         return MsgCmd::Null;
     }
