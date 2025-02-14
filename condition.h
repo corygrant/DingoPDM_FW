@@ -16,6 +16,7 @@ public:
     }
 
     void Update();
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nVal;
 

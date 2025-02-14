@@ -11,8 +11,6 @@ public:
     {
     };
 
-    void Update();
-
     void SetConfig(Config_VirtualInput *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
     {
         pConfig = config;
@@ -20,6 +18,9 @@ public:
         pVar1 = pVarMap[config->nVar1];
         pVar2 = pVarMap[config->nVar2];
     }
+
+    void Update();
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nVal;
 

@@ -69,7 +69,7 @@ void CanInput::CheckTimeout()
         nVal = 0;
 }
 
-MsgCmdResult CanInput::ProcessMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult CanInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 7 = Set CAN input settings
     // DLC 2 = Get CAN input settings

@@ -12,16 +12,17 @@ public:
         : m_line(line)
     {};
 
-    uint16_t nVal;
-
-    void Update();
-
     void SetConfig(Config_Input *config)
     {
         pConfig = config;
 
         SetPull(config->ePull);
     }
+
+    void Update();
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+
+    uint16_t nVal;
 
 private:
     const ioline_t m_line;

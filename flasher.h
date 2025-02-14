@@ -10,13 +10,14 @@ public:
 
     };
 
-    void Update(uint32_t timeNow);
-
     void SetConfig(Config_Flasher* config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
     {
         pConfig = config;
         pInput = pVarMap[config->nInput];
     }
+
+    void Update(uint32_t timeNow);
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nVal;
 

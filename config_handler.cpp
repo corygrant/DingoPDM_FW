@@ -1,7 +1,15 @@
 #include "config_handler.h"
 #include "msg.h"
-#include "dingopdm_config.h"    
+#include "dingopdm_config.h"
 #include "can_input.h"
+#include "counter.h"
+#include "condition.h"
+#include "digital.h"
+#include "flasher.h"
+#include "profet.h"
+#include "starter.h"
+#include "virtual_input.h"
+#include "wiper.h"
 
 MsgCmd CanMsg(CANRxFrame *frame)
 {
@@ -36,7 +44,7 @@ MsgCmd CanMsg(CANRxFrame *frame)
         tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         PostTxFrame(&tx);
 
-        if(frame->DLC == 5)
+        if (frame->DLC == 5)
         {
             return MsgCmd::Can;
         }
@@ -81,8 +89,8 @@ MsgCmd InputMsg(CANRxFrame *frame)
 
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
-            
-            if(frame->DLC == 4)
+
+            if (frame->DLC == 4)
                 return MsgCmd::Inputs;
         }
     }
@@ -130,7 +138,7 @@ MsgCmd OutputMsg(CANRxFrame *frame)
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 8)
+            if (frame->DLC == 8)
                 return MsgCmd::Outputs;
         }
     }
@@ -183,7 +191,7 @@ MsgCmd CanInputMsg(CANRxFrame *frame)
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 7)
+            if (frame->DLC == 7)
                 return MsgCmd::CanInputs;
         }
     }
@@ -207,8 +215,8 @@ MsgCmd CanInputIdMsg(CANRxFrame *frame)
             {
                 stConfig.stCanInput[nIndex].nIDE = (frame->data8[2] & 0x08) >> 3;
                 stConfig.stCanInput[nIndex].nSID = ((frame->data8[2] & 0x07) << 8) + frame->data8[3];
-                stConfig.stCanInput[nIndex].nEID =  ((frame->data8[4] & 0x1F) << 24) + (frame->data8[5] << 16) + 
-                                                    (frame->data8[6] << 8) + frame->data8[7];
+                stConfig.stCanInput[nIndex].nEID = ((frame->data8[4] & 0x1F) << 24) + (frame->data8[5] << 16) +
+                                                   (frame->data8[6] << 8) + frame->data8[7];
             }
 
             CANTxFrame tx;
@@ -217,7 +225,7 @@ MsgCmd CanInputIdMsg(CANRxFrame *frame)
 
             tx.data8[0] = static_cast<uint8_t>(MsgCmd::CanInputsId) + 128;
             tx.data8[1] = nIndex;
-            tx.data8[2] = ((stConfig.stCanInput[nIndex].nSID >> 8) & 0x07) + 
+            tx.data8[2] = ((stConfig.stCanInput[nIndex].nSID >> 8) & 0x07) +
                           ((stConfig.stCanInput[nIndex].nIDE & 0x01) << 3);
             tx.data8[3] = (uint8_t)(stConfig.stCanInput[nIndex].nSID & 0xFF);
             tx.data8[4] = (uint8_t)((stConfig.stCanInput[nIndex].nEID >> 24) & 0x1F);
@@ -228,7 +236,7 @@ MsgCmd CanInputIdMsg(CANRxFrame *frame)
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 8)
+            if (frame->DLC == 8)
                 return MsgCmd::CanInputsId;
         }
     }
@@ -287,7 +295,7 @@ MsgCmd VirtualInputMsg(CANRxFrame *frame)
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 7)
+            if (frame->DLC == 7)
                 return MsgCmd::VirtualInputs;
         }
     }
@@ -336,7 +344,7 @@ MsgCmd WiperMsg(CANRxFrame *frame)
         tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         PostTxFrame(&tx);
 
-        if(frame->DLC == 8)
+        if (frame->DLC == 8)
             return MsgCmd::Wiper;
     }
 
@@ -385,7 +393,7 @@ MsgCmd WiperSpeedMsg(CANRxFrame *frame)
         tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         PostTxFrame(&tx);
 
-        if(frame->DLC == 7)
+        if (frame->DLC == 7)
             return MsgCmd::WiperSpeed;
     }
 
@@ -426,7 +434,7 @@ MsgCmd WiperDelaysMsg(CANRxFrame *frame)
         tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         PostTxFrame(&tx);
 
-        if(frame->DLC == 7)
+        if (frame->DLC == 7)
             return MsgCmd::WiperDelays;
     }
 
@@ -472,7 +480,7 @@ MsgCmd FlasherMsg(CANRxFrame *frame)
             tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
             PostTxFrame(&tx);
 
-            if(frame->DLC == 6)
+            if (frame->DLC == 6)
                 return MsgCmd::Flashers;
         }
     }
@@ -525,79 +533,70 @@ MsgCmd StarterMsg(CANRxFrame *frame)
         tx.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
         PostTxFrame(&tx);
 
-        if(frame->DLC == 4)
+        if (frame->DLC == 4)
             return MsgCmd::StarterDisable;
     }
 
     return MsgCmd::Null;
 }
 
-MsgCmd CounterMsg(CANRxFrame *frame)
-{
-
-    return MsgCmd::Null;
-}
-
-MsgCmd ConditionMsg(CANRxFrame *frame)
-{
-    return MsgCmd::Null;
-}
-
 MsgCmd ConfigHandler(CANRxFrame *frame)
 {
     CANTxFrame tx;
-    MsgCmdResult res;
+    MsgCmd cmd;
+    MsgCmdResult res = MsgCmdResult::Invalid;
 
     if (frame->SID != stConfig.stCanOutput.nBaseId - 1)
     {
         return MsgCmd::Null;
     }
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Can))
-        return CanMsg(frame);
+    cmd = static_cast<MsgCmd>(frame->data8[0]);
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Inputs))
-        return InputMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Outputs))
-        return OutputMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::CanInputs))
+    switch(cmd)
     {
-        res = CanInput::ProcessMsg(&stConfig, frame, &tx);
-        if (res != MsgCmdResult::Invalid) {
-            PostTxFrame(&tx);
-            return (res == MsgCmdResult::Write) ? MsgCmd::CanInputs : MsgCmd::Null;
-        }
-        return MsgCmd::Null;
+        case MsgCmd::Can:
+            //res = Can::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Inputs:
+            res = Digital::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Outputs:
+            res = Profet::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::CanInputs:
+        case MsgCmd::CanInputsId:
+            res = CanInput::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::VirtualInputs:
+            res = VirtualInput::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Wiper:
+        case MsgCmd::WiperSpeed:
+        case MsgCmd::WiperDelays:
+            res = Wiper::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Flashers:
+            res = Flasher::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::StarterDisable:
+            res = Starter::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Counters:
+            res = Counter::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Conditions:
+            res = Condition::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        default:
+            break;
     }
 
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::CanInputsId))
-    return CanInputIdMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::VirtualInputs))
-        return VirtualInputMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Wiper))
-        return WiperMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::WiperSpeed))
-        return WiperSpeedMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::WiperDelays))
-        return WiperDelaysMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Flashers))
-        return FlasherMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::StarterDisable))
-        return StarterMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Counters))
-        return CounterMsg(frame);
-
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Conditions))
-        return ConditionMsg(frame);
-
+    if (res != MsgCmdResult::Invalid)
+    {
+        PostTxFrame(&tx);
+        //If MsgCmdResult::Request return Null to avoid applying new settings
+        return (res == MsgCmdResult::Write) ? cmd : MsgCmd::Null;
+    }
     return MsgCmd::Null;
 }

@@ -11,11 +11,6 @@ public:
 
     };
 
-    void Update(uint32_t timeNow);
-    WiperMode GetMode() { return pConfig->eMode; }
-    WiperSpeed GetSpeed() { return eSelectedSpeed; }
-    WiperState GetState() { return eState; }
-
     void SetConfig(Config_Wiper *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
     {
         pConfig = config;
@@ -28,6 +23,12 @@ public:
         pSwipeInput = pVarMap[config->nSwipeInput];
         pWashInput = pVarMap[config->nWashInput];
     };
+
+    void Update(uint32_t timeNow);
+    WiperMode GetMode() { return pConfig->eMode; }
+    WiperSpeed GetSpeed() { return eSelectedSpeed; }
+    WiperState GetState() { return eState; }
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nSlowOut;
     uint16_t nFastOut;

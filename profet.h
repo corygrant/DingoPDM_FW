@@ -29,18 +29,19 @@ public:
         }
     }
 
-    uint16_t nOutput;
-
-    void Update(bool bOutEnabled);
-    uint16_t GetCurrent() { return nCurrent; }
-    ProfetState GetState() { return eState; }
-    uint16_t GetOcCount() { return nOcCount; }
-
     void SetConfig(Config_Output *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
     {
         pConfig = config;
         pInput = pVarMap[config->nInput];
     }
+
+    void Update(bool bOutEnabled);
+    uint16_t GetCurrent() { return nCurrent; }
+    ProfetState GetState() { return eState; }
+    uint16_t GetOcCount() { return nOcCount; }
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+
+    uint16_t nOutput;
 
 private:
     const uint16_t m_num;
