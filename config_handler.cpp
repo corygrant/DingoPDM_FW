@@ -1,6 +1,7 @@
 #include "config_handler.h"
 #include "msg.h"
 #include "dingopdm_config.h"    
+#include "can_input.h"
 
 MsgCmd CanMsg(CANRxFrame *frame)
 {
@@ -260,8 +261,8 @@ MsgCmd VirtualInputMsg(CANRxFrame *frame)
                 stConfig.stVirtualInput[nIndex].nVar0 = frame->data8[3];
                 stConfig.stVirtualInput[nIndex].nVar1 = frame->data8[4];
                 stConfig.stVirtualInput[nIndex].nVar2 = frame->data8[5];
-                stConfig.stVirtualInput[nIndex].eCond0 = static_cast<Condition>((frame->data8[6] & 0x03));
-                stConfig.stVirtualInput[nIndex].eCond1 = static_cast<Condition>((frame->data8[6] & 0x0C) >> 2);
+                stConfig.stVirtualInput[nIndex].eCond0 = static_cast<BoolOperator>((frame->data8[6] & 0x03));
+                stConfig.stVirtualInput[nIndex].eCond1 = static_cast<BoolOperator>((frame->data8[6] & 0x0C) >> 2);
                 stConfig.stVirtualInput[nIndex].eMode = static_cast<InputMode>((frame->data8[6] & 0xC0) >> 6);
             }
 
@@ -531,8 +532,22 @@ MsgCmd StarterMsg(CANRxFrame *frame)
     return MsgCmd::Null;
 }
 
+MsgCmd CounterMsg(CANRxFrame *frame)
+{
+
+    return MsgCmd::Null;
+}
+
+MsgCmd ConditionMsg(CANRxFrame *frame)
+{
+    return MsgCmd::Null;
+}
+
 MsgCmd ConfigHandler(CANRxFrame *frame)
 {
+    CANTxFrame tx;
+    MsgCmdResult res;
+
     if (frame->SID != stConfig.stCanOutput.nBaseId - 1)
     {
         return MsgCmd::Null;
@@ -548,10 +563,17 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
         return OutputMsg(frame);
 
     if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::CanInputs))
-        return CanInputMsg(frame);
+    {
+        res = CanInput::ProcessMsg(&stConfig, frame, &tx);
+        if (res != MsgCmdResult::Invalid) {
+            PostTxFrame(&tx);
+            return (res == MsgCmdResult::Write) ? MsgCmd::CanInputs : MsgCmd::Null;
+        }
+        return MsgCmd::Null;
+    }
 
     if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::CanInputsId))
-        return CanInputIdMsg(frame);
+    return CanInputIdMsg(frame);
 
     if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::VirtualInputs))
         return VirtualInputMsg(frame);
@@ -570,6 +592,12 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
 
     if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::StarterDisable))
         return StarterMsg(frame);
+
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Counters))
+        return CounterMsg(frame);
+
+    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Conditions))
+        return ConditionMsg(frame);
 
     return MsgCmd::Null;
 }

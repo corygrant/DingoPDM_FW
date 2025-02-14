@@ -1,14 +1,14 @@
 #include "can_input.h"
 
-bool CanInput::CheckMsg(CANRxFrame frame)
+bool CanInput::CheckMsg(CANRxFrame rx)
 {
     if (!pConfig->bEnabled)
         return false;
-    if (pConfig->nIDE && 
-        (pConfig->nEID != frame.EID))
+    if (pConfig->nIDE &&
+        (pConfig->nEID != rx.EID))
         return false;
-    if (!pConfig->nIDE && 
-        (pConfig->nSID != frame.SID))
+    if (!pConfig->nIDE &&
+        (pConfig->nSID != rx.SID))
         return false;
     if (pConfig->nDLC == 0)
         return false;
@@ -16,44 +16,20 @@ bool CanInput::CheckMsg(CANRxFrame frame)
     nLastRxTime = SYS_TIME;
 
     nData = 0;
-    for (int i = 0; i <= (pConfig->nDLC - 1); i++) {
-        nData |= frame.data8[pConfig->nStartingByte + i] << (8 * ((pConfig->nDLC - 1) - i));
-    }
-
-    if(pConfig->eMode == InputMode::Num)
+    for (int i = 0; i <= (pConfig->nDLC - 1); i++)
     {
-        switch (pConfig->eOperator)
-        {
-        case Operator::Equal:
-            nVal = nData == pConfig->nOnVal;
-            break;
-
-        case Operator::GreaterThan:
-            nVal = nData > pConfig->nOnVal;
-            break;
-
-        case Operator::LessThan:
-            nVal = nData < pConfig->nOnVal;
-            break;
-
-        case Operator::BitwiseAnd:
-            nVal = (nData & pConfig->nOnVal);
-            break;
-
-        case Operator::BitwiseNand:
-            nVal = (nData & !pConfig->nOnVal);
-            break;
-        }
-
-        return true;
+        nData |= rx.data8[pConfig->nStartingByte + i] << (8 * ((pConfig->nDLC - 1) - i));
     }
 
-    //Use Input class to enable momentary/latching
-    //Inputs are treated as boolean
+    // Use Input class to enable momentary/latching
     switch (pConfig->eOperator)
     {
     case Operator::Equal:
         nVal = input.Check(pConfig->eMode, false, nData == pConfig->nOnVal);
+        break;
+
+    case Operator::NotEqual:
+        nVal = input.Check(pConfig->eMode, false, nData != pConfig->nOnVal);
         break;
 
     case Operator::GreaterThan:
@@ -62,6 +38,14 @@ bool CanInput::CheckMsg(CANRxFrame frame)
 
     case Operator::LessThan:
         nVal = input.Check(pConfig->eMode, false, nData < pConfig->nOnVal);
+        break;
+
+    case Operator::GreaterThanOrEqual:
+        nVal = input.Check(pConfig->eMode, false, nData >= pConfig->nOnVal);
+        break;
+
+    case Operator::LessThanOrEqual:
+        nVal = input.Check(pConfig->eMode, false, nData <= pConfig->nOnVal);
         break;
 
     case Operator::BitwiseAnd:
@@ -78,9 +62,63 @@ bool CanInput::CheckMsg(CANRxFrame frame)
 
 void CanInput::CheckTimeout()
 {
-    if(!pConfig->bTimeoutEnabled)
+    if (!pConfig->bTimeoutEnabled)
         return;
 
     if (SYS_TIME - nLastRxTime > pConfig->nTimeout)
         nVal = 0;
+}
+
+MsgCmdResult CanInput::ProcessMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 7 = Set CAN input settings
+    // DLC 2 = Get CAN input settings
+
+    if ((rx->DLC == 7) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = rx->data8[1];
+
+        if (nIndex < PDM_NUM_CAN_INPUTS)
+        {
+            if (rx->DLC == 7)
+            {
+                conf->stCanInput[nIndex].bEnabled = (rx->data8[2] & 0x01);
+                conf->stCanInput[nIndex].eMode = static_cast<InputMode>((rx->data8[2] & 0x06) >> 1);
+                conf->stCanInput[nIndex].bTimeoutEnabled = (rx->data8[2] & 0x08) >> 3;
+                conf->stCanInput[nIndex].eOperator = static_cast<Operator>((rx->data8[2] & 0xF0) >> 4);
+
+                conf->stCanInput[nIndex].nStartingByte = (rx->data8[3] & 0x0F);
+                conf->stCanInput[nIndex].nDLC = (rx->data8[3] & 0xF0) >> 4;
+
+                conf->stCanInput[nIndex].nOnVal = (rx->data8[4] << 8) + rx->data8[5];
+
+                conf->stCanInput[nIndex].nTimeout = (rx->data8[6] * 100);
+            }
+
+            tx->DLC = 7;
+            tx->IDE = CAN_IDE_STD;
+
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::CanInputs) + 128;
+            tx->data8[1] = nIndex;
+            tx->data8[2] = ((static_cast<uint8_t>(conf->stCanInput[nIndex].eOperator) & 0x0F) << 4) +
+                        ((static_cast<uint8_t>(conf->stCanInput[nIndex].eMode) & 0x03) << 1) +
+                        ((conf->stCanInput[nIndex].bTimeoutEnabled & 0x01) << 3) +
+                        (conf->stCanInput[nIndex].bEnabled & 0x01);
+            tx->data8[3] = ((conf->stCanInput[nIndex].nDLC & 0xF) << 4) +
+                        (conf->stCanInput[nIndex].nStartingByte & 0xF);
+            tx->data8[4] = (uint8_t)(conf->stCanInput[nIndex].nOnVal >> 8);
+            tx->data8[5] = (uint8_t)(conf->stCanInput[nIndex].nOnVal & 0xFF);
+            tx->data8[6] = (uint8_t)(conf->stCanInput[nIndex].nTimeout / 100);
+
+            if(rx->DLC == 7)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
 }

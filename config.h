@@ -21,10 +21,10 @@ struct Config_VirtualInput{
   bool bEnabled;
   bool bNot0;
   uint8_t nVar0;
-  Condition eCond0;
+  BoolOperator eCond0;
   bool bNot1;
   uint8_t nVar1;
-  Condition eCond1;
+  BoolOperator eCond1;
   bool bNot2;
   uint8_t nVar2;
   InputMode eMode;
@@ -92,6 +92,26 @@ struct Config_CanOutput{
   uint16_t nUpdateTime;
 };
 
+struct Config_Counter{
+  bool bEnabled;
+  uint8_t nIncInput;
+  uint8_t nDecInput;
+  uint8_t nResetInput;
+  uint8_t nMinCount;
+  uint8_t nMaxCount;
+  InputEdge eIncEdge;
+  InputEdge eDecEdge;
+  InputEdge eResetEdge;
+  bool bWrapAround;
+};
+
+struct Config_Condition{
+  bool bEnabled;
+  uint8_t nInput;
+  Operator eOperator;
+  uint16_t nArg;
+};
+
 struct PdmConfig{
   Config_DeviceConfig stDevConfig;
   Config_Input stInput[PDM_NUM_INPUTS];
@@ -102,6 +122,8 @@ struct PdmConfig{
   Config_Starter stStarter;
   Config_CanInput stCanInput[PDM_NUM_CAN_INPUTS];
   Config_CanOutput stCanOutput;
+  Config_Counter stCounter[PDM_NUM_COUNTERS];
+  Config_Condition stCondition[PDM_NUM_CONDITIONS];
 };
 
 extern PdmConfig stConfig;

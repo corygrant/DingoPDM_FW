@@ -25,7 +25,7 @@
                 "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/EXTIv1",
                 "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/GPIOv2",
                 "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/I2Cv1",
-                "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/MACv1", 
+                "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/MACv1",
                 "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/OTGv1",
                 "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/QUADSPIv1",
                 "${workspaceFolder}/ChibiOS/os/hal/ports/STM32/LLD/RTCv2",

@@ -17,13 +17,13 @@ void VirtualInput::Update()
 
     switch (pConfig->eCond0)
     {
-    case Condition::And:
+    case BoolOperator::And:
         bResultSec0 = bResult0 && bResult1;
         break;
-    case Condition::Or:
+    case BoolOperator::Or:
         bResultSec0 = bResult0 || bResult1;
         break;
-    case Condition::Nor:
+    case BoolOperator::Nor:
         bResultSec0 = !bResult0 || !bResult1;
         break;
     }
@@ -42,13 +42,13 @@ void VirtualInput::Update()
 
     switch (pConfig->eCond1)
     {
-    case Condition::And:
+    case BoolOperator::And:
         bResultSec1 = bResultSec0 && bResult2;
         return;
-    case Condition::Or:
+    case BoolOperator::Or:
         bResultSec1 = bResultSec0 || bResult2;
         return;
-    case Condition::Nor:
+    case BoolOperator::Nor:
         bResultSec1 = !bResultSec0 || !bResult2;
         return;
     }

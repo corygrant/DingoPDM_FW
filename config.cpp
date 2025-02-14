@@ -60,10 +60,10 @@ void SetDefaultConfig()
         stConfig.stVirtualInput[i].bEnabled = false;
         stConfig.stVirtualInput[i].bNot0 = false;
         stConfig.stVirtualInput[i].nVar0 = 0;
-        stConfig.stVirtualInput[i].eCond0 = Condition::And;
+        stConfig.stVirtualInput[i].eCond0 = BoolOperator::And;
         stConfig.stVirtualInput[i].bNot1 = false;
         stConfig.stVirtualInput[i].nVar1 = 0;
-        stConfig.stVirtualInput[i].eCond1 = Condition::And;
+        stConfig.stVirtualInput[i].eCond1 = BoolOperator::And;
         stConfig.stVirtualInput[i].bNot2 = false;
         stConfig.stVirtualInput[i].nVar2 = 0;
         stConfig.stVirtualInput[i].eMode = InputMode::Momentary;
@@ -141,6 +141,25 @@ void SetDefaultConfig()
 
     stConfig.stCanOutput.bEnabled = true;
     stConfig.stCanOutput.nBaseId = 2000;
+
+    for(uint8_t i=0; i < PDM_NUM_COUNTERS; i++)
+    {
+        stConfig.stCounter[i].bEnabled = false;
+        stConfig.stCounter[i].nIncInput = 0;
+        stConfig.stCounter[i].nDecInput = 0;
+        stConfig.stCounter[i].nResetInput = 0;
+        stConfig.stCounter[i].nMaxCount = 4;
+        stConfig.stCounter[i].nMinCount = 0;
+        stConfig.stCounter[i].bWrapAround = false;
+    }
+
+    for(uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
+    {
+        stConfig.stCondition[i].bEnabled = false;
+        stConfig.stCondition[i].eOperator = Operator::Equal;
+        stConfig.stCondition[i].nInput = 0;
+        stConfig.stCondition[i].nArg = 0;
+    }
 
 }
 

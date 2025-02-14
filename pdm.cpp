@@ -13,6 +13,8 @@
 #include "wiper.h"
 #include "starter.h"
 #include "flasher.h"
+#include "counter.h"
+#include "condition.h"
 #include "mailbox.h"
 #include "msg.h"
 #include "error.h"
@@ -23,6 +25,8 @@ VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];
 Wiper wiper;
 Starter starter;
 Flasher flasher[PDM_NUM_FLASHERS];
+Counter counter[PDM_NUM_COUNTERS];
+Condition condition[PDM_NUM_CONDITIONS];
 
 PdmState eState = PdmState::Run;
 FatalErrorType eError = FatalErrorType::NoError;
@@ -44,8 +48,8 @@ uint8_t nLastNumOutputsOn;
 uint32_t nAllOutputsOffTime;
 
 void InitVarMap();
-void ApplyConfig();
-void SetConfig(MsgCmd eCmd);
+void ApplyAllConfig();
+void ApplyConfig(MsgCmd eCmd);
 void CyclicUpdate();
 void States();
 void SendInfoMsgs();
@@ -124,7 +128,7 @@ void InitPdm()
 
     InitConfig(); // Read config from FRAM
 
-    ApplyConfig();
+    ApplyAllConfig();
     
     InitAdc();
     InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
@@ -222,7 +226,7 @@ void CyclicUpdate()
                 canIn[i].CheckMsg(rxMsg);
 
             CheckRequestMsgs(&rxMsg);
-            SetConfig(ConfigHandler(&rxMsg));
+            ApplyConfig(ConfigHandler(&rxMsg));
         }
     }
 
@@ -244,6 +248,12 @@ void CyclicUpdate()
 
     for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
         flasher[i].Update(SYS_TIME);
+
+    for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
+        counter[i].Update();
+
+    for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
+        condition[i].Update();
 }
 
 void InitVarMap()
@@ -290,23 +300,39 @@ void InitVarMap()
         pVarMap[i + 61] = &flasher[i].nVal;
     }
 
-    // 65
+    // 65 - 68
+    // Counters
+    for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
+    {
+        pVarMap[i + 65] = &counter[i].nVal;
+    }
+
+    // 68 - 100
+    // Conditions
+    for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
+    {
+        pVarMap[i + 68] = &condition[i].nVal;
+    }
+
+    // 101
     // Always true
-    pVarMap[65] = &nAlwaysTrue;
+    pVarMap[101] = &nAlwaysTrue;
 }
 
-void ApplyConfig()
+void ApplyAllConfig()
 {
-    SetConfig(MsgCmd::Inputs);
-    SetConfig(MsgCmd::CanInputs);
-    SetConfig(MsgCmd::VirtualInputs);
-    SetConfig(MsgCmd::Outputs);
-    SetConfig(MsgCmd::Wiper);
-    SetConfig(MsgCmd::StarterDisable);
-    SetConfig(MsgCmd::Flashers);
+    ApplyConfig(MsgCmd::Inputs);
+    ApplyConfig(MsgCmd::CanInputs);
+    ApplyConfig(MsgCmd::VirtualInputs);
+    ApplyConfig(MsgCmd::Outputs);
+    ApplyConfig(MsgCmd::Wiper);
+    ApplyConfig(MsgCmd::StarterDisable);
+    ApplyConfig(MsgCmd::Flashers);
+    ApplyConfig(MsgCmd::Counters);
+    ApplyConfig(MsgCmd::Conditions);
 }
 
-void SetConfig(MsgCmd eCmd)
+void ApplyConfig(MsgCmd eCmd)
 {
     if (eCmd == MsgCmd::Can)
     {
@@ -351,6 +377,18 @@ void SetConfig(MsgCmd eCmd)
     {
         for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
             flasher[i].SetConfig(&stConfig.stFlasher[i], pVarMap);
+    }
+
+    if (eCmd == MsgCmd::Counters)
+    {
+        for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
+            counter[i].SetConfig(&stConfig.stCounter[i], pVarMap);
+    }
+
+    if (eCmd == MsgCmd::Conditions)
+    {
+        for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
+            condition[i].SetConfig(&stConfig.stCondition[i], pVarMap);
     }
 }
 
@@ -557,6 +595,22 @@ bool GetFlasherVal(uint8_t nFlasher)
         return false;
 
     return flasher[nFlasher].nVal;
+}
+
+uint16_t GetCounterVal(uint8_t nCounter)
+{
+    if (nCounter >= PDM_NUM_COUNTERS)
+        return 0;
+
+    return counter[nCounter].nVal;
+}
+
+bool GetConditionVal(uint8_t nCondition)
+{
+    if (nCondition >= PDM_NUM_CONDITIONS)
+        return false;
+
+    return condition[nCondition].nVal;
 }
 
 bool CheckEnterSleep()

@@ -21,10 +21,21 @@ enum class MsgCmd : uint8_t
     CanInputs = 35,
     CanInputsId = 36,
     //CanInputsName = 37, //Future use
+    Counters = 40,
+    //CountersName = 41, //Future use
+    Conditions = 45,
+    //ConditionsName = 46, //Future use
     Version = 120,
     Sleep = 121,
     Bootloader = 125,
     BurnSettings = 127
+};
+
+enum class MsgCmdResult : uint8_t
+{
+    Invalid = 0,
+    Request = 1,
+    Write = 2
 };
 
 enum class MsgType : uint8_t
@@ -60,13 +71,16 @@ enum class MsgSrc : uint8_t
 enum class Operator : uint8_t
 {
     Equal,
+    NotEqual,
     GreaterThan,
     LessThan,
+    GreaterThanOrEqual,
+    LessThanOrEqual,
     BitwiseAnd,
     BitwiseNand
 };
 
-enum class Condition : uint8_t
+enum class BoolOperator : uint8_t
 {
     And,
     Or,
@@ -83,9 +97,15 @@ enum class CanBitrate : uint8_t
 
 enum class InputMode : uint8_t
 {
-    Num,
     Momentary,
     Latching
+};
+
+enum class InputEdge : uint8_t
+{
+    Rising,
+    Falling,
+    Both
 };
 
 enum class InputPull : uint8_t

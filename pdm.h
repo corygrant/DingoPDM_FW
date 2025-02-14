@@ -18,3 +18,5 @@ bool GetWiperSlowOut();
 WiperState GetWiperState();
 WiperSpeed GetWiperSpeed();
 bool GetFlasherVal(uint8_t nFlasher);
+uint16_t GetCounterVal(uint8_t nCounter);
+bool GetConditionVal(uint8_t nCondition);

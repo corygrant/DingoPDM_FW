@@ -15,3 +15,5 @@
 
 #define BOARD_TEMP_WARN 55 //deg C
 #define BOARD_TEMP_CRIT 80 //deg C
+
+#define MAX_COUNTER_VAL 8

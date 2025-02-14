@@ -135,8 +135,10 @@ CPPSRC = $(ALLCPPSRC) \
          msg.cpp \
          can_input.cpp \
          can.cpp \
+         condition.cpp \
          config.cpp \
          config_handler.cpp \
+         counter.cpp \
          digital.cpp \
          error.cpp \
          flasher.cpp \
