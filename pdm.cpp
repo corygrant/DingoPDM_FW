@@ -632,6 +632,16 @@ bool CheckEnterSleep()
     }
     nLastNumOutputsOn = nNumOutputsOn;
 
+    // Had issue with SYS_TIME being < GetLastCanRxTime when msgs come in quickly
+    // Check that SYS_TIME is greater than or equal to GetLastCanRxTime
+    uint32_t sys = SYS_TIME;
+    uint32_t canLast = GetLastCanRxTime();
+    uint32_t nCanRxIdleTime;
+    if (sys >= canLast)
+        nCanRxIdleTime = sys - canLast;
+    else
+        nCanRxIdleTime = 0;
+
     // No outputs on, no CAN msgs received and no USB connected
     // Go to sleep after timeout
     bEnterSleep = ENABLE_SLEEP &&
@@ -639,7 +649,13 @@ bool CheckEnterSleep()
                   (nLastNumOutputsOn == 0) &&
                   !GetUsbConnected() &&
                   ((SYS_TIME - nAllOutputsOffTime) > SLEEP_TIMEOUT) &&
-                  ((SYS_TIME - GetLastCanRxTime()) > SLEEP_TIMEOUT);
+                  (nCanRxIdleTime > SLEEP_TIMEOUT);
+
+    if (nCanRxIdleTime > SLEEP_TIMEOUT)
+    {
+        nCanRxIdleTime = SYS_TIME - GetLastCanRxTime();
+
+    }
 
     return bEnterSleep || bSleepRequest;
 }

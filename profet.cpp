@@ -137,3 +137,49 @@ void Profet::Update(bool bOutEnabled)
     nOutput = eState == ProfetState::On ? 1 : 0;
 
 }
+
+MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set output settings
+    // DLC 2 = Get output settings
+
+    if ((rx->DLC == 8) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = (rx->data8[1] & 0xF0) >> 4;
+        if (nIndex < PDM_NUM_OUTPUTS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stOutput[nIndex].bEnabled = (rx->data8[1] & 0x01);
+                conf->stOutput[nIndex].nInput = rx->data8[2];
+                conf->stOutput[nIndex].nCurrentLimit = rx->data8[3] * 10;
+                conf->stOutput[nIndex].eResetMode = static_cast<ProfetResetMode>(rx->data8[4] & 0x0F);
+                conf->stOutput[nIndex].nResetLimit = (rx->data8[4] & 0xF0) >> 4;
+                conf->stOutput[nIndex].nResetTime = rx->data8[5] * 100;
+                conf->stOutput[nIndex].nInrushLimit = rx->data8[6] * 10;
+                conf->stOutput[nIndex].nInrushTime = rx->data8[7] * 100;
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::Outputs) + 128;
+            tx->data8[1] = ((nIndex & 0x0F) << 4) + (conf->stOutput[nIndex].bEnabled & 0x01);
+            tx->data8[2] = conf->stOutput[nIndex].nInput;
+            tx->data8[3] = (uint8_t)(conf->stOutput[nIndex].nCurrentLimit / 10);
+            tx->data8[4] = ((conf->stOutput[nIndex].nResetLimit & 0x0F) << 4) +
+                          (static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode) & 0x0F);
+            tx->data8[5] = (uint8_t)(conf->stOutput[nIndex].nResetTime / 100);
+            tx->data8[6] = (uint8_t)(conf->stOutput[nIndex].nInrushLimit / 10);
+            tx->data8[7] = (uint8_t)(conf->stOutput[nIndex].nInrushTime / 100);
+
+            if (rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+        return MsgCmdResult::Invalid;
+    }
+    return MsgCmdResult::Invalid;
+}

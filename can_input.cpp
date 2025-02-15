@@ -69,7 +69,7 @@ void CanInput::CheckTimeout()
         nVal = 0;
 }
 
-MsgCmdResult CanInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 7 = Set CAN input settings
     // DLC 2 = Get CAN input settings
@@ -119,6 +119,61 @@ MsgCmdResult CanInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTx
 
         return MsgCmdResult::Invalid;
     }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult CanInputIdMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set CAN input ID settings
+    // DLC 2 = Get CAN input ID settings
+
+    if ((rx->DLC == 8) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = rx->data8[1];
+
+        if (nIndex < PDM_NUM_CAN_INPUTS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stCanInput[nIndex].nIDE = (rx->data8[2] & 0x08) >> 3;
+                conf->stCanInput[nIndex].nSID = ((rx->data8[2] & 0x07) << 8) + rx->data8[3];
+                conf->stCanInput[nIndex].nEID = ((rx->data8[4] & 0x1F) << 24) + (rx->data8[5] << 16) +
+                                                   (rx->data8[6] << 8) + rx->data8[7];
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::CanInputsId) + 128;
+            tx->data8[1] = nIndex;
+            tx->data8[2] = ((conf->stCanInput[nIndex].nSID >> 8) & 0x07) +
+                          ((conf->stCanInput[nIndex].nIDE & 0x01) << 3);
+            tx->data8[3] = (uint8_t)(conf->stCanInput[nIndex].nSID & 0xFF);
+            tx->data8[4] = (uint8_t)((conf->stCanInput[nIndex].nEID >> 24) & 0x1F);
+            tx->data8[5] = (uint8_t)((conf->stCanInput[nIndex].nEID >> 16) & 0xFF);
+            tx->data8[6] = (uint8_t)((conf->stCanInput[nIndex].nEID >> 8) & 0xFF);
+            tx->data8[7] = (uint8_t)(conf->stCanInput[nIndex].nEID & 0xFF);
+
+            if (rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+        return MsgCmdResult::Invalid;
+    }
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult CanInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    MsgCmd cmd = static_cast<MsgCmd>(rx->data8[0]);
+
+    if(cmd == MsgCmd::CanInputs)
+        return CanInputMsg(conf, rx, tx);
+    else if(cmd == MsgCmd::CanInputsId)
+        return CanInputIdMsg(conf, rx, tx);
 
     return MsgCmdResult::Invalid;
 }
