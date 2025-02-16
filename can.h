@@ -2,9 +2,8 @@
 
 #include <cstdint>
 #include "enums.h"
+#include "config.h"
 
 void InitCan(CanBitrate bitrate);
-void DeInitCan();
-void StopCan();
-void StartCan(CanBitrate bitrate);
 uint32_t GetLastCanRxTime();
+MsgCmdResult CanProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);

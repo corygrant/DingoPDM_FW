@@ -105,34 +105,44 @@ void InitCan(CanBitrate bitrate)
     canRxThreadRef = chThdCreateStatic(waCanRxThread, sizeof(waCanRxThread), NORMALPRIO + 1, CanRxThread, nullptr);
 }
 
-void DeInitCan()
-{
-    canStop(&CAND1);
-    
-    chThdTerminate(canCyclicTxThreadRef);
-    while (!chThdTerminatedX(canCyclicTxThreadRef))
-        chThdSleepMilliseconds(10);
-
-    chThdTerminate(canTxThreadRef);
-    while (!chThdTerminatedX(canTxThreadRef))
-        chThdSleepMilliseconds(10);
-
-    chThdTerminate(canRxThreadRef);
-    while (!chThdTerminatedX(canRxThreadRef))
-        chThdSleepMilliseconds(10);
-}
-
-void StartCan(CanBitrate bitrate)
-{
-    canStart(&CAND1, &GetCanConfig(bitrate));
-}
-
-void StopCan()
-{
-    canStop(&CAND1);
-}
-
 uint32_t GetLastCanRxTime()
 {
     return nLastCanRxTime;
+}
+
+MsgCmdResult CanProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 5 = Set CAN settings
+    // DLC 1 = Get CAN settings
+
+    if (rx->DLC == 5)
+    {
+        conf->stCanOutput.bEnabled = (rx->data8[1] & 0x02) >> 1;
+        conf->stDevConfig.eCanSpeed = static_cast<CanBitrate>((rx->data8[1] & 0xF0) >> 4);
+        conf->stCanOutput.nBaseId = (rx->data8[2] << 8) + rx->data8[3];
+        conf->stCanOutput.nUpdateTime = rx->data8[4] * 10;
+    }
+
+    if ((rx->DLC == 5) ||
+        (rx->DLC == 1))
+    {
+        tx->DLC = 5;
+        tx->IDE = CAN_IDE_STD;
+
+        tx->data8[0] = static_cast<uint8_t>(MsgCmd::Can) + 128;
+        tx->data8[1] = ((static_cast<uint8_t>(conf->stDevConfig.eCanSpeed) & 0x0F) << 4) +
+                      ((conf->stCanOutput.bEnabled & 0x01) << 1) + 1;
+        tx->data8[2] = (conf->stCanOutput.nBaseId & 0xFF00) >> 8;
+        tx->data8[3] = (conf->stCanOutput.nBaseId & 0x00FF);
+        tx->data8[4] = (conf->stCanOutput.nUpdateTime) / 10;
+        tx->data8[5] = 0;
+        tx->data8[6] = 0;
+        tx->data8[7] = 0;
+
+        if (rx->DLC == 5)
+            return MsgCmdResult::Write;
+        else
+            return MsgCmdResult::Request;
+    }
+    return MsgCmdResult::Invalid;
 }

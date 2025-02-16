@@ -26,10 +26,13 @@ void Counter::Update()
 
     if (Edge::Check(pConfig->eDecEdge, bLastDec, *pDecInput))
     {
-        nVal--;
-        if (nVal < pConfig->nMinCount)
+        if(nVal == 0)
         {
             nVal = pConfig->bWrapAround ? pConfig->nMaxCount : pConfig->nMinCount;
+        }
+        else
+        {
+            nVal--;
         }
     }
 
@@ -60,8 +63,8 @@ MsgCmdResult Counter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
                 conf->stCounter[nIndex].nMinCount = (rx->data8[6] & 0x0F);
                 conf->stCounter[nIndex].nMaxCount = ((rx->data8[6] & 0xF0) >> 4);
                 conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>(rx->data8[7] & 0x03);
-                conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>((rx->data8[7] & 0x0C) >> 2);
-                conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>((rx->data8[7] & 0x30) >> 4);
+                conf->stCounter[nIndex].eDecEdge = static_cast<InputEdge>((rx->data8[7] & 0x0C) >> 2);
+                conf->stCounter[nIndex].eResetEdge = static_cast<InputEdge>((rx->data8[7] & 0x30) >> 4);
             }
 
             tx->DLC = 8;

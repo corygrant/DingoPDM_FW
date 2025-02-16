@@ -307,11 +307,11 @@ void InitVarMap()
         pVarMap[i + 65] = &counter[i].nVal;
     }
 
-    // 68 - 100
+    // 69 - 100
     // Conditions
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
     {
-        pVarMap[i + 68] = &condition[i].nVal;
+        pVarMap[i + 69] = &condition[i].nVal;
     }
 
     // 101

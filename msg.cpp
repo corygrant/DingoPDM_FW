@@ -152,3 +152,31 @@ CANTxFrame TxMsg5()
 
     return stMsg;
 }
+
+CANTxFrame TxMsg6()
+{
+    CANTxFrame stMsg;
+    //=======================================================
+    // Build Msg 6 (Counters and Conditions)
+    //=======================================================
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 6;
+    stMsg.DLC = 8; // Bytes to send
+    stMsg.data8[0] = GetCounterVal(0);
+    stMsg.data8[1] = GetCounterVal(1);
+    stMsg.data8[2] = GetCounterVal(2);
+    stMsg.data8[3] = GetCounterVal(3);
+    stMsg.data8[4] = ((GetConditionVal(7) & 0x01) << 7) + ((GetConditionVal(6) & 0x01) << 6) + ((GetConditionVal(5) & 0x01) << 5) +
+                     ((GetConditionVal(4) & 0x01) << 4) + ((GetConditionVal(3) & 0x01) << 3) + ((GetConditionVal(2) & 0x01) << 2) +
+                     ((GetConditionVal(1) & 0x01) << 1) + (GetConditionVal(0) & 0x01);
+    stMsg.data8[5] = ((GetConditionVal(15) & 0x01) << 7) + ((GetConditionVal(14) & 0x01) << 6) + ((GetConditionVal(13) & 0x01) << 5) +
+                     ((GetConditionVal(12) & 0x01) << 4) + ((GetConditionVal(11) & 0x01) << 3) + ((GetConditionVal(10) & 0x01) << 2) +
+                     ((GetConditionVal(9) & 0x01) << 1) + (GetConditionVal(8) & 0x01);
+    stMsg.data8[6] = ((GetConditionVal(23) & 0x01) << 7) + ((GetConditionVal(22) & 0x01) << 6) + ((GetConditionVal(21) & 0x01) << 5) +
+                     ((GetConditionVal(20) & 0x01) << 4) + ((GetConditionVal(19) & 0x01) << 3) + ((GetConditionVal(18) & 0x01) << 2) +
+                     ((GetConditionVal(17) & 0x01) << 1) + (GetConditionVal(16) & 0x01);
+    stMsg.data8[7] = ((GetConditionVal(31) & 0x01) << 7) + ((GetConditionVal(30) & 0x01) << 6) + ((GetConditionVal(29) & 0x01) << 5) +
+                     ((GetConditionVal(28) & 0x01) << 4) + ((GetConditionVal(27) & 0x01) << 3) + ((GetConditionVal(26) & 0x01) << 2) +
+                     ((GetConditionVal(25) & 0x01) << 1) + (GetConditionVal(24) & 0x01);
+
+    return stMsg;
+}
