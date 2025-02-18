@@ -39,6 +39,14 @@ struct Config_Output{
   ProfetResetMode eResetMode;
   uint16_t nResetTime;
   uint8_t nResetLimit;
+
+  bool bPwmEnabled;
+  bool bSoftStart;
+  bool bVariableDutyCycle;
+  uint8_t nDutyCycleInput;
+  uint16_t nFreq; //Hz
+  uint16_t nSoftStartRampTime; //ms
+  uint16_t nDutyCycleInputDenom;
 };
 
 struct Config_Wiper{

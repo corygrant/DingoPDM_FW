@@ -39,6 +39,11 @@ public:
     uint16_t GetCurrent() { return nCurrent; }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
+    void SetPwmHigh(bool bHigh) 
+    { 
+        bPwmHigh = bHigh; 
+        nPwmCheckDelay = 0;
+    }
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nOutput;
@@ -61,6 +66,7 @@ private:
 
     uint16_t nCurrent; // Scaled current value (amps)
     uint16_t nIS;      // Raw analog current value
+    uint16_t nLastIS = 0; // Last analog current value
     float fKILIS;      // Current scaling factor
 
     bool bInRushActive;
@@ -68,4 +74,7 @@ private:
 
     uint16_t nOcCount;       // Number of overcurrents
     uint32_t nOcTriggerTime; // Time of overcurrent
+
+    bool bPwmHigh = false;
+    uint8_t nPwmCheckDelay = 0;
 };

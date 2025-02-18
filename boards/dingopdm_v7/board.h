@@ -338,7 +338,7 @@
                                      PIN_OSPEED_LOW(GPIOA_PIN4) |           \
                                      PIN_OSPEED_LOW(GPIOA_PIN5) |           \
                                      PIN_OSPEED_LOW(GPIOA_PIN6) |           \
-                                     PIN_OSPEED_LOW(GPIOA_PIN7) |           \
+                                     PIN_OSPEED_HIGH(GPIOA_PIN7) |          \
                                      PIN_OSPEED_LOW(GPIOA_PIN8) |           \
                                      PIN_OSPEED_HIGH(GPIOA_VBUS) |          \
                                      PIN_OSPEED_LOW(GPIOA_PIN10) |          \
@@ -460,7 +460,7 @@
                                      PIN_OSPEED_HIGH(GPIOB_PIN9) |          \
                                      PIN_OSPEED_LOW(GPIOB_PIN10) |          \
                                      PIN_OSPEED_LOW(GPIOB_PIN11) |          \
-                                     PIN_OSPEED_LOW(GPIOB_PIN12) |          \
+                                     PIN_OSPEED_HIGH(GPIOB_PIN12) |         \
                                      PIN_OSPEED_LOW(GPIOB_PIN13) |          \
                                      PIN_OSPEED_LOW(GPIOB_PIN14) |          \
                                      PIN_OSPEED_LOW(GPIOB_PIN15))
@@ -539,7 +539,7 @@
                                      PIN_MODE_ANALOG(GPIOC_PIN3) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN4) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN5) |          \
-                                     PIN_MODE_OUTPUT(GPIOC_PIN6) |          \
+                                     PIN_MODE_ALTERNATE(GPIOC_PIN6) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN7) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN8) |          \
                                      PIN_MODE_INPUT(GPIOC_PIN9) |           \
@@ -571,9 +571,9 @@
                                      PIN_OSPEED_LOW(GPIOC_PIN3) |           \
                                      PIN_OSPEED_LOW(GPIOC_PIN4) |           \
                                      PIN_OSPEED_LOW(GPIOC_PIN5) |           \
-                                     PIN_OSPEED_LOW(GPIOC_PIN6) |           \
+                                     PIN_OSPEED_HIGH(GPIOC_PIN6) |          \
                                      PIN_OSPEED_LOW(GPIOC_PIN7) |           \
-                                     PIN_OSPEED_LOW(GPIOC_PIN8) |           \
+                                     PIN_OSPEED_HIGH(GPIOC_PIN8) |          \
                                      PIN_OSPEED_LOW(GPIOC_PIN9) |           \
                                      PIN_OSPEED_LOW(GPIOC_PIN10) |          \
                                      PIN_OSPEED_LOW(GPIOC_PIN11) |          \
@@ -619,7 +619,7 @@
                                      PIN_AFIO_AF(GPIOC_PIN3, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN4, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN5, 0U) |          \
-                                     PIN_AFIO_AF(GPIOC_PIN6, 0U) |          \
+                                     PIN_AFIO_AF(GPIOC_PIN6, 2U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN7, 0U))
 #define VAL_GPIOC_AFRH              (PIN_AFIO_AF(GPIOC_PIN8, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN9, 0U) |          \

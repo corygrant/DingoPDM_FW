@@ -12,26 +12,25 @@ void Profet::Update(bool bOutEnabled)
         return;
     }
 
-    if((*pInput) && bOutEnabled)
+    if ((*pInput) && bOutEnabled)
         eReqState = ProfetState::On;
     else
         eReqState = ProfetState::Off;
-        
 
-    //Set DSEL pin to select the appropriate IS channel
-    //Only valid on 2 channel devices
-    //Wait for DSEL changeover (up to 60us)
-    //Deviates by ~60us, wait for 200us to ensure changeover finishes
-    if(m_model == ProfetModel::BTS7008_2EPA_CH1)
+    // Set DSEL pin to select the appropriate IS channel
+    // Only valid on 2 channel devices
+    // Wait for DSEL changeover (up to 60us)
+    // Deviates by ~60us, wait for 200us to ensure changeover finishes
+    if (m_model == ProfetModel::BTS7008_2EPA_CH1)
     {
         palClearLine(m_dsel);
-        
+
         chThdSleepMicroseconds(200);
     }
-    else if(m_model == ProfetModel::BTS7008_2EPA_CH2)
+    else if (m_model == ProfetModel::BTS7008_2EPA_CH2)
     {
         palSetLine(m_dsel);
-        //Wait for DSEL changeover (up to 60us)
+        // Wait for DSEL changeover (up to 60us)
         chThdSleepMicroseconds(200);
     }
 
@@ -39,7 +38,19 @@ void Profet::Update(bool bOutEnabled)
     // Analog value must be ready before reading to allow for conversion after DSEL change
     // Use the measured VDDA value to calculate volts/step
     // Current = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
-    nIS = GetAdcRaw(m_ain);
+    if (pConfig->bPwmEnabled && eState == ProfetState::On)
+    {
+        if((palReadLine(m_in) == PAL_HIGH) && bPwmHigh)
+            nIS = GetAdcRaw(m_ain);
+        else
+        {
+            nIS = nLastIS;
+        }
+    }
+    else
+        nIS = GetAdcRaw(m_ain);
+
+    nLastIS = nIS;
     nCurrent = (uint16_t)((((float)nIS * (GetVDDA() / 4095)) / 1200) * fKILIS);
 
     // Ignore current less than or equal to 0.2A
@@ -60,7 +71,17 @@ void Profet::Update(bool bOutEnabled)
     switch (eState)
     {
     case ProfetState::Off:
-        palClearLine(m_in);
+        if (m_num == 3)
+        {
+            // if(pwmIsChannelEnabledI(&PWMD3, 0) == true){
+            pwmDisableChannel(&PWMD3, 0);
+            //}
+        }
+        else
+        {
+            palClearLine(m_in);
+        }
+
         nOcCount = 0;
 
         // Check for turn on
@@ -72,7 +93,17 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::On:
-        palSetLine(m_in);
+        if (m_num == 3)
+        {
+            // if(pwmIsChannelEnabledI(&PWMD3, 0) == false)
+            //{
+            pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, 5000));
+            //}
+        }
+        else
+        {
+            palSetLine(m_in);
+        }
 
         // Check for turn off
         if (eReqState == ProfetState::Off)
@@ -135,10 +166,9 @@ void Profet::Update(bool bOutEnabled)
     }
 
     nOutput = eState == ProfetState::On ? 1 : 0;
-
 }
 
-MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 8 = Set output settings
     // DLC 2 = Get output settings
@@ -169,7 +199,7 @@ MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFr
             tx->data8[2] = conf->stOutput[nIndex].nInput;
             tx->data8[3] = (uint8_t)(conf->stOutput[nIndex].nCurrentLimit / 10);
             tx->data8[4] = ((conf->stOutput[nIndex].nResetLimit & 0x0F) << 4) +
-                          (static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode) & 0x0F);
+                           (static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode) & 0x0F);
             tx->data8[5] = (uint8_t)(conf->stOutput[nIndex].nResetTime / 100);
             tx->data8[6] = (uint8_t)(conf->stOutput[nIndex].nInrushLimit / 10);
             tx->data8[7] = (uint8_t)(conf->stOutput[nIndex].nInrushTime / 100);

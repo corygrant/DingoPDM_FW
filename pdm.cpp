@@ -70,6 +70,46 @@ static InfoMsg BattUndervoltageMsg(MsgType::Warning, MsgSrc::Voltage);
 InfoMsg OutputOvercurrentMsg[PDM_NUM_OUTPUTS];
 InfoMsg OutputFaultMsg[PDM_NUM_OUTPUTS];
 
+static void pwmpcb(PWMDriver *pwmp) {
+  (void)pwmp;
+  //pf[1].SetPwmHigh(true);
+  pf[2].SetPwmHigh(true);
+  //pf[4].SetPwmHigh(true);
+  //pf[6].SetPwmHigh(true);
+}
+static void pwmOut3cb(PWMDriver *pwmp) {
+  (void)pwmp;
+  pf[2].SetPwmHigh(false);
+}
+static void pwmOut7cb(PWMDriver *pwmp) {
+  (void)pwmp;
+  pf[6].SetPwmHigh(false);
+}
+static void pwmOut2cb(PWMDriver *pwmp) {
+  (void)pwmp;
+  pf[1].SetPwmHigh(false);
+}
+static void pwmOut5cb(PWMDriver *pwmp) {
+  (void)pwmp;
+  pf[4].SetPwmHigh(false);
+}
+
+
+static const PWMConfig pwmCfg = {
+  .frequency = 1000000,
+  .period = 10000,
+  .callback = pwmpcb,
+  .channels = {
+   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut3cb},  //OUT3
+   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut7cb},  //OUT7
+   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut2cb},  //OUT2
+   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut5cb}   //OUT5
+  },
+  .cr2 = 0,
+  .bdtr = 0,
+  .dier = 0
+};
+
 struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
     void main()
@@ -133,6 +173,9 @@ void InitPdm()
     InitAdc();
     InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
     // InitUsb(); // Starts USB threads
+    pwmStart(&PWMD3, &pwmCfg);
+    pwmEnablePeriodicNotification(&PWMD3);
+    stConfig.stOutput[2].bPwmEnabled = true;
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
