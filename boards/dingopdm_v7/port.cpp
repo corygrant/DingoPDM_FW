@@ -63,10 +63,15 @@ adcsample_t adc1_samples[ADC1_NUM_CHANNELS] = {0};
 //6 = TempSensor
 //7 = VRefInt
 
+void adc1cb(ADCDriver *adcp) {
+    (void)adcp;
+    palToggleLine(LINE_E2);
+}
+
 static const ADCConversionGroup adc1_cfg = {
     .circular = true,
     .num_channels = ADC1_NUM_CHANNELS,
-    .end_cb = NULL,
+    .end_cb = adc1cb,
     .error_cb = NULL,
     .cr1 = 0,
     .cr2 = ADC_CR2_SWSTART | ADC_CR2_CONT,
@@ -110,27 +115,7 @@ void DeInitAdc()
 
 uint16_t GetAdcRaw(AnalogChannel channel)
 {
-    switch (channel)
-    {
-    case AnalogChannel::IS1:
-        return adc1_samples[0];
-    case AnalogChannel::IS2:
-        return adc1_samples[1];
-    case AnalogChannel::IS3_4:
-        return adc1_samples[2];
-    case AnalogChannel::IS5_6:
-        return adc1_samples[3];
-    case AnalogChannel::IS7_8:
-        return adc1_samples[4];
-    case AnalogChannel::BattVolt:
-        return adc1_samples[5];
-    case AnalogChannel::TempSensor:
-        return adc1_samples[6];
-    case AnalogChannel::VRefInt:
-        return adc1_samples[7];
-    default:
-        return 0; // Invalid channel
-    }
+    return adc1_samples[static_cast<uint8_t>(channel)];
 }
 
 float GetBattVolt()

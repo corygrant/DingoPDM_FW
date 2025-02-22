@@ -8,8 +8,8 @@
 class Profet
 {
 public:
-    Profet(int num, ProfetModel model, ioline_t in, ioline_t den, ioline_t dsel, AnalogChannel ain)
-        : m_num(num), m_model(model), m_in(in), m_den(den), m_dsel(dsel), m_ain(ain)
+    Profet(int num, ProfetModel model, ioline_t in, ioline_t den, ioline_t dsel, AnalogChannel ain, PWMDriver *pwm, PwmChannel pwmCh)
+        : m_num(num), m_model(model), m_in(in), m_den(den), m_dsel(dsel), m_ain(ain), m_pwmDriver(pwm), m_pwmChannel(pwmCh)
     {
         // Always on
         palSetLine(m_den);
@@ -39,11 +39,17 @@ public:
     uint16_t GetCurrent() { return nCurrent; }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
-    void SetPwmHigh(bool bHigh) 
-    { 
-        bPwmHigh = bHigh; 
-        nPwmCheckDelay = 0;
-    }
+    void SetDutyCycle(uint8_t nDC)
+    {
+        if (nDC > 100)
+            nDC = 100;
+
+        //PWM duty cycle is 0-10000
+        // 100% = 10000
+        // 50% = 5000
+        // 0% = 0
+        nDutyCycle = (nDC * 100);
+    };
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nOutput;
@@ -55,6 +61,8 @@ private:
     const ioline_t m_den;
     const ioline_t m_dsel;
     const AnalogChannel m_ain;
+    PWMDriver *m_pwmDriver;
+    const PwmChannel m_pwmChannel;
 
     Config_Output *pConfig;
 
@@ -75,6 +83,5 @@ private:
     uint16_t nOcCount;       // Number of overcurrents
     uint32_t nOcTriggerTime; // Time of overcurrent
 
-    bool bPwmHigh = false;
-    uint8_t nPwmCheckDelay = 0;
+    uint16_t nDutyCycle = 0;
 };

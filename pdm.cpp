@@ -70,45 +70,71 @@ static InfoMsg BattUndervoltageMsg(MsgType::Warning, MsgSrc::Voltage);
 InfoMsg OutputOvercurrentMsg[PDM_NUM_OUTPUTS];
 InfoMsg OutputFaultMsg[PDM_NUM_OUTPUTS];
 
-static void pwmpcb(PWMDriver *pwmp) {
-  (void)pwmp;
-  //pf[1].SetPwmHigh(true);
-  pf[2].SetPwmHigh(true);
-  //pf[4].SetPwmHigh(true);
-  //pf[6].SetPwmHigh(true);
-}
-static void pwmOut3cb(PWMDriver *pwmp) {
-  (void)pwmp;
-  pf[2].SetPwmHigh(false);
-}
-static void pwmOut7cb(PWMDriver *pwmp) {
-  (void)pwmp;
-  pf[6].SetPwmHigh(false);
-}
-static void pwmOut2cb(PWMDriver *pwmp) {
-  (void)pwmp;
-  pf[1].SetPwmHigh(false);
-}
-static void pwmOut5cb(PWMDriver *pwmp) {
-  (void)pwmp;
-  pf[4].SetPwmHigh(false);
+static void pwm2pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palSetLine(LINE_PF1_IN);
+    if (pwmp->enabled & (1 << 1))
+        palSetLine(LINE_PF4_IN);
+    if (pwmp->enabled & (1 << 2))
+        palSetLine(LINE_PF6_IN);
+    if (pwmp->enabled & (1 << 3))
+        palSetLine(LINE_PF8_IN);
 }
 
+static void pwmOut1cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palClearLine(LINE_PF1_IN);
+}
+static void pwmOut4cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 1))
+        palClearLine(LINE_PF4_IN);
+}
+static void pwmOut6cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 2))
+        palClearLine(LINE_PF6_IN);
+}
+static void pwmOut8cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 3))
+        palClearLine(LINE_PF8_IN);
+}
 
 static const PWMConfig pwmCfg = {
-  .frequency = 1000000,
-  .period = 10000,
-  .callback = pwmpcb,
-  .channels = {
-   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut3cb},  //OUT3
-   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut7cb},  //OUT7
-   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut2cb},  //OUT2
-   {PWM_OUTPUT_ACTIVE_HIGH, pwmOut5cb}   //OUT5
-  },
-  .cr2 = 0,
-  .bdtr = 0,
-  .dier = 0
-};
+    .frequency = 1000000,
+    .period = 10000,
+    .callback = NULL,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, // OUT3
+        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, // OUT7
+        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, // OUT2
+        {PWM_OUTPUT_ACTIVE_HIGH, NULL}  // OUT5
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0};
+
+static const PWMConfig pwm2Cfg = {
+    .frequency = 1000000,
+    .period = 10000,
+    .callback = pwm2pcb,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut1cb}, // OUT3
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut4cb}, // OUT7
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut6cb}, // OUT2
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut8cb}  // OUT5
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0};
 
 struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
@@ -116,10 +142,15 @@ struct PdmThread : chibios_rt::BaseStaticThread<2048>
     {
         setName("PdmThread");
 
+        uint8_t dc = 0;
         while (true)
         {
             CyclicUpdate();
             States();
+            pf[1].SetDutyCycle(dc);
+            dc += 1;
+            if (dc > 100)
+                dc = 0;
             palToggleLine(LINE_E1);
             chThdSleepMilliseconds(2);
         }
@@ -149,7 +180,7 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
             bDeviceOverTemp = tempSensor.OverTempLimit();
             bDeviceCriticalTemp = tempSensor.CritTempLimit();
 
-            palToggleLine(LINE_E2);
+            // palToggleLine(LINE_E2);
             chThdSleepMilliseconds(250);
         }
     }
@@ -169,20 +200,30 @@ void InitPdm()
     InitConfig(); // Read config from FRAM
 
     ApplyAllConfig();
-    
+
     InitAdc();
     InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
     // InitUsb(); // Starts USB threads
+
+
+
     pwmStart(&PWMD3, &pwmCfg);
-    pwmEnablePeriodicNotification(&PWMD3);
-    stConfig.stOutput[2].bPwmEnabled = true;
+    //pwmEnablePeriodicNotification(&PWMD3);
+    pf[1].SetDutyCycle(50);
+
+    pwmStart(&PWMD4, &pwm2Cfg);
+    pwmEnablePeriodicNotification(&PWMD4);
+    stConfig.stOutput[1].bPwmEnabled = true;
+    stConfig.stOutput[3].bPwmEnabled = true;
+
+
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
     InitInfoMsgs();
 
-    palClearLine(LINE_CAN_STANDBY); //CAN enabled
+    palClearLine(LINE_CAN_STANDBY); // CAN enabled
 
     slowThreadRef = slowThread.start(NORMALPRIO);
     pdmThread.start(NORMALPRIO);
@@ -231,7 +272,7 @@ void States()
 
     case PdmState::Sleep:
         bSleepRequest = false;
-        palSetLine(LINE_CAN_STANDBY); //CAN disabled
+        palSetLine(LINE_CAN_STANDBY); // CAN disabled
         EnterStopMode();
         break;
 
@@ -697,7 +738,6 @@ bool CheckEnterSleep()
     if (nCanRxIdleTime > SLEEP_TIMEOUT)
     {
         nCanRxIdleTime = SYS_TIME - GetLastCanRxTime();
-
     }
 
     return bEnterSleep || bSleepRequest;

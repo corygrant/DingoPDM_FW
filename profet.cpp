@@ -1,5 +1,8 @@
 #include "profet.h"
 
+#define TIM_RISE_DELAY 200
+#define TIM_FALL_DELAY 100
+
 void Profet::Update(bool bOutEnabled)
 {
     eLastState = eState;
@@ -19,8 +22,10 @@ void Profet::Update(bool bOutEnabled)
 
     // Set DSEL pin to select the appropriate IS channel
     // Only valid on 2 channel devices
-    // Wait for DSEL changeover (up to 60us)
-    // Deviates by ~60us, wait for 200us to ensure changeover finishes
+    // Wait for DSEL changeover and ADC conversion to complete
+    // DSEL changeover takes ~60us
+    // ADC conversion takes ~60us 
+    // Round up to 200us to ensure changeover/conversion finishes
     if (m_model == ProfetModel::BTS7008_2EPA_CH1)
     {
         palClearLine(m_dsel);
@@ -34,13 +39,17 @@ void Profet::Update(bool bOutEnabled)
         chThdSleepMicroseconds(200);
     }
 
-    // Calculate current at ADC, multiply by kILIS ratio to get output current
-    // Analog value must be ready before reading to allow for conversion after DSEL change
-    // Use the measured VDDA value to calculate volts/step
-    // Current = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
+    //When freq is 100Hz, DC < 4% results in read issues
+    //100Hz = 10ms period, 4% = 0.4ms
+    //Rise delay is 200us, fall delay is 100us, sample is 60us
+    //200us+100us+60us = 360us
+    
     if (pConfig->bPwmEnabled && eState == ProfetState::On)
     {
-        if((palReadLine(m_in) == PAL_HIGH) && bPwmHigh)
+        uint32_t nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
+
+        if((nCCR > TIM_RISE_DELAY) && (nCCR > TIM_FALL_DELAY) &&
+            (m_pwmDriver->tim->CNT > TIM_RISE_DELAY) && (m_pwmDriver->tim->CNT < (nCCR - TIM_FALL_DELAY)))
             nIS = GetAdcRaw(m_ain);
         else
         {
@@ -51,6 +60,11 @@ void Profet::Update(bool bOutEnabled)
         nIS = GetAdcRaw(m_ain);
 
     nLastIS = nIS;
+
+    // Calculate current at ADC, multiply by kILIS ratio to get output current
+    // Analog value must be ready before reading to allow for conversion after DSEL change
+    // Use the measured VDDA value to calculate volts/step
+    // Current = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
     nCurrent = (uint16_t)((((float)nIS * (GetVDDA() / 4095)) / 1200) * fKILIS);
 
     // Ignore current less than or equal to 0.2A
@@ -71,11 +85,17 @@ void Profet::Update(bool bOutEnabled)
     switch (eState)
     {
     case ProfetState::Off:
-        if (m_num == 3)
+        if (pConfig->bPwmEnabled)
         {
-            // if(pwmIsChannelEnabledI(&PWMD3, 0) == true){
-            pwmDisableChannel(&PWMD3, 0);
-            //}
+            if(m_num == 2)
+            {
+                pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+            }
+            if(m_num == 4)
+            {
+                pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+                palClearLine(m_in);
+            }
         }
         else
         {
@@ -93,12 +113,17 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::On:
-        if (m_num == 3)
+        if (pConfig->bPwmEnabled)
         {
-            // if(pwmIsChannelEnabledI(&PWMD3, 0) == false)
-            //{
-            pwmEnableChannel(&PWMD3, 0, PWM_PERCENTAGE_TO_WIDTH(&PWMD3, 5000));
-            //}
+            if(m_num == 2)
+            {
+                pwmEnableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel), PWM_PERCENTAGE_TO_WIDTH(m_pwmDriver, nDutyCycle));
+            }
+            if(m_num == 4)
+            {
+            
+                pwmEnableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel), PWM_PERCENTAGE_TO_WIDTH(m_pwmDriver, nDutyCycle));
+            }
         }
         else
         {

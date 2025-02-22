@@ -202,3 +202,11 @@ enum class FatalErrorType : uint8_t
   ErrRCC,
   ErrTemp
 };
+
+enum class PwmChannel : uint8_t
+{
+    Ch1 = 0,
+    Ch2 = 1,
+    Ch3 = 2,
+    Ch4 = 3
+};
