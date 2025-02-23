@@ -39,6 +39,7 @@ public:
     uint16_t GetCurrent() { return nCurrent; }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
+    
     void SetDutyCycle(uint8_t nDC)
     {
         if (nDC > 100)
@@ -50,6 +51,7 @@ public:
         // 0% = 0
         nDutyCycle = (nDC * 100);
     };
+
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nOutput;

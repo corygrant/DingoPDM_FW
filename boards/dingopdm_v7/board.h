@@ -449,7 +449,7 @@
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN14) |      \
                                      PIN_OTYPE_PUSHPULL(GPIOB_PIN15))
 #define VAL_GPIOB_OSPEEDR           (PIN_OSPEED_LOW(GPIOB_PIN0) |           \
-                                     PIN_OSPEED_LOW(GPIOB_PIN1) |           \
+                                     PIN_OSPEED_HIGH(GPIOB_PIN1) |          \
                                      PIN_OSPEED_LOW(GPIOB_PIN2) |           \
                                      PIN_OSPEED_HIGH(GPIOB_PIN3) |          \
                                      PIN_OSPEED_LOW(GPIOB_PIN4) |           \
@@ -497,7 +497,7 @@
                                      PIN_ODR_LOW(GPIOB_PIN14) |             \
                                      PIN_ODR_LOW(GPIOB_PIN15))
 #define VAL_GPIOB_AFRL              (PIN_AFIO_AF(GPIOB_PIN0, 0U) |          \
-                                     PIN_AFIO_AF(GPIOB_PIN1, 0U) |          \
+                                     PIN_AFIO_AF(GPIOB_PIN1, 2U) |          \
                                      PIN_AFIO_AF(GPIOB_PIN2, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_PIN3, 0U) |          \
                                      PIN_AFIO_AF(GPIOB_PIN4, 0U) |          \
@@ -539,9 +539,9 @@
                                      PIN_MODE_ANALOG(GPIOC_PIN3) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN4) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN5) |          \
-                                     PIN_MODE_ALTERNATE(GPIOC_PIN6) |          \
+                                     PIN_MODE_OUTPUT(GPIOC_PIN6) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN7) |          \
-                                     PIN_MODE_ALTERNATE(GPIOC_PIN8) |          \
+                                     PIN_MODE_OUTPUT(GPIOC_PIN8) |          \
                                      PIN_MODE_INPUT(GPIOC_PIN9) |           \
                                      PIN_MODE_OUTPUT(GPIOC_PIN10) |         \
                                      PIN_MODE_OUTPUT(GPIOC_PIN11) |         \
@@ -619,9 +619,9 @@
                                      PIN_AFIO_AF(GPIOC_PIN3, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN4, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN5, 0U) |          \
-                                     PIN_AFIO_AF(GPIOC_PIN6, 2U) |          \
+                                     PIN_AFIO_AF(GPIOC_PIN6, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN7, 0U))
-#define VAL_GPIOC_AFRH              (PIN_AFIO_AF(GPIOC_PIN8, 2U) |          \
+#define VAL_GPIOC_AFRH              (PIN_AFIO_AF(GPIOC_PIN8, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN9, 0U) |          \
                                      PIN_AFIO_AF(GPIOC_PIN10, 0U) |         \
                                      PIN_AFIO_AF(GPIOC_PIN11, 0U) |         \

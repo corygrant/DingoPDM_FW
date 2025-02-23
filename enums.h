@@ -200,7 +200,8 @@ enum class FatalErrorType : uint8_t
   ErrCRC,
   ErrI2C,
   ErrRCC,
-  ErrTemp
+  ErrTemp,
+  ErrPwm
 };
 
 enum class PwmChannel : uint8_t

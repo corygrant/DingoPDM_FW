@@ -1,7 +1,22 @@
 #include "profet.h"
 
-#define TIM_RISE_DELAY 200
-#define TIM_FALL_DELAY 100
+//BTS7002_1EPP and BTS70012_1ESP current sense settle time = 3 * (tON + tsIS_ON)
+//3 * (210us + 40us) = 750us
+//BTS7008_2EPA current sense settle time = tON + tsIS_ON
+//110us + 20us = 130us
+//ADC conversion time = 60us
+//Total time 1 channel = 750us + 60us = 810us
+//Total time 2 channels = 130us + 60us = 190us
+
+//100Hz = 10ms
+//Min DC 1 channel = 810us / 10ms = 8.1%
+//Min DC 2 channels = 190us / 10ms = 1.9%
+
+//400Hz = 2.5ms
+//Min DC 1 channel = 810us / 2.5ms = 32.4%
+//Min DC 2 channels = 190us / 2.5ms = 7.6%
+#define TIM_RISE_DELAY 300
+#define TIM_FALL_DELAY 50
 
 void Profet::Update(bool bOutEnabled)
 {
@@ -38,17 +53,12 @@ void Profet::Update(bool bOutEnabled)
         // Wait for DSEL changeover (up to 60us)
         chThdSleepMicroseconds(200);
     }
-
-    //When freq is 100Hz, DC < 4% results in read issues
-    //100Hz = 10ms period, 4% = 0.4ms
-    //Rise delay is 200us, fall delay is 100us, sample is 60us
-    //200us+100us+60us = 360us
     
     if (pConfig->bPwmEnabled && eState == ProfetState::On)
     {
         uint32_t nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
 
-        if((nCCR > TIM_RISE_DELAY) && (nCCR > TIM_FALL_DELAY) &&
+        if((nCCR > (TIM_RISE_DELAY + TIM_FALL_DELAY)) &&
             (m_pwmDriver->tim->CNT > TIM_RISE_DELAY) && (m_pwmDriver->tim->CNT < (nCCR - TIM_FALL_DELAY)))
             nIS = GetAdcRaw(m_ain);
         else
@@ -85,23 +95,11 @@ void Profet::Update(bool bOutEnabled)
     switch (eState)
     {
     case ProfetState::Off:
-        if (pConfig->bPwmEnabled)
-        {
-            if(m_num == 2)
-            {
-                pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
-            }
-            if(m_num == 4)
-            {
-                pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
-                palClearLine(m_in);
-            }
-        }
-        else
-        {
-            palClearLine(m_in);
-        }
+        if(pConfig->bPwmEnabled)
+            pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
 
+        palClearLine(m_in);
+        
         nOcCount = 0;
 
         // Check for turn on
@@ -115,20 +113,11 @@ void Profet::Update(bool bOutEnabled)
     case ProfetState::On:
         if (pConfig->bPwmEnabled)
         {
-            if(m_num == 2)
-            {
-                pwmEnableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel), PWM_PERCENTAGE_TO_WIDTH(m_pwmDriver, nDutyCycle));
-            }
-            if(m_num == 4)
-            {
-            
-                pwmEnableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel), PWM_PERCENTAGE_TO_WIDTH(m_pwmDriver, nDutyCycle));
-            }
+            pwmEnableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel), PWM_PERCENTAGE_TO_WIDTH(m_pwmDriver, nDutyCycle));
+            pwmEnableChannelNotification(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
         }
         else
-        {
             palSetLine(m_in);
-        }
 
         // Check for turn off
         if (eReqState == ProfetState::Off)
@@ -155,6 +144,9 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::Overcurrent:
+        if(pConfig->bPwmEnabled)
+            pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+
         palClearLine(m_in);
 
         // No reset, straight to fault
@@ -185,6 +177,9 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::Fault:
+        if(pConfig->bPwmEnabled)
+            pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+
         palClearLine(m_in);
         // Fault requires power cycle, no way out
         break;

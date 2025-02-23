@@ -70,87 +70,16 @@ static InfoMsg BattUndervoltageMsg(MsgType::Warning, MsgSrc::Voltage);
 InfoMsg OutputOvercurrentMsg[PDM_NUM_OUTPUTS];
 InfoMsg OutputFaultMsg[PDM_NUM_OUTPUTS];
 
-static void pwm2pcb(PWMDriver *pwmp)
-{
-    (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
-        palSetLine(LINE_PF1_IN);
-    if (pwmp->enabled & (1 << 1))
-        palSetLine(LINE_PF4_IN);
-    if (pwmp->enabled & (1 << 2))
-        palSetLine(LINE_PF6_IN);
-    if (pwmp->enabled & (1 << 3))
-        palSetLine(LINE_PF8_IN);
-}
-
-static void pwmOut1cb(PWMDriver *pwmp)
-{
-    (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
-        palClearLine(LINE_PF1_IN);
-}
-static void pwmOut4cb(PWMDriver *pwmp)
-{
-    (void)pwmp;
-    if (pwmp->enabled & (1 << 1))
-        palClearLine(LINE_PF4_IN);
-}
-static void pwmOut6cb(PWMDriver *pwmp)
-{
-    (void)pwmp;
-    if (pwmp->enabled & (1 << 2))
-        palClearLine(LINE_PF6_IN);
-}
-static void pwmOut8cb(PWMDriver *pwmp)
-{
-    (void)pwmp;
-    if (pwmp->enabled & (1 << 3))
-        palClearLine(LINE_PF8_IN);
-}
-
-static const PWMConfig pwmCfg = {
-    .frequency = 1000000,
-    .period = 10000,
-    .callback = NULL,
-    .channels = {
-        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, // OUT3
-        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, // OUT7
-        {PWM_OUTPUT_ACTIVE_HIGH, NULL}, // OUT2
-        {PWM_OUTPUT_ACTIVE_HIGH, NULL}  // OUT5
-    },
-    .cr2 = 0,
-    .bdtr = 0,
-    .dier = 0};
-
-static const PWMConfig pwm2Cfg = {
-    .frequency = 1000000,
-    .period = 10000,
-    .callback = pwm2pcb,
-    .channels = {
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut1cb}, // OUT3
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut4cb}, // OUT7
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut6cb}, // OUT2
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut8cb}  // OUT5
-    },
-    .cr2 = 0,
-    .bdtr = 0,
-    .dier = 0};
-
 struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
     void main()
     {
         setName("PdmThread");
 
-        uint8_t dc = 0;
         while (true)
         {
             CyclicUpdate();
             States();
-            pf[1].SetDutyCycle(dc);
-            dc += 1;
-            if (dc > 100)
-                dc = 0;
             palToggleLine(LINE_E1);
             chThdSleepMilliseconds(2);
         }
@@ -164,6 +93,7 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
     {
         setName("SlowThread");
 
+        uint8_t dc = 35;
         while (true)
         {
             //=================================================================
@@ -180,6 +110,13 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
             bDeviceOverTemp = tempSensor.OverTempLimit();
             bDeviceCriticalTemp = tempSensor.CritTempLimit();
 
+            for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+            {
+                pf[i].SetDutyCycle(dc);
+                dc += 1;
+                if (dc > 100)
+                    dc = 35;
+            }
             // palToggleLine(LINE_E2);
             chThdSleepMilliseconds(250);
         }
@@ -205,18 +142,32 @@ void InitPdm()
     InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
     // InitUsb(); // Starts USB threads
 
+    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+        pf[i].SetDutyCycle(0);
 
+    if (!InitPwm() == HAL_RET_SUCCESS)
+        Error::SetFatalError(FatalErrorType::ErrPwm, MsgSrc::Init);
 
-    pwmStart(&PWMD3, &pwmCfg);
-    //pwmEnablePeriodicNotification(&PWMD3);
+    //*******REMOVE */
+    pf[0].SetDutyCycle(50);
     pf[1].SetDutyCycle(50);
+    pf[2].SetDutyCycle(50);
+    pf[3].SetDutyCycle(50);
+    pf[4].SetDutyCycle(50);
+    pf[5].SetDutyCycle(50);
+    pf[6].SetDutyCycle(50);
+    pf[7].SetDutyCycle(50);
 
-    pwmStart(&PWMD4, &pwm2Cfg);
-    pwmEnablePeriodicNotification(&PWMD4);
+    stConfig.stOutput[0].bPwmEnabled = true;
     stConfig.stOutput[1].bPwmEnabled = true;
+    stConfig.stOutput[2].bPwmEnabled = true;
     stConfig.stOutput[3].bPwmEnabled = true;
+    stConfig.stOutput[4].bPwmEnabled = true;
+    stConfig.stOutput[5].bPwmEnabled = true;
+    stConfig.stOutput[6].bPwmEnabled = true;
+    stConfig.stOutput[7].bPwmEnabled = true;
 
-
+    //*******END REMOVE */
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);

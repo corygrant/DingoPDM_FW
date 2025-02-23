@@ -60,6 +60,7 @@ const I2CConfig i2cConfig = {
 void InitAdc();
 void DeInitAdc();
 uint16_t GetAdcRaw(AnalogChannel channel);
+msg_t InitPwm();
 float GetBattVolt();
 float GetTemperature();
 float GetVDDA();

@@ -118,6 +118,129 @@ uint16_t GetAdcRaw(AnalogChannel channel)
     return adc1_samples[static_cast<uint8_t>(channel)];
 }
 
+static void pwm3pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palSetLine(LINE_PF1_IN);
+    if (pwmp->enabled & (1 << 1))
+        palSetLine(LINE_PF2_IN);
+    if (pwmp->enabled & (1 << 2))
+        palSetLine(LINE_PF3_IN);
+    if (pwmp->enabled & (1 << 3))
+        palSetLine(LINE_PF4_IN);
+}
+
+static void pwm4pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palSetLine(LINE_PF5_IN);
+    if (pwmp->enabled & (1 << 1))
+        palSetLine(LINE_PF6_IN);
+    if (pwmp->enabled & (1 << 2))
+        palSetLine(LINE_PF7_IN);
+    if (pwmp->enabled & (1 << 3))
+        palSetLine(LINE_PF8_IN);
+}
+
+static void pwmOut1cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palClearLine(LINE_PF1_IN);
+}
+static void pwmOut2cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 1))
+        palClearLine(LINE_PF2_IN);
+}
+static void pwmOut3cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 2))
+        palClearLine(LINE_PF3_IN);
+}
+static void pwmOut4cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 3))
+        palClearLine(LINE_PF4_IN);
+}
+static void pwmOut5cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palClearLine(LINE_PF5_IN);
+}
+static void pwmOut6cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 1))
+        palClearLine(LINE_PF6_IN);
+}
+static void pwmOut7cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 2))
+        palClearLine(LINE_PF7_IN);
+}
+static void pwmOut8cb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 3))
+        palClearLine(LINE_PF8_IN);
+}
+
+static const PWMConfig pwm3Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm3pcb,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut1cb},
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut2cb},
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut3cb},
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut4cb}
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm4Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm4pcb,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut5cb},
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut6cb},
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut7cb},
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut8cb} 
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+msg_t InitPwm()
+{
+    msg_t ret;
+
+    ret = pwmStart(&PWMD3, &pwm3Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    ret = pwmStart(&PWMD4, &pwm4Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    pwmEnablePeriodicNotification(&PWMD3);
+    pwmEnablePeriodicNotification(&PWMD4);
+
+    return HAL_RET_SUCCESS;
+}
+
 float GetBattVolt()
 {
     // MCU vRef = 3.3v
