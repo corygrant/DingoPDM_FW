@@ -93,7 +93,7 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
     {
         setName("SlowThread");
 
-        uint8_t dc = 35;
+        uint8_t dc = 50;
         while (true)
         {
             //=================================================================
@@ -115,7 +115,7 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
                 pf[i].SetDutyCycle(dc);
                 dc += 1;
                 if (dc > 100)
-                    dc = 35;
+                    dc = 10;
             }
             // palToggleLine(LINE_E2);
             chThdSleepMilliseconds(250);

@@ -5,6 +5,30 @@
 #include "config.h"
 #include "enums.h"
 
+
+//=============================================================================
+//PWM read delay = timer count from PWM going high till ready to read ADC
+//=============================================================================
+// BTS7002-1EPP or BTS70012-1ESP
+// Typical switch on time + current sense settle time = 130us + 5us = 135us, round up to 140us
+// NOTE: Section 9.4 of the datasheet says this should be multiplied by 3x
+// NOTE: Other datasheets do not say this, not using 3x
+// ADC conversion = 20us
+#define PWM_READ_DELAY_SINGLE_CH 160
+//Min duty cycle @ 100Hz = 160us / 10ms  = 1.6%
+//Min duty cycle @ 200Hz = 160us / 5ms   = 3.2%
+//Min duty cycle @ 400Hz = 160us / 2.5ms = 6.4%
+
+// BTS7008-2EPA
+// Typical switch on time + current sense settle time = 60us + 5us = 65us, round up to 70us
+// ADC conversion = 20us
+#define PWM_READ_DELAY_DOUBLE_CH 90
+//Min duty cycle @ 100Hz = 90us / 10ms  = 0.9%
+//Min duty cycle @ 200Hz = 90us / 5ms   = 1.8%
+//Min duty cycle @ 400Hz = 90us / 2.5ms = 3.6%
+//=============================================================================
+
+
 class Profet
 {
 public:
@@ -18,13 +42,16 @@ public:
         {
         case ProfetModel::BTS7002_1EPP:
             fKILIS = BTS7002_1EPP_KILIS;
+            nPwmReadDelay = PWM_READ_DELAY_SINGLE_CH;
             break;
         case ProfetModel::BTS7008_2EPA_CH1:
         case ProfetModel::BTS7008_2EPA_CH2:
             fKILIS = BTS7008_2EPA_KILIS;
+            nPwmReadDelay = PWM_READ_DELAY_DOUBLE_CH;
             break;
         case ProfetModel::BTS70012_1ESP:
             fKILIS = BTS70012_1ESP_KILIS;
+            nPwmReadDelay = PWM_READ_DELAY_SINGLE_CH;
             break;
         }
     }
@@ -86,4 +113,5 @@ private:
     uint32_t nOcTriggerTime; // Time of overcurrent
 
     uint16_t nDutyCycle = 0;
+    uint16_t nPwmReadDelay = 0;
 };

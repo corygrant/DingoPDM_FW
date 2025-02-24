@@ -1,23 +1,5 @@
 #include "profet.h"
 
-//BTS7002_1EPP and BTS70012_1ESP current sense settle time = 3 * (tON + tsIS_ON)
-//3 * (210us + 40us) = 750us
-//BTS7008_2EPA current sense settle time = tON + tsIS_ON
-//110us + 20us = 130us
-//ADC conversion time = 60us
-//Total time 1 channel = 750us + 60us = 810us
-//Total time 2 channels = 130us + 60us = 190us
-
-//100Hz = 10ms
-//Min DC 1 channel = 810us / 10ms = 8.1%
-//Min DC 2 channels = 190us / 10ms = 1.9%
-
-//400Hz = 2.5ms
-//Min DC 1 channel = 810us / 2.5ms = 32.4%
-//Min DC 2 channels = 190us / 2.5ms = 7.6%
-#define TIM_RISE_DELAY 300
-#define TIM_FALL_DELAY 50
-
 void Profet::Update(bool bOutEnabled)
 {
     eLastState = eState;
@@ -38,29 +20,40 @@ void Profet::Update(bool bOutEnabled)
     // Set DSEL pin to select the appropriate IS channel
     // Only valid on 2 channel devices
     // Wait for DSEL changeover and ADC conversion to complete
-    // DSEL changeover takes ~60us
-    // ADC conversion takes ~60us 
-    // Round up to 200us to ensure changeover/conversion finishes
+    // DSEL changeover takes max ~60us
     if (m_model == ProfetModel::BTS7008_2EPA_CH1)
     {
         palClearLine(m_dsel);
-
-        chThdSleepMicroseconds(200);
+        chThdSleepMicroseconds(60);
     }
     else if (m_model == ProfetModel::BTS7008_2EPA_CH2)
     {
         palSetLine(m_dsel);
-        // Wait for DSEL changeover (up to 60us)
-        chThdSleepMicroseconds(200);
+        chThdSleepMicroseconds(60);
     }
     
+    uint32_t nCNT = 0;
+    uint32_t nCCR = 0;
+
     if (pConfig->bPwmEnabled && eState == ProfetState::On)
     {
-        uint32_t nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
+        //Assign to local vars to prevent CNT rolling over and slipping past check
+        //Example: 
+        //CCR = 2500
+        //When checking read delay CNT = 2499
+        //Before getting to the CNT < CCR check the CNT has rolled over to 0
+        //This will cause an incorrect reading 
+        //Copying to local var freezes the CNT value
+        nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
+        nCNT = m_pwmDriver->tim->CNT; 
 
-        if((nCCR > (TIM_RISE_DELAY + TIM_FALL_DELAY)) &&
-            (m_pwmDriver->tim->CNT > TIM_RISE_DELAY) && (m_pwmDriver->tim->CNT < (nCCR - TIM_FALL_DELAY)))
+        if((nCCR > nPwmReadDelay) &&
+            (nCNT > nPwmReadDelay) && 
+            (nCNT < nCCR))
+        {
             nIS = GetAdcRaw(m_ain);
+            nLastIS = nIS;
+        }
         else
         {
             nIS = nLastIS;
@@ -69,7 +62,6 @@ void Profet::Update(bool bOutEnabled)
     else
         nIS = GetAdcRaw(m_ain);
 
-    nLastIS = nIS;
 
     // Calculate current at ADC, multiply by kILIS ratio to get output current
     // Analog value must be ready before reading to allow for conversion after DSEL change
