@@ -13,6 +13,15 @@ CANTxFrame TxMsg3();
 CANTxFrame TxMsg4();
 CANTxFrame TxMsg5();
 CANTxFrame TxMsg6();
+CANTxFrame TxMsg7();
+CANTxFrame TxMsg8();
+CANTxFrame TxMsg9();
+CANTxFrame TxMsg10();
+CANTxFrame TxMsg11();
+CANTxFrame TxMsg12();
+CANTxFrame TxMsg13();
+CANTxFrame TxMsg14();
+CANTxFrame TxMsg15();
 
 [[maybe_unused]] static CANTxFrame (*TxMsgs[PDM_NUM_TX_MSGS])() = {
     TxMsg0,
@@ -21,7 +30,16 @@ CANTxFrame TxMsg6();
     TxMsg3,
     TxMsg4,
     TxMsg5,
-    TxMsg6};
+    TxMsg6,
+    TxMsg7,
+    TxMsg8,
+    TxMsg9,
+    TxMsg10,
+    TxMsg11,
+    TxMsg12,
+    TxMsg13,
+    TxMsg14,
+    TxMsg15};
 
 class InfoMsg
 {

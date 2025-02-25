@@ -66,7 +66,7 @@ public:
     uint16_t GetCurrent() { return nCurrent; }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
-    
+    uint8_t GetDutyCycle() { return (nDutyCycle / 100); }
     void SetDutyCycle(uint8_t nDC)
     {
         if (nDC > 100)

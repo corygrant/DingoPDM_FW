@@ -129,18 +129,18 @@ CANTxFrame TxMsg5()
     //=======================================================
     stMsg.SID = stConfig.stCanOutput.nBaseId + 5;
     stMsg.DLC = 8; // Bytes to send
-    stMsg.data8[0] = ((GetCanInVal(7) & 0x01) << 7) + ((GetCanInVal(6) & 0x01) << 6) + ((GetCanInVal(5) & 0x01) << 5) +
-                     ((GetCanInVal(4) & 0x01) << 4) + ((GetCanInVal(3) & 0x01) << 3) + ((GetCanInVal(2) & 0x01) << 2) +
-                     ((GetCanInVal(1) & 0x01) << 1) + (GetCanInVal(0) & 0x01);
-    stMsg.data8[1] = ((GetCanInVal(15) & 0x01) << 7) + ((GetCanInVal(14) & 0x01) << 6) + ((GetCanInVal(13) & 0x01) << 5) +
-                     ((GetCanInVal(12) & 0x01) << 4) + ((GetCanInVal(11) & 0x01) << 3) + ((GetCanInVal(10) & 0x01) << 2) +
-                     ((GetCanInVal(9) & 0x01) << 1) + (GetCanInVal(8) & 0x01);
-    stMsg.data8[2] = ((GetCanInVal(23) & 0x01) << 7) + ((GetCanInVal(22) & 0x01) << 6) + ((GetCanInVal(21) & 0x01) << 5) +
-                     ((GetCanInVal(20) & 0x01) << 4) + ((GetCanInVal(19) & 0x01) << 3) + ((GetCanInVal(18) & 0x01) << 2) +
-                     ((GetCanInVal(17) & 0x01) << 1) + (GetCanInVal(16) & 0x01);
-    stMsg.data8[3] = ((GetCanInVal(31) & 0x01) << 7) + ((GetCanInVal(30) & 0x01) << 6) + ((GetCanInVal(29) & 0x01) << 5) +
-                     ((GetCanInVal(28) & 0x01) << 4) + ((GetCanInVal(27) & 0x01) << 3) + ((GetCanInVal(26) & 0x01) << 2) +
-                     ((GetCanInVal(25) & 0x01) << 1) + (GetCanInVal(24) & 0x01);
+    stMsg.data8[0] = ((GetCanInOutput(7) & 0x01) << 7) + ((GetCanInOutput(6) & 0x01) << 6) + ((GetCanInOutput(5) & 0x01) << 5) +
+                     ((GetCanInOutput(4) & 0x01) << 4) + ((GetCanInOutput(3) & 0x01) << 3) + ((GetCanInOutput(2) & 0x01) << 2) +
+                     ((GetCanInOutput(1) & 0x01) << 1) + (GetCanInOutput(0) & 0x01);
+    stMsg.data8[1] = ((GetCanInOutput(15) & 0x01) << 7) + ((GetCanInOutput(14) & 0x01) << 6) + ((GetCanInOutput(13) & 0x01) << 5) +
+                     ((GetCanInOutput(12) & 0x01) << 4) + ((GetCanInOutput(11) & 0x01) << 3) + ((GetCanInOutput(10) & 0x01) << 2) +
+                     ((GetCanInOutput(9) & 0x01) << 1) + (GetCanInOutput(8) & 0x01);
+    stMsg.data8[2] = ((GetCanInOutput(23) & 0x01) << 7) + ((GetCanInOutput(22) & 0x01) << 6) + ((GetCanInOutput(21) & 0x01) << 5) +
+                     ((GetCanInOutput(20) & 0x01) << 4) + ((GetCanInOutput(19) & 0x01) << 3) + ((GetCanInOutput(18) & 0x01) << 2) +
+                     ((GetCanInOutput(17) & 0x01) << 1) + (GetCanInOutput(16) & 0x01);
+    stMsg.data8[3] = ((GetCanInOutput(31) & 0x01) << 7) + ((GetCanInOutput(30) & 0x01) << 6) + ((GetCanInOutput(29) & 0x01) << 5) +
+                     ((GetCanInOutput(28) & 0x01) << 4) + ((GetCanInOutput(27) & 0x01) << 3) + ((GetCanInOutput(26) & 0x01) << 2) +
+                     ((GetCanInOutput(25) & 0x01) << 1) + (GetCanInOutput(24) & 0x01);
     stMsg.data8[4] = ((GetVirtInVal(7) & 0x01) << 7) + ((GetVirtInVal(6) & 0x01) << 6) + ((GetVirtInVal(5) & 0x01) << 5) +
                      ((GetVirtInVal(4) & 0x01) << 4) + ((GetVirtInVal(3) & 0x01) << 3) + ((GetVirtInVal(2) & 0x01) << 2) +
                      ((GetVirtInVal(1) & 0x01) << 1) + (GetVirtInVal(0) & 0x01);
@@ -178,5 +178,129 @@ CANTxFrame TxMsg6()
                      ((GetConditionVal(28) & 0x01) << 4) + ((GetConditionVal(27) & 0x01) << 3) + ((GetConditionVal(26) & 0x01) << 2) +
                      ((GetConditionVal(25) & 0x01) << 1) + (GetConditionVal(24) & 0x01);
 
+    return stMsg;
+}
+
+CANTxFrame TxMsg7()
+{
+    CANTxFrame stMsg;
+    //=======================================================
+    // Build Msg 7 (CAN Input Values 1-4)
+    //=======================================================
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 7;
+    stMsg.DLC = 8; // Bytes to send
+    stMsg.data16[0] = GetCanInVal(0);
+    stMsg.data16[1] = GetCanInVal(1);
+    stMsg.data16[2] = GetCanInVal(2);
+    stMsg.data16[3] = GetCanInVal(3); 
+
+    return stMsg;
+}
+
+CANTxFrame TxMsg8()
+{
+    CANTxFrame stMsg;
+    //=======================================================
+    // Build Msg 8 (CAN Input Values 5-8)
+    //=======================================================
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 8;
+    stMsg.DLC = 8; // Bytes to send
+    stMsg.data16[0] = GetCanInVal(4);
+    stMsg.data16[1] = GetCanInVal(5);
+    stMsg.data16[2] = GetCanInVal(6);
+    stMsg.data16[3] = GetCanInVal(7); 
+
+    return stMsg;
+}
+
+CANTxFrame TxMsg9()
+{
+    CANTxFrame stMsg;
+    //=======================================================
+    // Build Msg 9 (CAN Input Values 9-12)
+    //=======================================================
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 9;
+    stMsg.DLC = 8; // Bytes to send
+    stMsg.data16[0] = GetCanInVal(8);
+    stMsg.data16[1] = GetCanInVal(9);
+    stMsg.data16[2] = GetCanInVal(10);
+    stMsg.data16[3] = GetCanInVal(11); 
+
+    return stMsg;
+}
+
+CANTxFrame TxMsg10()
+{
+    CANTxFrame stMsg;
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 10;
+    stMsg.DLC = 8;
+    stMsg.data16[0] = GetCanInVal(12);
+    stMsg.data16[1] = GetCanInVal(13);
+    stMsg.data16[2] = GetCanInVal(14);
+    stMsg.data16[3] = GetCanInVal(15);
+    return stMsg;
+}
+
+CANTxFrame TxMsg11()
+{
+    CANTxFrame stMsg;
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 11;
+    stMsg.DLC = 8;
+    stMsg.data16[0] = GetCanInVal(16);
+    stMsg.data16[1] = GetCanInVal(17);
+    stMsg.data16[2] = GetCanInVal(18);
+    stMsg.data16[3] = GetCanInVal(19);
+    return stMsg;
+}
+
+CANTxFrame TxMsg12()
+{
+    CANTxFrame stMsg;
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 12;
+    stMsg.DLC = 8;
+    stMsg.data16[0] = GetCanInVal(20);
+    stMsg.data16[1] = GetCanInVal(21);
+    stMsg.data16[2] = GetCanInVal(22);
+    stMsg.data16[3] = GetCanInVal(23);
+    return stMsg;
+}
+
+CANTxFrame TxMsg13()
+{
+    CANTxFrame stMsg;
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 13;
+    stMsg.DLC = 8;
+    stMsg.data16[0] = GetCanInVal(24);
+    stMsg.data16[1] = GetCanInVal(25);
+    stMsg.data16[2] = GetCanInVal(26);
+    stMsg.data16[3] = GetCanInVal(27);
+    return stMsg;
+}
+
+CANTxFrame TxMsg14()
+{
+    CANTxFrame stMsg;
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 14;
+    stMsg.DLC = 8;
+    stMsg.data16[0] = GetCanInVal(28);
+    stMsg.data16[1] = GetCanInVal(29);
+    stMsg.data16[2] = GetCanInVal(30);
+    stMsg.data16[3] = GetCanInVal(31);
+    return stMsg;
+}
+
+CANTxFrame TxMsg15()
+{
+    CANTxFrame stMsg;
+    stMsg.SID = stConfig.stCanOutput.nBaseId + 15;
+    stMsg.DLC = 8;
+    stMsg.data8[0] = GetOutputDC(0);
+    stMsg.data8[1] = GetOutputDC(1);
+    stMsg.data8[2] = GetOutputDC(2);
+    stMsg.data8[3] = GetOutputDC(3);
+    stMsg.data8[4] = GetOutputDC(4);
+    stMsg.data8[5] = GetOutputDC(5);
+    stMsg.data8[6] = GetOutputDC(6);
+    stMsg.data8[7] = GetOutputDC(7); 
     return stMsg;
 }

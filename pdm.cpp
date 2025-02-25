@@ -595,12 +595,20 @@ uint8_t GetOutputOcCount(uint8_t nOutput)
     return pf[nOutput].GetOcCount();
 }
 
-bool GetCanInVal(uint8_t nInput)
+uint8_t GetOutputDC(uint8_t nOutput)
+{
+    if (nOutput >= PDM_NUM_OUTPUTS)
+        return 0;
+
+    return pf[nOutput].GetDutyCycle();
+}
+
+bool GetCanInOutput(uint8_t nInput)
 {
     if (nInput >= PDM_NUM_CAN_INPUTS)
         return false;
 
-    return canIn[nInput].nVal;
+    return canIn[nInput].nOutput;
 }
 
 bool GetVirtInVal(uint8_t nInput)
