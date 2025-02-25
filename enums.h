@@ -9,7 +9,8 @@ enum class MsgCmd : uint8_t
     Inputs = 5,
     //InputsName = 6, //Future use
     Outputs = 10,
-    //OutputsName = 11, //Future use
+    OutputsPwm = 11,
+    //OutputsName = 12, //Future use
     VirtualInputs = 15,
     //VirtualInputsName = 16, //Future use
     Wiper = 20,

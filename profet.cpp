@@ -35,7 +35,7 @@ void Profet::Update(bool bOutEnabled)
     uint32_t nCNT = 0;
     uint32_t nCCR = 0;
 
-    if (pConfig->bPwmEnabled && eState == ProfetState::On)
+    if (pwm.IsEnabled() && eState == ProfetState::On)
     {
         //Assign to local vars to prevent CNT rolling over and slipping past check
         //Example: 
@@ -87,8 +87,8 @@ void Profet::Update(bool bOutEnabled)
     switch (eState)
     {
     case ProfetState::Off:
-        if(pConfig->bPwmEnabled)
-            pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+        if(pwm.IsEnabled())
+            pwm.Off();
 
         palClearLine(m_in);
         
@@ -103,11 +103,8 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::On:
-        if (pConfig->bPwmEnabled)
-        {
-            pwmEnableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel), PWM_PERCENTAGE_TO_WIDTH(m_pwmDriver, nDutyCycle));
-            pwmEnableChannelNotification(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
-        }
+        if (pwm.IsEnabled())
+            pwm.On();
         else
             palSetLine(m_in);
 
@@ -136,8 +133,8 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::Overcurrent:
-        if(pConfig->bPwmEnabled)
-            pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+        if(pwm.IsEnabled())
+            pwm.Off();
 
         palClearLine(m_in);
 
@@ -169,13 +166,15 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::Fault:
-        if(pConfig->bPwmEnabled)
-            pwmDisableChannel(m_pwmDriver, static_cast<uint8_t>(m_pwmChannel));
+        if(pwm.IsEnabled())
+            pwm.Off();
 
         palClearLine(m_in);
         // Fault requires power cycle, no way out
         break;
     }
+
+    pwm.Update();
 
     nOutput = eState == ProfetState::On ? 1 : 0;
 }

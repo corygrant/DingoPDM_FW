@@ -93,7 +93,6 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
     {
         setName("SlowThread");
 
-        uint8_t dc = 50;
         while (true)
         {
             //=================================================================
@@ -110,13 +109,6 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
             bDeviceOverTemp = tempSensor.OverTempLimit();
             bDeviceCriticalTemp = tempSensor.CritTempLimit();
 
-            for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
-            {
-                pf[i].SetDutyCycle(dc);
-                dc += 1;
-                if (dc > 100)
-                    dc = 10;
-            }
             // palToggleLine(LINE_E2);
             chThdSleepMilliseconds(250);
         }
@@ -141,33 +133,6 @@ void InitPdm()
     InitAdc();
     InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
     // InitUsb(); // Starts USB threads
-
-    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
-        pf[i].SetDutyCycle(0);
-
-    if (!InitPwm() == HAL_RET_SUCCESS)
-        Error::SetFatalError(FatalErrorType::ErrPwm, MsgSrc::Init);
-
-    //*******REMOVE */
-    pf[0].SetDutyCycle(50);
-    pf[1].SetDutyCycle(50);
-    pf[2].SetDutyCycle(50);
-    pf[3].SetDutyCycle(50);
-    pf[4].SetDutyCycle(50);
-    pf[5].SetDutyCycle(50);
-    pf[6].SetDutyCycle(50);
-    pf[7].SetDutyCycle(50);
-
-    stConfig.stOutput[0].bPwmEnabled = true;
-    stConfig.stOutput[1].bPwmEnabled = true;
-    stConfig.stOutput[2].bPwmEnabled = true;
-    stConfig.stOutput[3].bPwmEnabled = true;
-    stConfig.stOutput[4].bPwmEnabled = true;
-    stConfig.stOutput[5].bPwmEnabled = true;
-    stConfig.stOutput[6].bPwmEnabled = true;
-    stConfig.stOutput[7].bPwmEnabled = true;
-
-    //*******END REMOVE */
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
@@ -313,7 +278,7 @@ void InitVarMap()
     // CAN Input val
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
     {
-        pVarMap[i + 35] = &canIn[i].nOutput;
+        pVarMap[i + 35] = &canIn[i].nVal;
     }
 
     // 67-84

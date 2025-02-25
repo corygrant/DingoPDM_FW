@@ -36,6 +36,9 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
         case MsgCmd::Outputs:
             res = Profet::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
+        case MsgCmd::OutputsPwm:
+            res = Pwm::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
         case MsgCmd::CanInputs:
         case MsgCmd::CanInputsId:
             res = CanInput::ProcessSettingsMsg(&stConfig, frame, &tx);

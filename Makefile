@@ -146,6 +146,7 @@ CPPSRC = $(ALLCPPSRC) \
          led.cpp \
          mailbox.cpp \
          pdm.cpp \
+         pwm.cpp \
          profet.cpp \
          hw_devices.cpp \
          starter.cpp \

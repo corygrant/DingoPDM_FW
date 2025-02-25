@@ -30,6 +30,17 @@ struct Config_VirtualInput{
   InputMode eMode;
 };
 
+struct Config_PwmOutput{
+  bool bEnabled;
+  bool bSoftStart;
+  bool bVariableDutyCycle;
+  uint8_t nDutyCycleInput;
+  uint8_t nFixedDutyCycle; //0-100
+  uint16_t nFreq; //0-400Hz
+  uint16_t nSoftStartRampTime; //0-2000ms
+  uint16_t nDutyCycleInputDenom; //0-5000
+};
+
 struct Config_Output{
   bool bEnabled;
   uint8_t nInput;
@@ -40,13 +51,7 @@ struct Config_Output{
   uint16_t nResetTime;
   uint8_t nResetLimit;
 
-  bool bPwmEnabled;
-  bool bSoftStart;
-  bool bVariableDutyCycle;
-  uint8_t nDutyCycleInput;
-  uint16_t nFreq; //Hz
-  uint16_t nSoftStartRampTime; //ms
-  uint16_t nDutyCycleInputDenom;
+  Config_PwmOutput stPwm;
 };
 
 struct Config_Wiper{
