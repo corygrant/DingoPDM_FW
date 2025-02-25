@@ -611,6 +611,14 @@ bool GetCanInOutput(uint8_t nInput)
     return canIn[nInput].nOutput;
 }
 
+uint16_t GetCanInVal(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_CAN_INPUTS)
+        return false;
+
+    return canIn[nInput].nVal;
+}
+
 bool GetVirtInVal(uint8_t nInput)
 {
     if (nInput >= PDM_NUM_VIRT_INPUTS)

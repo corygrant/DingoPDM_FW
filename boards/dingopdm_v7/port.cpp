@@ -123,24 +123,54 @@ static void pwm3pcb(PWMDriver *pwmp)
     (void)pwmp;
     if (pwmp->enabled & (1 << 0))
         palSetLine(LINE_PF1_IN);
-    if (pwmp->enabled & (1 << 1))
-        palSetLine(LINE_PF2_IN);
-    if (pwmp->enabled & (1 << 2))
-        palSetLine(LINE_PF3_IN);
-    if (pwmp->enabled & (1 << 3))
-        palSetLine(LINE_PF4_IN);
 }
 
 static void pwm4pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
     if (pwmp->enabled & (1 << 0))
+        palSetLine(LINE_PF2_IN);
+}
+
+static void pwm5pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palSetLine(LINE_PF3_IN);
+}
+
+static void pwm9pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
+        palSetLine(LINE_PF4_IN);
+}
+
+static void pwm10pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
         palSetLine(LINE_PF5_IN);
-    if (pwmp->enabled & (1 << 1))
+}
+
+static void pwm11pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
         palSetLine(LINE_PF6_IN);
-    if (pwmp->enabled & (1 << 2))
+}
+
+static void pwm12pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
         palSetLine(LINE_PF7_IN);
-    if (pwmp->enabled & (1 << 3))
+}
+
+static void pwm13pcb(PWMDriver *pwmp)
+{
+    (void)pwmp;
+    if (pwmp->enabled & (1 << 0))
         palSetLine(LINE_PF8_IN);
 }
 
@@ -153,19 +183,19 @@ static void pwmOut1cb(PWMDriver *pwmp)
 static void pwmOut2cb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 1))
+    if (pwmp->enabled & (1 << 0))
         palClearLine(LINE_PF2_IN);
 }
 static void pwmOut3cb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 2))
+    if (pwmp->enabled & (1 << 0))
         palClearLine(LINE_PF3_IN);
 }
 static void pwmOut4cb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 3))
+    if (pwmp->enabled & (1 << 0))
         palClearLine(LINE_PF4_IN);
 }
 static void pwmOut5cb(PWMDriver *pwmp)
@@ -177,19 +207,19 @@ static void pwmOut5cb(PWMDriver *pwmp)
 static void pwmOut6cb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 1))
+    if (pwmp->enabled & (1 << 0))
         palClearLine(LINE_PF6_IN);
 }
 static void pwmOut7cb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 2))
+    if (pwmp->enabled & (1 << 0))
         palClearLine(LINE_PF7_IN);
 }
 static void pwmOut8cb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 3))
+    if (pwmp->enabled & (1 << 0))
         palClearLine(LINE_PF8_IN);
 }
 
@@ -199,9 +229,9 @@ static const PWMConfig pwm3Cfg = {
     .callback = pwm3pcb,
     .channels = {
         {PWM_OUTPUT_ACTIVE_HIGH, pwmOut1cb},
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut2cb},
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut3cb},
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut4cb}
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL} 
     },
     .cr2 = 0,
     .bdtr = 0,
@@ -213,10 +243,100 @@ static const PWMConfig pwm4Cfg = {
     .period = 2500,
     .callback = pwm4pcb,
     .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut2cb},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL} 
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm5Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm5pcb,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut3cb},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL}  
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm9Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm9pcb,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut4cb},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL}  
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm10Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm10pcb,
+    .channels = {
         {PWM_OUTPUT_ACTIVE_HIGH, pwmOut5cb},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL}  
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm11Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm11pcb,
+    .channels = {
         {PWM_OUTPUT_ACTIVE_HIGH, pwmOut6cb},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL}  
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm12Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm12pcb,
+    .channels = {
         {PWM_OUTPUT_ACTIVE_HIGH, pwmOut7cb},
-        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut8cb} 
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL} 
+    },
+    .cr2 = 0,
+    .bdtr = 0,
+    .dier = 0
+};
+
+static const PWMConfig pwm13Cfg = {
+    .frequency = 1000000,
+    .period = 2500,
+    .callback = pwm13pcb,
+    .channels = {
+        {PWM_OUTPUT_ACTIVE_HIGH, pwmOut8cb},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL},
+        {PWM_OUTPUT_DISABLED, NULL} 
     },
     .cr2 = 0,
     .bdtr = 0,
@@ -235,8 +355,38 @@ msg_t InitPwm()
     if (ret != HAL_RET_SUCCESS)
         return ret;
 
+    ret = pwmStart(&PWMD5, &pwm5Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    ret = pwmStart(&PWMD9, &pwm9Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    ret = pwmStart(&PWMD10, &pwm10Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    ret = pwmStart(&PWMD11, &pwm11Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    ret = pwmStart(&PWMD12, &pwm12Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
+    ret = pwmStart(&PWMD13, &pwm13Cfg);
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
+
     pwmEnablePeriodicNotification(&PWMD3);
     pwmEnablePeriodicNotification(&PWMD4);
+    pwmEnablePeriodicNotification(&PWMD5);
+    pwmEnablePeriodicNotification(&PWMD9);
+    pwmEnablePeriodicNotification(&PWMD10);
+    pwmEnablePeriodicNotification(&PWMD11);
+    pwmEnablePeriodicNotification(&PWMD12);
+    pwmEnablePeriodicNotification(&PWMD13);
 
     return HAL_RET_SUCCESS;
 }
