@@ -21,39 +21,42 @@ bool CanInput::CheckMsg(CANRxFrame rx)
         nData |= rx.data8[pConfig->nStartingByte + i] << (8 * ((pConfig->nDLC - 1) - i));
     }
 
+    //Copy data to shared value
+    nVal = nData;
+
     // Use Input class to enable momentary/latching
     switch (pConfig->eOperator)
     {
     case Operator::Equal:
-        nVal = input.Check(pConfig->eMode, false, nData == pConfig->nOnVal);
+        nOutput = input.Check(pConfig->eMode, false, nData == pConfig->nOnVal);
         break;
 
     case Operator::NotEqual:
-        nVal = input.Check(pConfig->eMode, false, nData != pConfig->nOnVal);
+        nOutput = input.Check(pConfig->eMode, false, nData != pConfig->nOnVal);
         break;
 
     case Operator::GreaterThan:
-        nVal = input.Check(pConfig->eMode, false, nData > pConfig->nOnVal);
+        nOutput = input.Check(pConfig->eMode, false, nData > pConfig->nOnVal);
         break;
 
     case Operator::LessThan:
-        nVal = input.Check(pConfig->eMode, false, nData < pConfig->nOnVal);
+        nOutput = input.Check(pConfig->eMode, false, nData < pConfig->nOnVal);
         break;
 
     case Operator::GreaterThanOrEqual:
-        nVal = input.Check(pConfig->eMode, false, nData >= pConfig->nOnVal);
+        nOutput = input.Check(pConfig->eMode, false, nData >= pConfig->nOnVal);
         break;
 
     case Operator::LessThanOrEqual:
-        nVal = input.Check(pConfig->eMode, false, nData <= pConfig->nOnVal);
+        nOutput = input.Check(pConfig->eMode, false, nData <= pConfig->nOnVal);
         break;
 
     case Operator::BitwiseAnd:
-        nVal = input.Check(pConfig->eMode, false, (nData & pConfig->nOnVal) > 0);
+        nOutput = input.Check(pConfig->eMode, false, (nData & pConfig->nOnVal) > 0);
         break;
 
     case Operator::BitwiseNand:
-        nVal = input.Check(pConfig->eMode, false, !((nData & pConfig->nOnVal) > 0));
+        nOutput = input.Check(pConfig->eMode, false, !((nData & pConfig->nOnVal) > 0));
         break;
     }
 
@@ -66,7 +69,10 @@ void CanInput::CheckTimeout()
         return;
 
     if (SYS_TIME - nLastRxTime > pConfig->nTimeout)
+    {
         nVal = 0;
+        nOutput = 0;
+    }
 }
 
 MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)

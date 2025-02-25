@@ -17,11 +17,12 @@ public:
     void CheckTimeout();
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
+    uint16_t nOutput;
     uint16_t nVal;
 
 private:
     Config_CanInput* pConfig;
-    uint64_t nData;
+    uint16_t nData;
 
     Input input;
 

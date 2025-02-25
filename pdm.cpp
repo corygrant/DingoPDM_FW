@@ -306,52 +306,59 @@ void InitVarMap()
     // CAN Inputs
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
     {
-        pVarMap[i + 3] = &canIn[i].nVal;
+        pVarMap[i + 3] = &canIn[i].nOutput;
     }
 
-    // 35-50
+    // 35-66
+    // CAN Input val
+    for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
+    {
+        pVarMap[i + 35] = &canIn[i].nOutput;
+    }
+
+    // 67-84
     // Virtual Inputs
     for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
     {
-        pVarMap[i + 35] = &virtIn[i].nVal;
+        pVarMap[i + 67] = &virtIn[i].nVal;
     }
 
-    // 51-66
+    // 83-90
     // Outputs
     for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
     {
-        pVarMap[i + 51] = &pf[i].nOutput;
+        pVarMap[i + 83] = &pf[i].nOutput;
     }
 
-    // 59-60
+    // 91-92
     // Wiper
-    pVarMap[59] = &wiper.nSlowOut;
-    pVarMap[60] = &wiper.nFastOut;
+    pVarMap[91] = &wiper.nSlowOut;
+    pVarMap[92] = &wiper.nFastOut;
 
-    // 61-64
+    // 93-96
     // Flashers
     for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
     {
-        pVarMap[i + 61] = &flasher[i].nVal;
+        pVarMap[i + 93] = &flasher[i].nVal;
     }
 
-    // 65 - 68
+    // 97-100
     // Counters
     for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
     {
-        pVarMap[i + 65] = &counter[i].nVal;
+        pVarMap[i + 97] = &counter[i].nVal;
     }
 
-    // 69 - 100
+    // 101 - 132
     // Conditions
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
     {
-        pVarMap[i + 69] = &condition[i].nVal;
+        pVarMap[i + 101] = &condition[i].nVal;
     }
 
-    // 101
+    // 133
     // Always true
-    pVarMap[101] = &nAlwaysTrue;
+    pVarMap[133] = &nAlwaysTrue;
 }
 
 void ApplyAllConfig()
