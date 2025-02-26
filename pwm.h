@@ -4,6 +4,8 @@
 #include <cstdint>
 #include "config.h"
 
+#define PWM_UPDATE_TIME 2.0 //ms
+
 class Pwm
 {
 public:
@@ -17,7 +19,7 @@ public:
         pConfig = config;
         pInput = pVarMap[config->nDutyCycleInput];
 
-        if (pConfig->bEnabled)
+        if ((pConfig->bEnabled) && (m_pwm->state != PWM_READY))
             Init();
     }
 
@@ -60,4 +62,12 @@ private:
 
     uint16_t nDutyCycle;
     uint16_t nLastFreq;
+
+    bool bChannelEnabled;
+    bool bLastChannelEnabled;
+    bool bSoftStartComplete;
+    float fSoftStartStep;
+    
+    uint32_t nSoftStartTime;
+    uint32_t nSoftStartEndTime;
 };

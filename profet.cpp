@@ -6,6 +6,7 @@ void Profet::Update(bool bOutEnabled)
 
     if (!pConfig->bEnabled)
     {
+        pwm.Off();
         palClearLine(m_in);
         nOcCount = 0;
         eState = ProfetState::Off;
@@ -87,8 +88,7 @@ void Profet::Update(bool bOutEnabled)
     switch (eState)
     {
     case ProfetState::Off:
-        if(pwm.IsEnabled())
-            pwm.Off();
+        pwm.Off();
 
         palClearLine(m_in);
         
@@ -133,8 +133,7 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::Overcurrent:
-        if(pwm.IsEnabled())
-            pwm.Off();
+        pwm.Off();
 
         palClearLine(m_in);
 
@@ -166,8 +165,7 @@ void Profet::Update(bool bOutEnabled)
         break;
 
     case ProfetState::Fault:
-        if(pwm.IsEnabled())
-            pwm.Off();
+        pwm.Off();
 
         palClearLine(m_in);
         // Fault requires power cycle, no way out

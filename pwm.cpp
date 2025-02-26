@@ -2,11 +2,44 @@
 
 void Pwm::Update()
 {
-    if (pConfig->bEnabled)
+    bChannelEnabled = (bool)(m_pwm->enabled & (1 << 0));
+
+    if (!((pConfig->bEnabled) && bChannelEnabled))
+    {
+        bLastChannelEnabled = bChannelEnabled;
+        bSoftStartComplete = false;
+        nDutyCycle = 0;
+        return;
+    }
+
+    if (!pConfig->bSoftStart)
+        bSoftStartComplete = true;
+    else{
+        // Start of soft start
+        if (bChannelEnabled != bLastChannelEnabled)
+        {
+            fSoftStartStep = ((float)pConfig->nFixedDutyCycle) / ((float)pConfig->nSoftStartRampTime);
+            bSoftStartComplete = false;
+            nSoftStartTime = SYS_TIME;
+        }
+
+        if (!bSoftStartComplete)
+        {
+            nDutyCycle = (uint8_t)(fSoftStartStep * (SYS_TIME - nSoftStartTime));
+            if (nDutyCycle >= pConfig->nFixedDutyCycle)
+            {
+                nSoftStartEndTime = SYS_TIME;
+                bSoftStartComplete = true;
+            }
+        }
+    }
+
+
+    if (bSoftStartComplete)
     {
         if (pConfig->bVariableDutyCycle)
         {
-            if(pConfig->nDutyCycleInputDenom > 0)
+            if (pConfig->nDutyCycleInputDenom > 0)
                 SetDutyCycle((*pInput) / pConfig->nDutyCycleInputDenom);
         }
         else
@@ -14,14 +47,19 @@ void Pwm::Update()
             SetDutyCycle(pConfig->nFixedDutyCycle);
         }
     }
-    else
-        SetDutyCycle(0);
 
+     // Frequency within range and
+     // (Frequency setting has changed or
+     // PWM driver frequency != Frequency setting)
     if (((pConfig->nFreq <= 400) && (pConfig->nFreq > 0)) &&
-       (pConfig->nFreq != nLastFreq))
-            pwmChangePeriod(m_pwm, m_pwmCfg->frequency / pConfig->nFreq);
+        ((pConfig->nFreq != nLastFreq) ||
+        (m_pwm->period != (m_pwmCfg->frequency / pConfig->nFreq))))
+    {
+        pwmChangePeriod(m_pwm, m_pwmCfg->frequency / pConfig->nFreq);
+    }
 
     nLastFreq = pConfig->nFreq;
+    bLastChannelEnabled = bChannelEnabled;
 }
 
 msg_t Pwm::Init()
@@ -34,7 +72,6 @@ msg_t Pwm::Init()
     return HAL_RET_SUCCESS;
 }
 
-
 void Pwm::On()
 {
     // PWM duty cycle is 0-10000
@@ -44,7 +81,7 @@ void Pwm::On()
     pwmEnableChannel(m_pwm, static_cast<uint8_t>(m_pwmCh), PWM_PERCENTAGE_TO_WIDTH(m_pwm, nDutyCycle * 100));
     pwmEnablePeriodicNotification(m_pwm);
     pwmEnableChannelNotification(m_pwm, static_cast<uint8_t>(m_pwmCh));
-} 
+}
 
 void Pwm::Off()
 {
@@ -79,7 +116,7 @@ MsgCmdResult Pwm::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame
             tx->IDE = CAN_IDE_STD;
 
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::OutputsPwm) + 128;
-            tx->data8[1] = ((nIndex & 0x0F) << 4) + (conf->stOutput[nIndex].stPwm.bVariableDutyCycle << 2) + 
+            tx->data8[1] = ((nIndex & 0x0F) << 4) + (conf->stOutput[nIndex].stPwm.bVariableDutyCycle << 2) +
                            (conf->stOutput[nIndex].stPwm.bSoftStart << 1) + conf->stOutput[nIndex].stPwm.bEnabled;
             tx->data8[2] = conf->stOutput[nIndex].stPwm.nDutyCycleInput;
             tx->data8[3] = (conf->stOutput[nIndex].stPwm.nFreq >> 1) & 0xFF;

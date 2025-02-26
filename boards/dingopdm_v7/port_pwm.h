@@ -8,56 +8,56 @@
 static void pwmOut1pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF1_IN);
 }
 
 static void pwmOut2pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF2_IN);
 }
 
 static void pwmOut3pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF3_IN);
 }
 
 static void pwmOut4pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF4_IN);
 }
 
 static void pwmOut5pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF5_IN);
 }
 
 static void pwmOut6pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF6_IN);
 }
 
 static void pwmOut7pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF7_IN);
 }
 
 static void pwmOut8pcb(PWMDriver *pwmp)
 {
     (void)pwmp;
-    if (pwmp->enabled & (1 << 0))
+    if ((pwmp->enabled & (1 << 0)) && (pwmp->tim->CCR[0] > 0))
         palSetLine(LINE_PF8_IN);
 }
 
