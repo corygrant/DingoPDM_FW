@@ -59,6 +59,10 @@ private:
     Config_PwmOutput *pConfig;
 
     msg_t Init();
+    uint8_t GetTargetDutyCycle();
+    void InitSoftStart();
+    void UpdateSoftStart();
+    void UpdateFrequency();
 
     uint16_t nDutyCycle;
     uint16_t nLastFreq;

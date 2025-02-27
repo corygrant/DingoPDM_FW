@@ -4,53 +4,64 @@ void Pwm::Update()
 {
     bChannelEnabled = (bool)(m_pwm->enabled & (1 << 0));
 
-    if (!((pConfig->bEnabled) && bChannelEnabled))
-    {
+    // Early exit if disabled
+    if (!pConfig->bEnabled || !bChannelEnabled) {
         bLastChannelEnabled = bChannelEnabled;
         bSoftStartComplete = false;
         nDutyCycle = 0;
         return;
     }
 
-    if (!pConfig->bSoftStart)
+    // Handle no soft start case
+    if (!pConfig->bSoftStart) {
         bSoftStartComplete = true;
-    else{
-        // Start of soft start
-        if (bChannelEnabled != bLastChannelEnabled)
-        {
-            fSoftStartStep = ((float)pConfig->nFixedDutyCycle) / ((float)pConfig->nSoftStartRampTime);
-            bSoftStartComplete = false;
-            nSoftStartTime = SYS_TIME;
-        }
-
-        if (!bSoftStartComplete)
-        {
-            nDutyCycle = (uint8_t)(fSoftStartStep * (SYS_TIME - nSoftStartTime));
-            if (nDutyCycle >= pConfig->nFixedDutyCycle)
-            {
-                nSoftStartEndTime = SYS_TIME;
-                bSoftStartComplete = true;
-            }
-        }
+        nDutyCycle = GetTargetDutyCycle();
+        return;
     }
 
-
-    if (bSoftStartComplete)
-    {
-        if (pConfig->bVariableDutyCycle)
-        {
-            if (pConfig->nDutyCycleInputDenom > 0)
-                SetDutyCycle((*pInput) / pConfig->nDutyCycleInputDenom);
-        }
-        else
-        {
-            SetDutyCycle(pConfig->nFixedDutyCycle);
-        }
+    // Initialize soft start
+    if (bChannelEnabled != bLastChannelEnabled) {
+        InitSoftStart();
     }
 
-     // Frequency within range and
-     // (Frequency setting has changed or
-     // PWM driver frequency != Frequency setting)
+    // Update soft start
+    if (!bSoftStartComplete) {
+        UpdateSoftStart();
+    }
+
+    UpdateFrequency();
+    
+    bLastChannelEnabled = bChannelEnabled;
+}
+
+uint8_t Pwm::GetTargetDutyCycle() {
+    if (pConfig->bVariableDutyCycle && pConfig->nDutyCycleInputDenom > 0) {
+        return (*pInput) / pConfig->nDutyCycleInputDenom;
+    }
+    return pConfig->nFixedDutyCycle;
+}
+
+void Pwm::InitSoftStart() {
+    fSoftStartStep = GetTargetDutyCycle() / (float)pConfig->nSoftStartRampTime;
+    bSoftStartComplete = false;
+    nSoftStartTime = SYS_TIME;
+}
+
+void Pwm::UpdateSoftStart() {
+    uint8_t targetDuty = GetTargetDutyCycle();
+    nDutyCycle = (uint8_t)(fSoftStartStep * (SYS_TIME - nSoftStartTime));
+    
+    if (nDutyCycle >= targetDuty) {
+        nDutyCycle = targetDuty;
+        bSoftStartComplete = true;
+    }
+}
+
+void Pwm::UpdateFrequency()
+{
+    // Frequency within range and
+    // (Frequency setting has changed or
+    // PWM driver frequency != Frequency setting)
     if (((pConfig->nFreq <= 400) && (pConfig->nFreq > 0)) &&
         ((pConfig->nFreq != nLastFreq) ||
         (m_pwm->period != (m_pwmCfg->frequency / pConfig->nFreq))))
@@ -59,7 +70,6 @@ void Pwm::Update()
     }
 
     nLastFreq = pConfig->nFreq;
-    bLastChannelEnabled = bChannelEnabled;
 }
 
 msg_t Pwm::Init()
