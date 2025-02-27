@@ -96,13 +96,19 @@ static thread_t *canCyclicTxThreadRef;
 static thread_t *canTxThreadRef;
 static thread_t *canRxThreadRef;
 
-void InitCan(CanBitrate bitrate)
+msg_t InitCan(CanBitrate bitrate)
 {
+    msg_t ret;
+
     // No rx filtering, need to evaluate all incoming messages
-    canStart(&CAND1, &GetCanConfig(bitrate));
+    ret = canStart(&CAND1, &GetCanConfig(bitrate));
+    if (ret != HAL_RET_SUCCESS)
+        return ret;
     canCyclicTxThreadRef = chThdCreateStatic(waCanCyclicTxThread, sizeof(waCanCyclicTxThread), NORMALPRIO + 1, CanCyclicTxThread, nullptr);
     canTxThreadRef = chThdCreateStatic(waCanTxThread, sizeof(waCanTxThread), NORMALPRIO + 1, CanTxThread, nullptr);
     canRxThreadRef = chThdCreateStatic(waCanRxThread, sizeof(waCanRxThread), NORMALPRIO + 1, CanRxThread, nullptr);
+
+    return HAL_RET_SUCCESS;
 }
 
 uint32_t GetLastCanRxTime()

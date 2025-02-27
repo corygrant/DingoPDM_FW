@@ -2,5 +2,5 @@
 
 #include "hal.h"
 
-void InitUsb();
+msg_t InitUsb();
 bool GetUsbConnected();

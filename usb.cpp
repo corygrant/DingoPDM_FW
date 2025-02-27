@@ -336,12 +336,11 @@ void UsbTxThread(void *)
     {
         // Send all messages in the TX queue
         msg_t res;
-        //if (usbGetDriverStateI(&USBD1) == USB_ACTIVE)
-        if(false)
+        if (usbGetDriverStateI(&USBD1) == USB_ACTIVE)
         {
             do
             {
-                res = FetchTxFrame(&msg);
+                res = FetchTxUsbFrame(&msg);
                 if (res == MSG_OK)
                 {
                     uint8_t nData[22];
@@ -368,7 +367,7 @@ void UsbTxThread(void *)
                     nData[20] = (msg.data8[7] & 0x0F);
                     nData[21] = '\r';
 
-                    // Shift the data to ASCII, except the first 't'
+                    // Shift the data to ASCII, except the first 't' and last '\r' 
                     for (uint8_t i = 1; i <= 20; i++)
                     {
                         // Less than 0xA is a number
@@ -379,11 +378,16 @@ void UsbTxThread(void *)
                             nData[i] += 0x37;
                     }
 
+                    
                     size_t nWritten = chnWriteTimeout(&SDU1, (const uint8_t *)nData, sizeof(nData), TIME_IMMEDIATE);
                     if (nWritten == 0)
-                        PostTxFrame(&msg);
+                        PostTxUsbFrame(&msg);
+
+                    chThdSleepMicroseconds(USB_TX_MSG_SPLIT);
                 }
             } while (res == MSG_OK);
+
+            chThdSleepMicroseconds(30);
         }
         else
         {
@@ -402,28 +406,27 @@ void UsbRxThread(void *)
 
     while (true)
     {
-        //if (SDU1.state == SDU_READY)
-        //if (usbGetDriverStateI(&USBD1) == USB_ACTIVE)
-        if(false)
+        if ((SDU1.state == SDU_READY) &&
+             (usbGetDriverStateI(&USBD1) == USB_ACTIVE))
         {
             size_t nRead = chnReadTimeout(&SDU1, buf, 8, TIME_IMMEDIATE);
-            if (nRead == 0)
-                continue;
-
-            if (nRead > 8)
-                continue;
-
-            msg.DLC = 0;
-            for (uint8_t i = 0; i < nRead; i++)
+            if ((nRead != 0) && (nRead <= 8))
             {
-                msg.data8[i] = buf[i];
-                msg.DLC++;
+                msg.DLC = 0;
+                for (uint8_t i = 0; i < nRead; i++)
+                {
+                    msg.data8[i] = buf[i];
+                    msg.DLC++;
+                }
+
+                msg.SID = stConfig.stCanOutput.nBaseId - 1;
+
+                PostRxFrame(&msg);
+                // TODO:What to do if mailbox is full?
             }
 
-            msg.SID = stConfig.stCanOutput.nBaseId - 1;
-
-            PostRxFrame(&msg);
-            // TODO:What to do if mailbox is full?
+            chThdSleepMicroseconds(30);
+            
         }
         else
         {
@@ -432,15 +435,32 @@ void UsbRxThread(void *)
     }
 }
 
-void InitUsb()
+msg_t InitUsb()
 {
+    msg_t ret;
+
     usbDisconnectBus(serusbcfg.usbp);
-    chThdSleepMilliseconds(1500);
-    usbStart(serusbcfg.usbp, &usbcfg);
+
+    //Wait for disconnect if USB is already connected
+    if(palReadLine(LINE_USB_VBUS) == PAL_HIGH)
+        chThdSleepMilliseconds(1500);
+
+    sduObjectInit(&SDU1);
+
+    ret = sduStart(&SDU1, &serusbcfg);
+    if (ret != MSG_OK)
+        return ret;
+
+    ret = usbStart(serusbcfg.usbp, &usbcfg);
+    if (ret != MSG_OK)
+        return ret;
+
     usbConnectBus(serusbcfg.usbp);
 
     chThdCreateStatic(waUsbTxThread, sizeof(waUsbTxThread), NORMALPRIO + 1, UsbTxThread, nullptr);
     chThdCreateStatic(waUsbRxThread, sizeof(waUsbRxThread), NORMALPRIO + 1, UsbRxThread, nullptr);
+
+    return MSG_OK;
 }
 
 bool GetUsbConnected()

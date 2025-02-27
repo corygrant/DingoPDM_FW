@@ -130,9 +130,14 @@ void InitPdm()
 
     ApplyAllConfig();
 
-    InitAdc();
-    InitCan(stConfig.stDevConfig.eCanSpeed); // Starts CAN threads
-    // InitUsb(); // Starts USB threads
+    if(!InitAdc() == HAL_RET_SUCCESS)
+        Error::SetFatalError(FatalErrorType::ErrADC, MsgSrc::Init);
+        
+    if(!InitCan(stConfig.stDevConfig.eCanSpeed) == HAL_RET_SUCCESS) // Starts CAN threads
+        Error::SetFatalError(FatalErrorType::ErrCAN, MsgSrc::Init);
+
+    if (!InitUsb() == HAL_RET_SUCCESS) // Starts USB threads
+        Error::SetFatalError(FatalErrorType::ErrUSB, MsgSrc::Init);
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);

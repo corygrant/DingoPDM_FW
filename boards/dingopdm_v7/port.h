@@ -57,7 +57,7 @@ const I2CConfig i2cConfig = {
     FAST_DUTY_CYCLE_2,
 };
 
-void InitAdc();
+msg_t InitAdc();
 void DeInitAdc();
 uint16_t GetAdcRaw(AnalogChannel channel);
 msg_t InitPwm();
