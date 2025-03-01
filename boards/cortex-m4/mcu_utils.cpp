@@ -1,9 +1,6 @@
 #include "mcu_utils.h"
 #include "hal.h"
 
-#define BOOTLOADER_FLAG_ADDRESS 0x40024000   // Backup SRAM address to store bootloader flag
-#define BOOTLOADER_MAGIC_CODE   0xDEADBEEF  // Magic code to indicate bootloader request
-
 void EnterStopMode()
 {
     __disable_irq();
@@ -26,112 +23,15 @@ void EnterStopMode()
     NVIC_SystemReset();
 }
 
-void EnableBackupDomain(void) {
-    // Enable PWR clock
-    rccEnablePWRInterface(false);
-    
-    // Enable backup domain access
-    PWR->CR |= PWR_CR_DBP;
-    
-    // Enable backup SRAM clock
-    RCC->AHB1ENR |= RCC_AHB1ENR_BKPSRAMEN;
-    
-    // Wait for backup domain write protection disable
-    while(!(PWR->CR & PWR_CR_DBP));
-}
-
-#define BOOT_ADDR  0x1FFF0000
-
-struct boot_vectable_{
-  uint32_t Initial_SP;
-  void (*Reset_Handler)(void);
-};
-
-#define BOOTVTAB ((struct boot_vectable_*)BOOT_ADDR)
- void JumpToBootloader(void)
- {
-    //Disable all interrupts
-    __disable_irq();
-
-    chSysDisable();
-
-    // Reset USB
-    USB_OTG_FS->GOTGCTL |= USB_OTG_DCTL_SDIS;
-    USB_OTG_FS->GRSTCTL |= USB_OTG_GRSTCTL_CSRST;
-
-    // Stop all ChibiOS drivers
-    adcStop(&ADCD1);
-    canStop(&CAND1);
-    i2cStop(&I2CD1);
-
-    // Reset all GPIO pins
-    GPIOA->MODER = 0;
-    GPIOB->MODER = 0;
-    GPIOC->MODER = 0;
-    GPIOD->MODER = 0;
-
-    // Disable all peripheral clocks
-    RCC->AHB1ENR = 0;
-    RCC->AHB2ENR = 0;
-    RCC->APB1ENR = 0;
-    RCC->APB2ENR = 0;
-
-    // Reset system clock
-    RCC->CR |= RCC_CR_HSION;
-    while(!(RCC->CR & RCC_CR_HSIRDY));
-    RCC->CFGR = 0;
-
-    //Disable systick timer
-    SysTick->CTRL = 0;
-    SysTick->LOAD = 0;
-    SysTick->VAL = 0;
-
-    //Clear interrupt enable register and interrupt pending register
-    for (uint8_t i = 0; i < sizeof(NVIC->ICER) / sizeof(NVIC->ICER[0]); i++)
-    {
-      NVIC->ICER[i] = 0xFFFFFFFF;
-      NVIC->ICPR[i] = 0xFFFFFFFF;
-    }
-
-    // Enable SYSCFG clock and remap memory
-    RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN;
-    SYSCFG->MEMRMP = SYSCFG_MEMRMP_MEM_MODE_0;
-
-    //Re-enable all interrupts
-    __enable_irq();
-
-    //Set the MSP
-    __set_PSP(BOOTVTAB->Initial_SP);
-    __set_MSP(BOOTVTAB->Initial_SP);
-
-    //Jump to bootloader
-    BOOTVTAB->Reset_Handler();
- }
-
  void RequestBootloader()
 {
-    // Set the magic code in the reserved SRAM location
-    *(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS = BOOTLOADER_MAGIC_CODE;
+    // Set the magic code
+    *((unsigned long *)0x2001FFF0) = 0xDEADBEEF; // End of RAM
 
-    // -Reset the microcontroller to start the bootloader on next boot
-    // -Using this approach solves the issue of tracking down every possible 
-    // peripheral that could be enabled and preventing entering the bootloader properly
+    // Reset the microcontroller to start the bootloader on next boot
+    // See enter_bootloader.S, which overrides the reset handler
+    // to jump to the bootloader if the magic code is set
     NVIC_SystemReset();
     
     // No further code will execute after this point
-}
-
-void CheckBootloaderRequest()
-{
-    EnableBackupDomain();
-
-    // Check if the magic code is present in the reserved SRAM location
-    if(*(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS == BOOTLOADER_MAGIC_CODE)
-    {
-        // Clear the magic code
-        *(volatile uint32_t*)BOOTLOADER_FLAG_ADDRESS = 0;
-        
-        // Enter the bootloader
-        JumpToBootloader();
-    }
 }

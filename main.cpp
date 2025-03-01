@@ -6,11 +6,9 @@
  * Application entry point.
  */
 int main(void) {
-
+  
   halInit();
   chSysInit();
-
-  CheckBootloaderRequest();
   
   InitPdm();
   
