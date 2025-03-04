@@ -19,7 +19,7 @@
         },
         {
             "cwd": "${workspaceFolder}",
-            "executable": "${workspaceFolder}/build/dingopdm-max_v1.elf",
+            "executable": "${workspaceFolder}/build/dingopdmmax_v1.elf",
             "name": "Debug dingoPDM-Max v1",
             "request": "launch",
             "type": "cortex-debug",

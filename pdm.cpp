@@ -300,6 +300,9 @@ void InitVarMap()
         pVarMap[i + 83] = &pf[i].nOutput;
     }
 
+    //dingoPDM-Max
+    //Var map 87-90 are not used
+
     // 91-92
     // Wiper
     pVarMap[91] = &wiper.nSlowOut;

@@ -15,9 +15,9 @@
 #define PDM_NUM_COUNTERS 4
 #define PDM_NUM_CONDITIONS 32
 
-#define PDM_VAR_MAP_SIZE 102
+#define PDM_VAR_MAP_SIZE 133
 
-#define PDM_NUM_TX_MSGS 6
+#define PDM_NUM_TX_MSGS 16
 
 #define ADC1_NUM_CHANNELS 8
 #define ADC1_BUF_DEPTH 1
@@ -48,7 +48,7 @@ enum class LedType
     Error
 };
 
-const CANConfig &GetCanConfig();
+const CANConfig &GetCanConfig(CanBitrate bitrate);
 
 const I2CConfig i2cConfig = {
     OPMODE_I2C,
@@ -56,7 +56,7 @@ const I2CConfig i2cConfig = {
     FAST_DUTY_CYCLE_2,
 };
 
-void InitAdc();
+msg_t InitAdc();
 void DeInitAdc();
 uint16_t GetAdcRaw(AnalogChannel channel);
 float GetBattVolt();

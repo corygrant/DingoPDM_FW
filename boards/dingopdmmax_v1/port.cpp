@@ -88,16 +88,19 @@ static const ADCConversionGroup adc1_cfg = {
             ADC_SQR3_SQ6_N(ADC_CHANNEL_IN3)                   
     };
 
-void InitAdc()
-{
-    adcStart(&ADCD1, NULL);
-    adcSTM32EnableTSVREFE(); //Enable temp sensor and vref
-
-    //Need to continuous conversion to read both channels of the BTS7008-2EPA
-    //Requires 2 channels to be read with a 100us delay between them
-    //Profet DSEL pin toggled in profet.cpp
-    adcStartConversion(&ADCD1, &adc1_cfg, adc1_samples, ADC1_BUF_DEPTH);
-}
+    msg_t InitAdc()
+    {
+        msg_t ret;
+        ret = adcStart(&ADCD1, NULL);
+        if(ret != HAL_RET_SUCCESS)
+            return ret;
+    
+        adcSTM32EnableTSVREFE(); //Enable temp sensor and vref
+    
+        adcStartConversion(&ADCD1, &adc1_cfg, adc1_samples, ADC1_BUF_DEPTH);
+    
+        return HAL_RET_SUCCESS;
+    }
 
 void DeInitAdc()
 {
@@ -107,25 +110,7 @@ void DeInitAdc()
 
 uint16_t GetAdcRaw(AnalogChannel channel)
 {
-    switch (channel)
-    {
-    case AnalogChannel::IS1:
-        return adc1_samples[0];
-    case AnalogChannel::IS2:
-        return adc1_samples[1];
-    case AnalogChannel::IS3:
-        return adc1_samples[2];
-    case AnalogChannel::IS4:
-        return adc1_samples[3];
-    case AnalogChannel::BattVolt:
-        return adc1_samples[4];
-    case AnalogChannel::TempSensor:
-        return adc1_samples[5];
-    case AnalogChannel::VRefInt:
-        return adc1_samples[6];
-    default:
-        return 0; // Invalid channel
-    }
+    return adc1_samples[static_cast<uint8_t>(channel)];
 }
 
 float GetBattVolt()
