@@ -573,6 +573,24 @@ uint8_t GetOutputDC(uint8_t nOutput)
     return pf[nOutput].GetDutyCycle();
 }
 
+bool GetAnyCanInEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
+    {
+        if (canIn[i].GetEnable())
+            return true;
+    }
+    return false;
+}
+
+bool GetCanInEnable(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_CAN_INPUTS)
+        return false;
+
+    return canIn[nInput].GetEnable();
+}
+
 bool GetCanInOutput(uint8_t nInput)
 {
     if (nInput >= PDM_NUM_CAN_INPUTS)
@@ -589,12 +607,27 @@ uint16_t GetCanInVal(uint8_t nInput)
     return canIn[nInput].nVal;
 }
 
+bool GetAnyVirtInEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
+    {
+        if (virtIn[i].GetEnable())
+            return true;
+    }
+    return false;
+}
+
 bool GetVirtInVal(uint8_t nInput)
 {
     if (nInput >= PDM_NUM_VIRT_INPUTS)
         return false;
 
     return virtIn[nInput].nVal;
+}
+
+bool GetWiperEnable()
+{
+    return wiper.GetEnable();
 }
 
 bool GetWiperFastOut()
@@ -617,6 +650,16 @@ WiperSpeed GetWiperSpeed()
     return wiper.GetSpeed();
 }
 
+bool GetAnyFlasherEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
+    {
+        if (flasher[i].GetEnable())
+            return true;
+    }
+    return false;
+}
+
 bool GetFlasherVal(uint8_t nFlasher)
 {
     if (nFlasher >= PDM_NUM_FLASHERS)
@@ -625,12 +668,32 @@ bool GetFlasherVal(uint8_t nFlasher)
     return flasher[nFlasher].nVal;
 }
 
+bool GetAnyCounterEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
+    {
+        if (counter[i].GetEnable())
+            return true;
+    }
+    return false;
+}
+
 uint16_t GetCounterVal(uint8_t nCounter)
 {
     if (nCounter >= PDM_NUM_COUNTERS)
         return 0;
 
     return counter[nCounter].nVal;
+}
+
+bool GetAnyConditionEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
+    {
+        if (condition[i].GetEnable())
+            return true;
+    }
+    return false;
 }
 
 bool GetConditionVal(uint8_t nCondition)

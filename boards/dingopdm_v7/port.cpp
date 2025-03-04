@@ -63,15 +63,10 @@ adcsample_t adc1_samples[ADC1_NUM_CHANNELS] = {0};
 //6 = TempSensor
 //7 = VRefInt
 
-void adc1cb(ADCDriver *adcp) {
-    (void)adcp;
-    palToggleLine(LINE_E2);
-}
-
 static const ADCConversionGroup adc1_cfg = {
     .circular = true,
     .num_channels = ADC1_NUM_CHANNELS,
-    .end_cb = adc1cb,
+    .end_cb = NULL,
     .error_cb = NULL,
     .cr1 = 0,
     .cr2 = ADC_CR2_SWSTART | ADC_CR2_CONT,

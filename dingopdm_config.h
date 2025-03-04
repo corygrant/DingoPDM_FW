@@ -2,7 +2,7 @@
 
 #define MAJOR_VERSION 0
 #define MINOR_VERSION 4
-#define BUILD 6
+#define BUILD 7
 
 #define TX_SETTINGS_ID_OFFSET 30
 #define TX_MSG_ID_OFFSET 31

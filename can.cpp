@@ -14,16 +14,18 @@ void CanCyclicTxThread(void *)
 {
     chRegSetThreadName("CAN Cyclic Tx");
 
-    CANTxFrame msg;
+    CANTxMsg msg;
 
     while (1)
     {
         for (uint8_t i = 0; i < PDM_NUM_TX_MSGS; i++)
         {
             msg = TxMsgs[i]();
-            msg.IDE = CAN_IDE_STD;
-            msg.RTR = CAN_RTR_DATA;
-            PostTxFrame(&msg);
+            if (!msg.bSend)
+                continue;
+            msg.frame.IDE = CAN_IDE_STD;
+            msg.frame.RTR = CAN_RTR_DATA;
+            PostTxFrame(&msg.frame);
         }
 
         if (chThdShouldTerminateX())
@@ -51,10 +53,10 @@ void CanTxThread(void *)
             {
                 msg.IDE = CAN_IDE_STD;
                 msg.RTR = CAN_RTR_DATA;
-                bool txOk = canTryTransmitI(&CAND1, CAN_ANY_MAILBOX, &msg);
-                if (txOk) // Returns true if mailbox full
-                    PostTxFrame(&msg);
-
+                canTryTransmitI(&CAND1, CAN_ANY_MAILBOX, &msg);
+                // Returns true if mailbox full or nothing connected
+                // TODO: What to do if no tx?
+                palToggleLine(LINE_E2);
                 chThdSleepMicroseconds(CAN_TX_MSG_SPLIT);
             }
         } while (res == MSG_OK);

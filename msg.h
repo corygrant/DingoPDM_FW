@@ -6,24 +6,30 @@
 #include "mailbox.h"
 #include "dingopdm_config.h"    
 
-CANTxFrame TxMsg0();
-CANTxFrame TxMsg1();
-CANTxFrame TxMsg2();
-CANTxFrame TxMsg3();
-CANTxFrame TxMsg4();
-CANTxFrame TxMsg5();
-CANTxFrame TxMsg6();
-CANTxFrame TxMsg7();
-CANTxFrame TxMsg8();
-CANTxFrame TxMsg9();
-CANTxFrame TxMsg10();
-CANTxFrame TxMsg11();
-CANTxFrame TxMsg12();
-CANTxFrame TxMsg13();
-CANTxFrame TxMsg14();
-CANTxFrame TxMsg15();
+struct CANTxMsg
+{
+    CANTxFrame frame;
+    bool bSend;
+};
 
-[[maybe_unused]] static CANTxFrame (*TxMsgs[PDM_NUM_TX_MSGS])() = {
+CANTxMsg TxMsg0();
+CANTxMsg TxMsg1();
+CANTxMsg TxMsg2();
+CANTxMsg TxMsg3();
+CANTxMsg TxMsg4();
+CANTxMsg TxMsg5();
+CANTxMsg TxMsg6();
+CANTxMsg TxMsg7();
+CANTxMsg TxMsg8();
+CANTxMsg TxMsg9();
+CANTxMsg TxMsg10();
+CANTxMsg TxMsg11();
+CANTxMsg TxMsg12();
+CANTxMsg TxMsg13();
+CANTxMsg TxMsg14();
+CANTxMsg TxMsg15();
+
+[[maybe_unused]] static CANTxMsg (*TxMsgs[PDM_NUM_TX_MSGS])() = {
     TxMsg0,
     TxMsg1,
     TxMsg2,

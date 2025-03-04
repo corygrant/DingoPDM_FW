@@ -25,6 +25,7 @@ public:
     };
 
     void Update(uint32_t timeNow);
+    bool GetEnable() { return pConfig->bEnabled; }
     WiperMode GetMode() { return pConfig->eMode; }
     WiperSpeed GetSpeed() { return eSelectedSpeed; }
     WiperState GetState() { return eState; }
