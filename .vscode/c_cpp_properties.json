@@ -47,6 +47,7 @@
                 "${workspaceFolder}/ChibiOS/os/various/cpp_wrappers",
                 "${workspaceFolder}/cfg",
                 "${workspaceFolder}/hardware",
+                "${workspaceFolder}/wiper",
                 "${workspaceFolder}/boards/dingopdm_v7",
                 "${workspaceFolder}/boards/dingopdmmax_v1",
                 "${workspaceFolder}/boards/cortex-m4",

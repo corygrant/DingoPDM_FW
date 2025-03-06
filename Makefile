@@ -156,10 +156,10 @@ CPPSRC = $(ALLCPPSRC) \
 				 starter.cpp \
 				 usb.cpp \
 				 virtual_input.cpp \
-				 wiper_digin.cpp \
-				 wiper_intin.cpp \
-				 wiper_mixin.cpp \
-				 wiper.cpp \
+				 wiper/wiper_digin.cpp \
+				 wiper/wiper_intin.cpp \
+				 wiper/wiper_mixin.cpp \
+				 wiper/wiper.cpp \
 				 hardware/mcp9808.cpp \
 				 hardware/mb85rc.cpp \
 				 main.cpp

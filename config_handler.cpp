@@ -10,7 +10,7 @@
 #include "profet.h"
 #include "starter.h"
 #include "virtual_input.h"
-#include "wiper.h"
+#include "wiper/wiper.h"
 
 MsgCmd ConfigHandler(CANRxFrame *frame)
 {

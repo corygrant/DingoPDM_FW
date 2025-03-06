@@ -10,7 +10,7 @@
 #include "can.h"
 #include "can_input.h"
 #include "virtual_input.h"
-#include "wiper.h"
+#include "wiper/wiper.h"
 #include "starter.h"
 #include "flasher.h"
 #include "counter.h"
