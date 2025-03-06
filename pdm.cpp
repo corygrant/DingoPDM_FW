@@ -34,8 +34,6 @@ FatalErrorType eError = FatalErrorType::NoError;
 PdmConfig stConfig;
 uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 
-uint16_t nAlwaysFalse = 0;
-uint16_t nAlwaysTrue = 1;
 float fBattVolt;
 float fTempSensor;
 bool bDeviceOverTemp;
@@ -264,8 +262,8 @@ void CyclicUpdate()
 void InitVarMap()
 {
     // 0
-    // Always false
-    pVarMap[0] = &nAlwaysFalse;
+    // None - set to 0
+    pVarMap[0] = const_cast<uint16_t*>(&ALWAYS_FALSE);
 
     // 1-2
     // Digital inputs
@@ -331,7 +329,7 @@ void InitVarMap()
 
     // 133
     // Always true
-    pVarMap[133] = &nAlwaysTrue;
+    pVarMap[133] = const_cast<uint16_t*>(&ALWAYS_TRUE);
 }
 
 void ApplyAllConfig()

@@ -30,6 +30,9 @@
 #define SLEEP_TIMEOUT 30000
 
 #define SYS_TIME TIME_I2MS(chVTGetSystemTimeX())
+
+static const uint16_t ALWAYS_FALSE = 0;
+static const uint16_t ALWAYS_TRUE = 1;
  
 enum class AnalogChannel
 {
