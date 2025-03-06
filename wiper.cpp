@@ -1,56 +1,14 @@
 #include "wiper.h"
 
-void Wiper::Update(uint32_t nTimeNow)
+void Wiper::Update()
 {
     if (!pConfig->bEnabled)
+    {
+        SetMotorSpeed(MotorSpeed::Off);
         return;
-
-    switch (eState)
-    {
-    case WiperState::Parked:
-        Parked();
-        break;
-
-    case WiperState::Parking:
-        Parking();
-        break;
-
-    case WiperState::Slow:
-        Slow();
-        break;
-
-    case WiperState::Fast:
-        Fast();
-        break;
-
-    case WiperState::IntermittentOn:
-        InterOn(nTimeNow);
-        break;
-
-    case WiperState::IntermittentPause:
-        InterPause(nTimeNow);
-        break;
-
-    case WiperState::Wash:
-        Wash();
-        break;
-
-    case WiperState::Swipe:
-        Swipe();
-        break;
     }
 
-    if (*pWashInput)
-    {
-        eStatePreWash = eState;
-        eState = WiperState::Wash;
-    }
-
-    if (*pSwipeInput)
-        eState = WiperState::Swipe;
-
-
-    eState = eNextState;
+    pMode->Update();
 }
 
 void Wiper::SetMotorSpeed(MotorSpeed speed)
@@ -74,65 +32,15 @@ void Wiper::SetMotorSpeed(MotorSpeed speed)
     }
 }
 
-void Wiper::ReqState(WiperState state)
-{
-    eNextState = state;
-}
-
-void Wiper::Parked()
-{
-    SetMotorSpeed(MotorSpeed::Off);
-}
-
 void Wiper::Parking()
 {
     // Park detected - stop motor
     // Park high or low depending on stop level
-    if ((!(*pParkSw) && !pConfig->bParkStopLevel) ||
-        (*pParkSw && pConfig->bParkStopLevel))
+    if ((!GetParkSw() && !pConfig->bParkStopLevel) ||
+        (GetParkSw() && pConfig->bParkStopLevel))
     {
         SetMotorSpeed(MotorSpeed::Off);
         eState = WiperState::Parked;
-    }
-}
-
-void Wiper::Slow()
-{
-    SetMotorSpeed(MotorSpeed::Slow);
-    ModeUpdate();
-}
-
-void Wiper::Fast()
-{
-    SetMotorSpeed(MotorSpeed::Fast);
-    ModeUpdate();
-}
-
-void Wiper::InterOn(uint32_t nTimeNow)
-{
-    SetMotorSpeed(MotorSpeed::Slow);
-    ModeUpdate();
-
-    // Park detected
-    // Stop motor
-    // Save time - pause for set time
-    if (!(*pParkSw))
-    {
-        nInterPauseStartTime = nTimeNow;
-        eState = WiperState::IntermittentPause;
-    }
-}
-
-void Wiper::InterPause(uint32_t nTimeNow)
-{
-    SetMotorSpeed(MotorSpeed::Off);
-    ModeUpdate();
-
-    // Pause for inter delay
-    if ((nTimeNow - nInterPauseStartTime) > nInterDelay)
-    {
-        SetMotorSpeed(MotorSpeed::Slow);
-        eState = WiperState::IntermittentOn;
     }
 }
 
@@ -149,24 +57,24 @@ void Wiper::Wash()
     }
     else
     {
-        if (!(*pParkSw) && (*pParkSw != nLastParkSw))
+        if (!GetParkSw() && (GetParkSw() != nLastParkSw))
             nWashWipeCount++;
 
         if (nWashWipeCount >= pConfig->nWashWipeCycles)
         {
             if (eStatePreWash == WiperState::Parked)
-                ReqState(WiperState::Parking);
+                eState = WiperState::Parking;
             else if (eStatePreWash == WiperState::IntermittentPause)
             {
-                ReqState(WiperState::IntermittentOn);
+                eState = WiperState::IntermittentOn;
             }
             else
             {
-                ReqState(eStatePreWash);
+                eState = eStatePreWash;
             }
         }
     }
-    nLastParkSw = *pParkSw;
+    nLastParkSw = GetParkSw();
 }
 
 void Wiper::Swipe()
@@ -177,7 +85,7 @@ void Wiper::Swipe()
 
     // Park switch high
     // Moved past park position
-    if (*pParkSw)
+    if (Wiper::GetParkSw())
     {
         eState = WiperState::Parking;
     }
@@ -191,114 +99,30 @@ void Wiper::UpdateInter()
     }
 }
 
-void Wiper::ModeUpdate()
+void Wiper::CheckWash()
 {
-    switch (pConfig->eMode)
+    if (GetWashInput())
     {
-    case WiperMode::DigIn:
-        DigInUpdate();
-        break;
-
-    case WiperMode::IntIn:
-        IntInUpdate();
-        break;
-
-    case WiperMode::MixIn:
-        MixInUpdate();
-        break;
+        eStatePreWash = eState;
+        eState = WiperState::Wash;
     }
 }
 
-void Wiper::DigInUpdate()
+void Wiper::CheckSwipe()
 {
-    if (*pInterInput)
+    if (GetSwipeInput())
     {
-        //No speed input, use first delay
-        nInterDelay = pConfig->nIntermitTime[0];
-        ReqState(WiperState::IntermittentOn);
-    }
-
-    if (*pSlowInput)
-        ReqState(WiperState::Slow);
-
-    if (*pFastInput)
-        ReqState(WiperState::Fast);
-
-    if (eState == WiperState::Fast)
-    {
-        if (!(*pFastInput))
-            ReqState(WiperState::Parking);
-    }
-
-    if (eState == WiperState::Slow)
-    {
-        if (!(*pSlowInput))
-            ReqState(WiperState::Parking);
-    }
-
-    if ((eState == WiperState::IntermittentOn) ||
-        (eState == WiperState::IntermittentPause))
-    {
-        if (!(*pInterInput))
-            ReqState(WiperState::Parking);
-    }
-}
-void Wiper::IntInUpdate()
-{
-    eSelectedSpeed = pConfig->eSpeedMap[*pSpeedInput];
-    
-    switch (eSelectedSpeed)
-    {
-    case WiperSpeed::Park:
-        ReqState(WiperState::Parking);
-        break;
-
-    case WiperSpeed::Slow:
-        ReqState(WiperState::Slow);
-        break;
-
-    case WiperSpeed::Fast:
-        ReqState(WiperState::Fast);
-        break;
-
-    case WiperSpeed::Intermittent1... WiperSpeed::Intermittent6:
-        UpdateInter();
-        ReqState(WiperState::IntermittentOn);
-        break;
+        eState = WiperState::Swipe;
     }
 }
 
-void Wiper::MixInUpdate()
+bool Wiper::GetParkSw()
 {
-    eSelectedSpeed = pConfig->eSpeedMap[*pSpeedInput];
-
-    // Wipers turned off - park
-    if (!(*pOnSw))
-        ReqState(WiperState::Parking);
-
-    // Speed changed
-    switch (eSelectedSpeed)
-    {
-    case WiperSpeed::Park:
-        //Not active in MixIn mode
-        break;
-
-    case WiperSpeed::Slow:
-        ReqState(WiperState::Slow);
-        break;
-
-    case WiperSpeed::Fast:
-        ReqState(WiperState::Fast);
-        break;
-
-    case WiperSpeed::Intermittent1... WiperSpeed::Intermittent6:
-        UpdateInter();
-        ReqState(WiperState::IntermittentOn);
-        break;
-    }
+    return (!(*pParkSw) && !pConfig->bParkStopLevel) ||
+           (*pParkSw && pConfig->bParkStopLevel);
 }
 
-MsgCmdResult WiperMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult WiperMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 8 = Set wiper settings
     // DLC 1 = Get wiper settings
@@ -325,9 +149,9 @@ MsgCmdResult WiperMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 
         tx->data8[0] = static_cast<uint8_t>(MsgCmd::Wiper) + 128;
         tx->data8[1] = ((conf->stWiper.nWashWipeCycles & 0x0F) << 4) +
-                      ((conf->stWiper.bParkStopLevel & 0x01) << 3) +
-                      ((static_cast<uint8_t>(conf->stWiper.eMode) & 0x03) << 2) +
-                      (conf->stWiper.bEnabled & 0x01);
+                       ((conf->stWiper.bParkStopLevel & 0x01) << 3) +
+                       ((static_cast<uint8_t>(conf->stWiper.eMode) & 0x03) << 2) +
+                       (conf->stWiper.bEnabled & 0x01);
         tx->data8[2] = conf->stWiper.nSlowInput;
         tx->data8[3] = conf->stWiper.nFastInput;
         tx->data8[4] = conf->stWiper.nInterInput;
@@ -343,7 +167,7 @@ MsgCmdResult WiperMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     return MsgCmdResult::Invalid;
 }
 
-MsgCmdResult WiperSpeedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult WiperSpeedMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 7 = Set wiper speed settings
     // DLC 1 = Get wiper speed settings
@@ -372,13 +196,13 @@ MsgCmdResult WiperSpeedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         tx->data8[1] = conf->stWiper.nSwipeInput;
         tx->data8[2] = conf->stWiper.nSpeedInput;
         tx->data8[3] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[1]) & 0x0F) << 4) +
-                      (static_cast<uint8_t>(conf->stWiper.eSpeedMap[0]) & 0x0F);
+                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[0]) & 0x0F);
         tx->data8[4] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[3]) & 0x0F) << 4) +
-                      (static_cast<uint8_t>(conf->stWiper.eSpeedMap[2]) & 0x0F);
+                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[2]) & 0x0F);
         tx->data8[5] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[5]) & 0x0F) << 4) +
-                      (static_cast<uint8_t>(conf->stWiper.eSpeedMap[4]) & 0x0F);
+                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[4]) & 0x0F);
         tx->data8[6] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[7]) & 0x0F) << 4) +
-                      (static_cast<uint8_t>(conf->stWiper.eSpeedMap[6]) & 0x0F);
+                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[6]) & 0x0F);
         tx->data8[7] = 0;
 
         if (rx->DLC == 7)
@@ -389,7 +213,7 @@ MsgCmdResult WiperSpeedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     return MsgCmdResult::Invalid;
 }
 
-MsgCmdResult WiperDelaysMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult WiperDelaysMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 7 = Set wiper delay settings
     // DLC 1 = Get wiper delay settings
@@ -427,17 +251,16 @@ MsgCmdResult WiperDelaysMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     return MsgCmdResult::Invalid;
 }
 
-MsgCmdResult Wiper::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult Wiper::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     MsgCmd cmd = static_cast<MsgCmd>(rx->data8[0]);
 
-    if(cmd == MsgCmd::Wiper)
+    if (cmd == MsgCmd::Wiper)
         return WiperMsg(conf, rx, tx);
-    else if(cmd == MsgCmd::WiperSpeed)
+    else if (cmd == MsgCmd::WiperSpeed)
         return WiperSpeedMsg(conf, rx, tx);
-    else if(cmd == MsgCmd::WiperDelays)
+    else if (cmd == MsgCmd::WiperDelays)
         return WiperDelaysMsg(conf, rx, tx);
 
     return MsgCmdResult::Invalid;
-
 }

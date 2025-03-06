@@ -2,14 +2,25 @@
 
 #include <cstdint>
 #include "enums.h"
+#include "port.h"
 #include "config.h"
+#include "wiper_mode.h"
+#include "wiper_digin.h"
+#include "wiper_intin.h"
+#include "wiper_mixin.h"
+
 
 class Wiper
 {
-public:
-    Wiper() {
+    friend class Wiper_DigIn;
+    friend class Wiper_IntIn;
+    friend class Wiper_MixIn;
 
-    };
+public:
+    Wiper() : pMode(&digInMode),
+              digInMode(*this),
+              intInMode(*this),
+              mixInMode(*this) {}
 
     void SetConfig(Config_Wiper *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
     {
@@ -24,40 +35,44 @@ public:
         pWashInput = pVarMap[config->nWashInput];
     };
 
-    void Update(uint32_t timeNow);
+    void Update();
     bool GetEnable() { return pConfig->bEnabled; }
     WiperMode GetMode() { return pConfig->eMode; }
     WiperSpeed GetSpeed() { return eSelectedSpeed; }
     WiperState GetState() { return eState; }
-    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nSlowOut;
     uint16_t nFastOut;
 
 private:
-    void Parked();
     void Parking();
-    void Slow();
-    void Fast();
-    void InterPause(uint32_t nTimeNow);
-    void InterOn(uint32_t nTimeNow);
     void Wash();
     void Swipe();
 
-    void UpdateInter();
-
     void SetMotorSpeed(MotorSpeed speed);
-    void ReqState(WiperState state);
 
-    void ModeUpdate();
-    void DigInUpdate();
-    void IntInUpdate();
-    void MixInUpdate();
+    void UpdateInter();
+    void CheckWash();
+    void CheckSwipe();
+
+    bool GetParkSw();
+    bool GetOnSw(){return *pOnSw;};
+    bool GetSpeedInput(){return *pSpeedInput;};
+    bool GetInterInput(){return *pInterInput;};
+    bool GetSlowInput(){return *pSlowInput;};
+    bool GetFastInput(){return *pFastInput;};
+    bool GetWashInput(){return *pWashInput;};
+    bool GetSwipeInput(){return *pSwipeInput;};
+
+    Wiper_Mode *pMode;
+    Wiper_DigIn digInMode;
+    Wiper_IntIn intInMode;
+    Wiper_MixIn mixInMode;
 
     Config_Wiper *pConfig;
 
     WiperState eState;
-    WiperState eNextState;
 
     uint16_t *pParkSw;
     uint16_t *pSwipeInput;

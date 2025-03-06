@@ -245,7 +245,7 @@ void CyclicUpdate()
     for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
         virtIn[i].Update();
 
-    wiper.Update(SYS_TIME);
+    wiper.Update();
 
     starter.Update();
 
