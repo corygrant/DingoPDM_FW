@@ -5,13 +5,6 @@
 class Wiper_IntIn : public Wiper_Mode
 {
 public:
-    Wiper_IntIn(Wiper& w) : Wiper_Mode(w) {}
-    void Update() override;
-
-private:
-    void Parked();
-    void Slow();
-    void Fast();
-    void InterPause();
-    void InterOn();
+    Wiper_IntIn(Wiper &w) : Wiper_Mode(w) {}
+    virtual void CheckInputs() override;
 };

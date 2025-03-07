@@ -1,170 +1,40 @@
 #include "wiper_intin.h"
-#include "wiper.h"  
+#include "wiper.h"
 
-void Wiper_IntIn::Update()
+void Wiper_IntIn::CheckInputs()
 {
-    switch (wiper.eState)
-    {
-    case WiperState::Parked:
-        Parked();
-        break;
+    if (wiper.eState == WiperState::Swipe)
+        return;
 
-    case WiperState::Parking:
-        wiper.Parking();
-        break;
-
-    case WiperState::Slow:
-        Slow();
-        break;
-
-    case WiperState::Fast:
-        Fast();
-        break;
-
-    case WiperState::IntermittentOn:
-        InterOn();
-        break;
-
-    case WiperState::IntermittentPause:
-        InterPause();
-        break;
-
-    case WiperState::Wash:
-        wiper.Wash();
-        break;
-
-    case WiperState::Swipe:
-        wiper.Swipe();
-        break;
-    }
-
-    wiper.CheckWash();
-    wiper.CheckSwipe();
-}
-
-void Wiper_IntIn::Parked()
-{
-    wiper.SetMotorSpeed(MotorSpeed::Off);
-
-    if (wiper.GetInterInput())
+    if ((wiper.eSelectedSpeed >= WiperSpeed::Intermittent1) &&
+        (wiper.eSelectedSpeed <= WiperSpeed::Intermittent6) &&  
+        (wiper.eState != WiperState::IntermittentOn) &&
+        (wiper.eState != WiperState::IntermittentPause))
     {
         wiper.SetMotorSpeed(MotorSpeed::Slow);
         wiper.eState = WiperState::IntermittentOn;
-        wiper.eSelectedSpeed = WiperSpeed::Intermittent1;
+        return;
     }
 
-    if (wiper.GetSlowInput())
+    if (wiper.eSelectedSpeed == WiperSpeed::Slow)
     {
         wiper.SetMotorSpeed(MotorSpeed::Slow);
         wiper.eState = WiperState::Slow;
-        wiper.eSelectedSpeed = WiperSpeed::Slow;
+        return;
     }
 
-    if (wiper.GetFastInput())
+    if (wiper.eSelectedSpeed == WiperSpeed::Fast)
     {
         wiper.SetMotorSpeed(MotorSpeed::Fast);
         wiper.eState = WiperState::Fast;
-        wiper.eSelectedSpeed = WiperSpeed::Fast;
-    }
-}
-
-void Wiper_IntIn::Slow()
-{
-    wiper.eLastState = wiper.eState;
-
-    wiper.SetMotorSpeed(MotorSpeed::Slow);
-
-    if (!wiper.GetSlowInput())
-        wiper.eState = WiperState::Parking;
-
-    if (wiper.GetInterInput())
-        wiper.eState = WiperState::IntermittentOn;
-
-    if (wiper.GetFastInput())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Fast);
-        wiper.eState = WiperState::Fast;
-    }
-}
-
-void Wiper_IntIn::Fast()
-{
-    wiper.eLastState = wiper.eState;
-
-    wiper.SetMotorSpeed(MotorSpeed::Fast);
-
-    if (!wiper.GetFastInput())
-        wiper.eState = WiperState::Parking;
-
-    if (wiper.GetInterInput())
-        wiper.eState = WiperState::IntermittentOn;
-
-    if (wiper.GetSlowInput())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Slow);
-        wiper.eState = WiperState::Slow;
-    }
-}
-
-void Wiper_IntIn::InterOn()
-{
-    wiper.eLastState = wiper.eState;
-
-    wiper.SetMotorSpeed(MotorSpeed::Slow);
-
-    if (!wiper.GetInterInput())
-        wiper.eState = WiperState::Parking;
-
-    if (wiper.GetSlowInput())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Slow);
-        wiper.eState = WiperState::Slow;
+        return;
     }
 
-    if (wiper.GetFastInput())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Fast);
-        wiper.eState = WiperState::Fast;
-    }
-
-    // Park detected
-    // Stop motor
-    // Save time - pause for set time
-    if (!wiper.GetParkSw())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Off);
-        wiper.nInterPauseStartTime = SYS_TIME;
-        wiper.eState = WiperState::IntermittentPause;
-    }
-}
-
-void Wiper_IntIn::InterPause()
-{
-    wiper.eLastState = wiper.eState;
-
-    wiper.SetMotorSpeed(MotorSpeed::Off);
-
-    if (!wiper.GetInterInput())
+    if ((wiper.eSelectedSpeed == WiperSpeed::Park) &&
+        (wiper.eState != WiperState::Parked) &&
+        (wiper.eState != WiperState::Wash))
     {
         wiper.eState = WiperState::Parking;
-    }
-
-    if (wiper.GetSlowInput())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Slow);
-        wiper.eState = WiperState::Slow;
-    }
-
-    if (wiper.GetFastInput())
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Fast);
-        wiper.eState = WiperState::Fast;
-    }
-
-    // Pause for inter delay
-    if ((SYS_TIME - wiper.nInterPauseStartTime) > wiper.nInterDelay)
-    {
-        wiper.SetMotorSpeed(MotorSpeed::Slow);
-        wiper.eState = WiperState::IntermittentOn;
+        return;
     }
 }

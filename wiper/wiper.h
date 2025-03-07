@@ -9,7 +9,6 @@
 #include "wiper_intin.h"
 #include "wiper_mixin.h"
 
-
 class Wiper
 {
     friend class Wiper_DigIn;
@@ -33,6 +32,21 @@ public:
         pSpeedInput = pVarMap[config->nSpeedInput];
         pSwipeInput = pVarMap[config->nSwipeInput];
         pWashInput = pVarMap[config->nWashInput];
+
+        switch (config->eMode)
+        {
+        case WiperMode::DigIn:
+            pMode = &digInMode;
+            break;
+
+        case WiperMode::IntIn:
+            pMode = &intInMode;
+            break;
+
+        case WiperMode::MixIn:
+            pMode = &mixInMode;
+            break;
+        }
     };
 
     void Update();
@@ -47,9 +61,15 @@ public:
 
 private:
     void Parking();
+    void Parked();
+    void Slow();
+    void Fast();
+    void InterOn();
+    void InterPause();
     void Wash();
     void Swipe();
 
+    MotorSpeed GetMotorSpeed();
     void SetMotorSpeed(MotorSpeed speed);
 
     void UpdateInter();
@@ -57,13 +77,13 @@ private:
     void CheckSwipe();
 
     bool GetParkSw();
-    bool GetOnSw(){return *pOnSw;};
-    bool GetSpeedInput(){return *pSpeedInput;};
-    bool GetInterInput(){return *pInterInput;};
-    bool GetSlowInput(){return *pSlowInput;};
-    bool GetFastInput(){return *pFastInput;};
-    bool GetWashInput(){return *pWashInput;};
-    bool GetSwipeInput(){return *pSwipeInput;};
+    bool GetOnSw() { return *pOnSw; };
+    bool GetInterInput() { return *pInterInput; };
+    bool GetSlowInput() { return *pSlowInput; };
+    bool GetFastInput() { return *pFastInput; };
+    bool GetWashInput() { return *pWashInput; };
+    bool GetSwipeInput() { return *pSwipeInput; };
+    uint16_t GetSpeedInput() { return (*pSpeedInput < PDM_NUM_WIPER_SPEED_MAP) ? *pSpeedInput : 0; };
 
     Wiper_Mode *pMode;
     Wiper_DigIn digInMode;
@@ -94,6 +114,8 @@ private:
     uint16_t *pOnSw;
 
     // Internal
+    MotorSpeed eLastMotorSpeed;
+    uint32_t nMotorOnTime;
     uint32_t nInterPauseStartTime;
     WiperState eLastState;
     uint16_t nLastParkSw;

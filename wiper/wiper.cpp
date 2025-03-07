@@ -8,39 +8,102 @@ void Wiper::Update()
         return;
     }
 
-    pMode->Update();
-}
+    UpdateInter();
 
-void Wiper::SetMotorSpeed(MotorSpeed speed)
-{
-    switch (speed)
+    CheckWash();
+    CheckSwipe();
+
+    // Map speed input to selected speed
+    eSelectedSpeed = pConfig->eSpeedMap[GetSpeedInput()];
+
+    switch (eState)
     {
-    case MotorSpeed::Off:
-        nSlowOut = 0;
-        nFastOut = 0;
+    case WiperState::Parked:
+        eLastState = eState;
+        SetMotorSpeed(MotorSpeed::Off);
         break;
 
-    case MotorSpeed::Slow:
-        nSlowOut = 1;
-        nFastOut = 0;
+    case WiperState::Parking:
+        eLastState = eState;
+        // Keep last speed
+        Parking();
         break;
 
-    case MotorSpeed::Fast:
-        nSlowOut = 1;
-        nFastOut = 1;
+    case WiperState::Slow:
+        eLastState = eState;
+        SetMotorSpeed(MotorSpeed::Slow);
+        break;
+
+    case WiperState::Fast:
+        eLastState = eState;
+        SetMotorSpeed(MotorSpeed::Fast);
+        break;
+
+    case WiperState::IntermittentOn:
+        eLastState = eState;
+        SetMotorSpeed(MotorSpeed::Slow);
+        InterOn();
+        break;
+
+    case WiperState::IntermittentPause:
+        eLastState = eState;
+        SetMotorSpeed(MotorSpeed::Off);
+        InterPause();
+        break;
+
+    case WiperState::Wash:
+        eLastState = eState;
+        // Set speed to prewash speed in Wash()
+        Wash();
+        break;
+
+    case WiperState::Swipe:
+        eLastState = eState;
+        SetMotorSpeed(MotorSpeed::Fast);
+        Swipe();
         break;
     }
+
+    pMode->CheckInputs();
 }
 
 void Wiper::Parking()
 {
+    // Turn motor on to move back to park position
+    if (GetMotorSpeed() == MotorSpeed::Off)
+        SetMotorSpeed(MotorSpeed::Slow);
+
     // Park detected - stop motor
-    // Park high or low depending on stop level
-    if ((!GetParkSw() && !pConfig->bParkStopLevel) ||
-        (GetParkSw() && pConfig->bParkStopLevel))
+    if (GetParkSw())
     {
         SetMotorSpeed(MotorSpeed::Off);
         eState = WiperState::Parked;
+        eSelectedSpeed = WiperSpeed::Park;
+    }
+}
+
+void Wiper::InterOn()
+{
+    //Delay checking switch to allow motor to spin off of switch
+    if (!((SYS_TIME - nMotorOnTime) > 100))
+        return;
+
+    // Park detected
+    // Stop motor
+    // Save time - pause for set time
+    if (GetParkSw())
+    {
+        nInterPauseStartTime = SYS_TIME;
+        eState = WiperState::IntermittentPause;
+    }
+}
+
+void Wiper::InterPause()
+{
+    // Pause for inter delay
+    if ((SYS_TIME - nInterPauseStartTime) > nInterDelay)
+    {
+        eState = WiperState::IntermittentOn;
     }
 }
 
@@ -57,7 +120,11 @@ void Wiper::Wash()
     }
     else
     {
-        if (!GetParkSw() && (GetParkSw() != nLastParkSw))
+        //Delay checking switch to allow motor to spin off of switch
+        if (!((SYS_TIME - nMotorOnTime) > 100))
+            return;
+        
+        if (GetParkSw() && (GetParkSw() != nLastParkSw))
             nWashWipeCount++;
 
         if (nWashWipeCount >= pConfig->nWashWipeCycles)
@@ -79,20 +146,58 @@ void Wiper::Wash()
 
 void Wiper::Swipe()
 {
-    eLastState = eState;
-
-    SetMotorSpeed(MotorSpeed::Fast);
+    //Delay checking switch to allow motor to spin off of switch
+    if (!((SYS_TIME - nMotorOnTime) > 100))
+        return;
 
     // Park switch high
     // Moved past park position
-    if (Wiper::GetParkSw())
+    if (GetParkSw())
     {
         eState = WiperState::Parking;
     }
 }
 
+void Wiper::SetMotorSpeed(MotorSpeed speed)
+{
+    if((speed != eLastMotorSpeed) && (speed != MotorSpeed::Off))
+        nMotorOnTime = SYS_TIME;
+    
+    eLastMotorSpeed = speed;
+        
+    switch (speed)
+    {
+    case MotorSpeed::Off:
+        nSlowOut = 0;
+        nFastOut = 0;
+        break;
+
+    case MotorSpeed::Slow:
+        nSlowOut = 1;
+        nFastOut = 0;
+        break;
+
+    case MotorSpeed::Fast:
+        nSlowOut = 1;
+        nFastOut = 1;
+        break;
+    }
+    
+}
+
+MotorSpeed Wiper::GetMotorSpeed()
+{
+    if (nSlowOut && nFastOut)
+        return MotorSpeed::Fast;
+    else if (nSlowOut)
+        return MotorSpeed::Slow;
+    else
+        return MotorSpeed::Off;
+}
+
 void Wiper::UpdateInter()
 {
+    // Map intermittent speed to delay
     if (eSelectedSpeed >= WiperSpeed::Intermittent1 && eSelectedSpeed <= WiperSpeed::Intermittent6)
     {
         nInterDelay = pConfig->nIntermitTime[static_cast<int>(eSelectedSpeed) - 3];
@@ -101,7 +206,7 @@ void Wiper::UpdateInter()
 
 void Wiper::CheckWash()
 {
-    if (GetWashInput())
+    if (GetWashInput() && (eState != WiperState::Wash))
     {
         eStatePreWash = eState;
         eState = WiperState::Wash;
@@ -110,7 +215,7 @@ void Wiper::CheckWash()
 
 void Wiper::CheckSwipe()
 {
-    if (GetSwipeInput())
+    if (GetSwipeInput() && (eState == WiperState::Parked))
     {
         eState = WiperState::Swipe;
     }
@@ -150,7 +255,7 @@ MsgCmdResult WiperMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
         tx->data8[0] = static_cast<uint8_t>(MsgCmd::Wiper) + 128;
         tx->data8[1] = ((conf->stWiper.nWashWipeCycles & 0x0F) << 4) +
                        ((conf->stWiper.bParkStopLevel & 0x01) << 3) +
-                       ((static_cast<uint8_t>(conf->stWiper.eMode) & 0x03) << 2) +
+                       ((static_cast<uint8_t>(conf->stWiper.eMode) & 0x03) << 1) +
                        (conf->stWiper.bEnabled & 0x01);
         tx->data8[2] = conf->stWiper.nSlowInput;
         tx->data8[3] = conf->stWiper.nFastInput;
