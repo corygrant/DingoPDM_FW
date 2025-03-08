@@ -13,9 +13,6 @@ void Wiper::Update()
     CheckWash();
     CheckSwipe();
 
-    // Map speed input to selected speed
-    eSelectedSpeed = pConfig->eSpeedMap[GetSpeedInput()];
-
     switch (eState)
     {
     case WiperState::Parked:

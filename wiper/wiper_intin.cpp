@@ -3,6 +3,9 @@
 
 void Wiper_IntIn::CheckInputs()
 {
+    // Map speed input to selected speed
+    wiper.eSelectedSpeed = wiper.pConfig->eSpeedMap[wiper.GetSpeedInput()];
+
     if (wiper.eState == WiperState::Swipe)
         return;
 
