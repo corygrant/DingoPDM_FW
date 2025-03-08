@@ -8,7 +8,11 @@ void Wiper_MixIn::CheckInputs()
 
     if (!wiper.GetOnSw())
     {
-        wiper.eState = WiperState::Parking;
+        if (wiper.eState != WiperState::Parked)
+        {
+            wiper.eState = WiperState::Parking;
+        }
+        
         return;
     }
 

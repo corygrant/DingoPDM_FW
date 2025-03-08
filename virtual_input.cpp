@@ -3,7 +3,11 @@
 void VirtualInput::Update()
 {
     if (!pConfig->bEnabled)
+    {
+        nVal = 0;
         return;
+    }
+    
     if ((pVar0 == 0) || (pVar1 == 0))
         return;
 

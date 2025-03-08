@@ -66,10 +66,6 @@ void Wiper::Update()
 
 void Wiper::Parking()
 {
-    // Turn motor on to move back to park position
-    if (GetMotorSpeed() == MotorSpeed::Off)
-        SetMotorSpeed(MotorSpeed::Slow);
-
     // Park detected - stop motor
     if (GetParkSw())
     {
@@ -82,7 +78,7 @@ void Wiper::Parking()
 void Wiper::InterOn()
 {
     //Delay checking switch to allow motor to spin off of switch
-    if (!((SYS_TIME - nMotorOnTime) > 100))
+    if (!((SYS_TIME - nMotorOnTime) > 1000))
         return;
 
     // Park detected

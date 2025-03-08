@@ -10,6 +10,7 @@ void Profet::Update(bool bOutEnabled)
         palClearLine(m_in);
         nOcCount = 0;
         eState = ProfetState::Off;
+        nOutput = 0;
         return;
     }
 
