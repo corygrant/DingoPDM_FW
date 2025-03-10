@@ -4,19 +4,15 @@ void Pwm::Update()
 {
     bChannelEnabled = (bool)(m_pwm->enabled & (1 << 0));
 
-    // Early exit if disabled
     if (!pConfig->bEnabled || !bChannelEnabled) {
         bLastChannelEnabled = bChannelEnabled;
         bSoftStartComplete = false;
         nDutyCycle = 0;
-        return;
     }
 
-    // Handle no soft start case
     if (!pConfig->bSoftStart) {
         bSoftStartComplete = true;
         nDutyCycle = GetTargetDutyCycle();
-        return;
     }
 
     // Initialize soft start
