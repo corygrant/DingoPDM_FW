@@ -9,6 +9,12 @@
 
 uint32_t nLastCanRxTime;
 
+static CANFilter canfilters[STM32_CAN_MAX_FILTERS];
+static uint32_t nFilterIds[STM32_CAN_MAX_FILTERS * 2];
+static bool bFilterExtended[STM32_CAN_MAX_FILTERS * 2];
+
+void ConfigureCanFilters();
+
 static THD_WORKING_AREA(waCanCyclicTxThread, 128);
 void CanCyclicTxThread(void *)
 {
@@ -56,7 +62,7 @@ void CanTxThread(void *)
                 canTryTransmitI(&CAND1, CAN_ANY_MAILBOX, &msg);
                 // Returns true if mailbox full or nothing connected
                 // TODO: What to do if no tx?
-                palToggleLine(LINE_E2);
+                
                 chThdSleepMicroseconds(CAN_TX_MSG_SPLIT);
             }
         } while (res == MSG_OK);
@@ -84,6 +90,7 @@ void CanRxThread(void *)
             nLastCanRxTime = SYS_TIME;
 
             res = PostRxFrame(&msg);
+            palToggleLine(LINE_E2);
             // TODO:What to do if mailbox is full?
         }
 
@@ -100,10 +107,14 @@ static thread_t *canRxThreadRef;
 
 msg_t InitCan(CanBitrate bitrate)
 {
-    msg_t ret;
+    if (canCyclicTxThreadRef || canTxThreadRef || canRxThreadRef)
+    {
+        StopCan();
+    }
 
-    // No rx filtering, need to evaluate all incoming messages
-    ret = canStart(&CAND1, &GetCanConfig(bitrate));
+    ConfigureCanFilters();
+
+    msg_t ret = canStart(&CAND1, &GetCanConfig(bitrate));
     if (ret != HAL_RET_SUCCESS)
         return ret;
     canCyclicTxThreadRef = chThdCreateStatic(waCanCyclicTxThread, sizeof(waCanCyclicTxThread), NORMALPRIO + 1, CanCyclicTxThread, nullptr);
@@ -111,6 +122,98 @@ msg_t InitCan(CanBitrate bitrate)
     canRxThreadRef = chThdCreateStatic(waCanRxThread, sizeof(waCanRxThread), NORMALPRIO + 1, CanRxThread, nullptr);
 
     return HAL_RET_SUCCESS;
+}
+
+void StopCan()
+{
+    // Signal threads to terminate
+    chThdTerminate(canCyclicTxThreadRef);
+    chThdTerminate(canTxThreadRef);
+    chThdTerminate(canRxThreadRef);
+
+    // Wait for threads to exit
+    chThdWait(canCyclicTxThreadRef);
+    chThdWait(canTxThreadRef);
+    chThdWait(canRxThreadRef);
+
+    // Stop CAN driver
+    canStop(&CAND1);
+
+    // Reset thread references
+    canCyclicTxThreadRef = NULL;
+    canTxThreadRef = NULL;
+    canRxThreadRef = NULL;
+}
+
+void ClearCanFilters()
+{
+    // Clear all filters
+    for (uint8_t i = 0; i < STM32_CAN_MAX_FILTERS; i++)
+    {
+        nFilterIds[i] = 0;
+        bFilterExtended[i] = false;
+
+        canfilters[i].register1 = 0;
+        canfilters[i].register2 = 0;
+        canfilters[i].filter = 0;
+        canfilters[i].assignment = 0;
+        canfilters[i].mode = 0;
+        canfilters[i].scale = 0;
+    }
+}
+
+void SetCanFilterId(uint8_t nFilterNum, uint32_t nId, bool bExtended)
+{
+    if (nFilterNum >= (STM32_CAN_MAX_FILTERS * 2))
+        return;
+
+    bFilterExtended[nFilterNum] = bExtended;
+
+    if (bExtended)
+    {
+        nFilterIds[nFilterNum] = (nId << 3) | 0x04; // Set IDE bit for extended ID
+    }
+    else
+    {
+        nFilterIds[nFilterNum] = nId << 21;
+    }
+}
+
+void ConfigureCanFilters()
+{
+    uint8_t nCurrentFilter = 0;
+
+    // Go through nFilterIds and set filter register1 and register2 for each filter if ID is set
+    for (uint8_t i = 0; i < (STM32_CAN_MAX_FILTERS * 2); i += 2)
+    {
+        if (nFilterIds[i] != 0 || nFilterIds[i + 1] != 0)
+        {
+            canfilters[nCurrentFilter].filter = nCurrentFilter;      // Filter bank number
+            canfilters[nCurrentFilter].assignment = 0;  // Assign to FIFO 0
+            canfilters[nCurrentFilter].mode = 1;        // List mode
+            canfilters[nCurrentFilter].scale = 1;       // 32-bit scale
+
+            // First ID (register1)
+            if (nFilterIds[i] != 0)
+            {
+                canfilters[nCurrentFilter].register1 = nFilterIds[i];
+            }
+
+            // Second ID (register2)
+            if (nFilterIds[i + 1] != 0)
+            {
+                canfilters[nCurrentFilter].register2 = nFilterIds[i + 1];
+            }
+
+            nCurrentFilter++;
+        }
+    }
+
+    // CANNOT SET ALL FILTERS, MUST USE ONLY THE NUMBER OF REQUIRED FILTERS
+
+    // Apply all filter configurations
+    // Note: filter 0 is always enabled to allow all messages, must use
+    canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS, nCurrentFilter, canfilters);
 }
 
 uint32_t GetLastCanRxTime()
@@ -139,7 +242,7 @@ MsgCmdResult CanProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *
 
         tx->data8[0] = static_cast<uint8_t>(MsgCmd::Can) + 128;
         tx->data8[1] = ((static_cast<uint8_t>(conf->stDevConfig.eCanSpeed) & 0x0F) << 4) +
-                      ((conf->stCanOutput.bEnabled & 0x01) << 1) + 1;
+                       ((conf->stCanOutput.bEnabled & 0x01) << 1) + 1;
         tx->data8[2] = (conf->stCanOutput.nBaseId & 0xFF00) >> 8;
         tx->data8[3] = (conf->stCanOutput.nBaseId & 0x00FF);
         tx->data8[4] = (conf->stCanOutput.nUpdateTime) / 10;

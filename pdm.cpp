@@ -349,7 +349,7 @@ void ApplyConfig(MsgCmd eCmd)
 {
     if (eCmd == MsgCmd::Can)
     {
-        // TODO: Change CAN speed
+        // TODO: Change CAN speed without requiring reset
     }
 
     if (eCmd == MsgCmd::Inputs)
@@ -360,8 +360,28 @@ void ApplyConfig(MsgCmd eCmd)
 
     if ((eCmd == MsgCmd::CanInputs) || (eCmd == MsgCmd::CanInputsId))
     {
+        ClearCanFilters(); // Clear all filters before setting new ones
+
+        // Set filter for CAN settings request message, (Base ID - 1)
+        // Use filter 0, it is always enabled to allow all messages by hal so it must be used
+        SetCanFilterId(0, stConfig.stCanOutput.nBaseId - 1, false);
+
         for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
+        {
             canIn[i].SetConfig(&stConfig.stCanInput[i]);
+            if(!stConfig.stCanInput[i].bEnabled)
+                continue; // Skip if not enabled
+            
+            // Set filter for this input
+            uint32_t nId = 0;
+            if(stConfig.stCanInput[i].nIDE == 1)
+                nId = stConfig.stCanInput[i].nEID;
+            else
+                nId = stConfig.stCanInput[i].nSID;
+            SetCanFilterId(i + 1, nId, stConfig.stCanInput[i].nIDE == 1);
+        }
+
+        //TODO: Set can filter without requiring reset, need a new message to indicate all IDs set before stopping CAN
     }
 
     if (eCmd == MsgCmd::VirtualInputs)
@@ -407,6 +427,10 @@ void ApplyConfig(MsgCmd eCmd)
 
 void CheckRequestMsgs(CANRxFrame *frame)
 {
+    //Check for settings request message, (Base ID - 1)
+    if(frame->SID != (stConfig.stCanOutput.nBaseId - 1))
+        return;
+
     // Check for sleep request
     if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Sleep))
     {
