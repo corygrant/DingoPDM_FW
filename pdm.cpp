@@ -131,7 +131,7 @@ void InitPdm()
     if(!InitAdc() == HAL_RET_SUCCESS)
         Error::SetFatalError(FatalErrorType::ErrADC, MsgSrc::Init);
         
-    if(!InitCan(stConfig.stDevConfig.eCanSpeed) == HAL_RET_SUCCESS) // Starts CAN threads
+    if(!InitCan(&stConfig.stDevConfig) == HAL_RET_SUCCESS) // Starts CAN threads
         Error::SetFatalError(FatalErrorType::ErrCAN, MsgSrc::Init);
 
     if (!InitUsb() == HAL_RET_SUCCESS) // Starts USB threads
@@ -349,7 +349,9 @@ void ApplyConfig(MsgCmd eCmd)
 {
     if (eCmd == MsgCmd::Can)
     {
-        // TODO: Change CAN speed without requiring reset
+        // TODO: Change CAN speed and filters without requiring reset
+
+        SetCanFilterEnabled(stConfig.stDevConfig.bCanFilterEnabled);
     }
 
     if (eCmd == MsgCmd::Inputs)
@@ -432,7 +434,10 @@ void CheckRequestMsgs(CANRxFrame *frame)
         return;
 
     // Check for sleep request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Sleep))
+    if ((frame->DLC == 5) && 
+        (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Sleep)) &&
+        (frame->data8[1] == 'Q') && (frame->data8[2] == 'U') && 
+        (frame->data8[3] == 'I') && (frame->data8[4] == 'T'))
     {
         CANTxFrame txMsg;
         txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
@@ -447,7 +452,11 @@ void CheckRequestMsgs(CANRxFrame *frame)
     }
 
     // Check for burn request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::BurnSettings))
+    if ((frame->DLC == 4) && 
+        (frame->data8[0] == static_cast<uint8_t>(MsgCmd::BurnSettings)) &&
+        (frame->data8[1] == 1) &&
+        (frame->data8[2] == 3) && 
+        (frame->data8[3] == 8))
     {
         CANTxFrame txMsg;
         txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
@@ -460,13 +469,17 @@ void CheckRequestMsgs(CANRxFrame *frame)
     }
 
     // Check for bootloader request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Bootloader))
+    if ((frame->DLC == 6) &&
+        (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Bootloader)) && 
+        (frame->data8[1] == 'B') && (frame->data8[2] == 'O') && 
+        (frame->data8[3] == 'O') && (frame->data8[4] == 'T') && (frame->data8[5] == 'L'))
     {
         RequestBootloader();
     }
 
     // Check for version request
-    if (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Version))
+    if ((frame->DLC == 1) &&
+        (frame->data8[0] == static_cast<uint8_t>(MsgCmd::Version)))
     {
         CANTxFrame txMsg;
         txMsg.SID = stConfig.stCanOutput.nBaseId + TX_SETTINGS_ID_OFFSET;
@@ -760,7 +773,7 @@ bool CheckEnterSleep()
 
     // No outputs on, no CAN msgs received and no USB connected
     // Go to sleep after timeout
-    bEnterSleep = ENABLE_SLEEP &&
+    bEnterSleep = stConfig.stDevConfig.bSleepEnabled &&
                   (nNumOutputsOn == 0) &&
                   (nLastNumOutputsOn == 0) &&
                   !GetUsbConnected() &&

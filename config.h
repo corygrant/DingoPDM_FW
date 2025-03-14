@@ -7,6 +7,8 @@
 
 struct Config_DeviceConfig{
   CanBitrate eCanSpeed;
+  bool bSleepEnabled;
+  bool bCanFilterEnabled;
 };
 
 struct Config_Input{
@@ -100,9 +102,7 @@ struct Config_CanInput{
 };
 
 struct Config_CanOutput{
-  bool bEnabled;
   uint16_t nBaseId;
-  uint16_t nUpdateTime;
 };
 
 struct Config_Counter{

@@ -45,6 +45,8 @@ bool WriteConfig(){
 void SetDefaultConfig()
 {
     stConfig.stDevConfig.eCanSpeed = CanBitrate::Bitrate_500K;
+    stConfig.stDevConfig.bCanFilterEnabled = false;
+    stConfig.stDevConfig.bSleepEnabled = true;
 
     for(uint8_t i = 0; i < PDM_NUM_INPUTS; i++)
     {
@@ -139,7 +141,6 @@ void SetDefaultConfig()
         stConfig.stCanInput[i].eMode = InputMode::Momentary;
     }
 
-    stConfig.stCanOutput.bEnabled = true;
     stConfig.stCanOutput.nBaseId = 2000;
 
     for(uint8_t i=0; i < PDM_NUM_COUNTERS; i++)
