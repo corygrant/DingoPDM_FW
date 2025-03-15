@@ -33,24 +33,24 @@ void Profet::Update(bool bOutEnabled)
         palSetLine(m_dsel);
         chThdSleepMicroseconds(60);
     }
-    
+
     uint32_t nCNT = 0;
     uint32_t nCCR = 0;
 
     if (pwm.IsEnabled() && eState == ProfetState::On)
     {
-        //Assign to local vars to prevent CNT rolling over and slipping past check
-        //Example: 
-        //CCR = 2500
-        //When checking read delay CNT = 2499
-        //Before getting to the CNT < CCR check the CNT has rolled over to 0
-        //This will cause an incorrect reading 
-        //Copying to local var freezes the CNT value
+        // Assign to local vars to prevent CNT rolling over and slipping past check
+        // Example:
+        // CCR = 2500
+        // When checking read delay CNT = 2499
+        // Before getting to the CNT < CCR check the CNT has rolled over to 0
+        // This will cause an incorrect reading
+        // Copying to local var freezes the CNT value
         nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
-        nCNT = m_pwmDriver->tim->CNT; 
+        nCNT = m_pwmDriver->tim->CNT;
 
-        if((nCCR > nPwmReadDelay) &&
-            (nCNT > nPwmReadDelay) && 
+        if ((nCCR > nPwmReadDelay) &&
+            (nCNT > nPwmReadDelay) &&
             (nCNT < nCCR))
         {
             nIS = GetAdcRaw(m_ain);
@@ -64,18 +64,31 @@ void Profet::Update(bool bOutEnabled)
     else
         nIS = GetAdcRaw(m_ain);
 
-
     // Calculate current at ADC, multiply by kILIS ratio to get output current
     // Analog value must be ready before reading to allow for conversion after DSEL change
     // Use the measured VDDA value to calculate volts/step
     // Current = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
     nCurrent = (uint16_t)((((float)nIS * (GetVDDA() / 4095)) / 1200) * fKILIS);
 
-    // Ignore current less than or equal to 0.2A
-    // Not capable of measuring that low
-    // Noise causes small blips in current when output is off
-    if (nCurrent <= 2)
-        nCurrent = 0;
+    // Ignore current less than a low value
+    // Not capable of measuring that low anyways
+    // Depending on the model the value changes
+    switch (m_model)
+    {
+    case ProfetModel::BTS7002_1EPP:
+        if (nCurrent <= 5) // 0.5A
+            nCurrent = 0;
+        break;
+    case ProfetModel::BTS7008_2EPA_CH1:
+    case ProfetModel::BTS7008_2EPA_CH2:
+        if (nCurrent <= 2) // 0.2A
+            nCurrent = 0;
+        break;
+    case ProfetModel::BTS70012_1ESP:
+        if (nCurrent <= 10) // 1.0A
+            nCurrent = 0;
+        break;
+    }
 
     // Check for fault (device overcurrent/overtemp/short)
     // Raw ADC current reading will be very high
@@ -92,7 +105,7 @@ void Profet::Update(bool bOutEnabled)
         pwm.Off();
 
         palClearLine(m_in);
-        
+
         nOcCount = 0;
 
         // Check for turn on

@@ -1,49 +1,65 @@
 #include "config.h"
 #include "error.h"
+#include "crc.h"
 
 MB85RC fram(I2CD1, MB85RC_I2CADDR_DEFAULT);
 
 bool ReadConfig(){
 
-    uint16_t nSizeInFram = 0;
-
-    //Get size from 2 bytes after config
-    if(!fram.Read(sizeof(stConfig), (uint8_t*)&nSizeInFram, sizeof(nSizeInFram))){
+    // Read config
+    if(!fram.Read(0x0, (uint8_t*)&stConfig, sizeof(stConfig))) {
         return false;
     }
-
-    if(sizeof(stConfig) != nSizeInFram){
+    
+    // Check version number
+    if(stConfig.stDevConfig.nConfigVersion != CONFIG_VERSION) {
         return false;
     }
-
-    if(!fram.Read(0x0, (uint8_t*)&stConfig, sizeof(stConfig))){
+    
+    // Read stored data CRC
+    uint32_t storedCrc = 0;
+    if(!fram.Read(sizeof(stConfig), (uint8_t*)&storedCrc, sizeof(storedCrc))) {
         return false;
     }
-
+    
+    // Calculate CRC of the data we just read
+    uint32_t calculatedCrc = CalculateCRC32(&stConfig, sizeof(stConfig));
+    
+    // Compare CRCs to verify data integrity
+    if(storedCrc != calculatedCrc) {
+        return false; // Data corrupt or changed
+    }
+    
     return true;
 }
 
 bool WriteConfig(){
-
-    if(!fram.CheckId()){
+    if(!fram.CheckId()) {
         return false;
     }
-
-    if(!fram.Write(0x0, (uint8_t*)&stConfig, sizeof(stConfig))){
+    
+    // Make sure the version is current
+    stConfig.stDevConfig.nConfigVersion = CONFIG_VERSION;
+    
+    // Write config
+    if(!fram.Write(0x0, (uint8_t*)&stConfig, sizeof(stConfig))) {
         return false;
     }
-
-    uint16_t nSize = sizeof(stConfig);
-
-    if(!fram.Write(sizeof(stConfig), (uint8_t*)&nSize, sizeof(nSize))){
+    
+    // Calculate config CRC
+    uint32_t dataCrc = CalculateCRC32(&stConfig, sizeof(stConfig));
+    
+    // Write CRC after config
+    if(!fram.Write(sizeof(stConfig), (uint8_t*)&dataCrc, sizeof(dataCrc))) {
         return false;
     }
-
+    
     return true;
 }
 
 void SetDefaultConfig()
 {
+    stConfig.stDevConfig.nConfigVersion = CONFIG_VERSION;
     stConfig.stDevConfig.eCanSpeed = CanBitrate::Bitrate_500K;
     stConfig.stDevConfig.bCanFilterEnabled = false;
     stConfig.stDevConfig.bSleepEnabled = true;
