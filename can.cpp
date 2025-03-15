@@ -193,7 +193,6 @@ void ConfigureCanFilters()
     }
 
     uint8_t nCurrentFilter = 0;
-    uint8_t nFiltersUsed = 0;
 
     // Go through nFilterIds and set filter register1 and register2 for each filter if ID is set
     // CANNOT SET ALL FILTERS, MUST USE ONLY THE NUMBER OF REQUIRED FILTERS
@@ -210,14 +209,12 @@ void ConfigureCanFilters()
             if (nFilterIds[i] != 0)
             {
                 canfilters[nCurrentFilter].register1 = nFilterIds[i];
-                nFiltersUsed++;
             }
 
             // Second ID (register2)
             if (nFilterIds[i + 1] != 0)
             {
                 canfilters[nCurrentFilter].register2 = nFilterIds[i + 1];
-                nFiltersUsed++;
             }
 
             nCurrentFilter++;
@@ -225,12 +222,8 @@ void ConfigureCanFilters()
     }
 
     // Apply all filter configurations
-    // Note: filter 0 is always enabled to allow all messages, must use
-    // If filters enabled but no CAN inputs enabled, don't set filters
-    // One filter is always set, (BaseId - 1) for settings request message
-    // If only this filter, don't use filters
-    if (nFiltersUsed > 1)
-        canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS, nCurrentFilter, canfilters);
+    // If no CAN inputs are enabled, filter[0].register1 is still set to settings request message ID (BaseId-1)
+    canSTM32SetFilters(&CAND1, STM32_CAN_MAX_FILTERS, nCurrentFilter, canfilters);
 }
 
 uint32_t GetLastCanRxTime()
