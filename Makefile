@@ -143,6 +143,7 @@ CPPSRC = $(ALLCPPSRC) \
 				 config.cpp \
 				 config_handler.cpp \
 				 counter.cpp \
+				 crc.cpp \
 				 digital.cpp \
 				 error.cpp \
 				 flasher.cpp \
