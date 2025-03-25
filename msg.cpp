@@ -41,11 +41,11 @@ CANTxMsg TxMsg0()
     stMsg.frame.DLC = 8; // Bytes to send
     stMsg.frame.data8[0] = (GetInputVal(1) << 1) + GetInputVal(0);
     stMsg.frame.data8[1] = static_cast<uint8_t>(GetPdmState()) + (PDM_TYPE << 4);
-    stMsg.frame.data16[1] = (uint16_t)GetTotalCurrent();
-    stMsg.frame.data16[2] = (uint16_t)(GetBattVolt() * 10);
-    stMsg.frame.data16[3] = (uint16_t)GetBoardTemp();
+    stMsg.frame.data16[1] = (uint16_t)GetTotalCurrent(); //Already scaled by 10
+    stMsg.frame.data16[2] = (uint16_t)(GetBattVolt() * 10.0);
+    stMsg.frame.data16[3] = (uint16_t)(GetBoardTemp() * 10.0);
 
-    stMsg.bSend = true; //Always send
+    stMsg.bSend = true; // Always send
 
     return stMsg;
 }
@@ -63,7 +63,7 @@ CANTxMsg TxMsg1()
     stMsg.frame.data16[2] = GetOutputCurrent(2);
     stMsg.frame.data16[3] = GetOutputCurrent(3);
 
-    stMsg.bSend = true; //Always send
+    stMsg.bSend = true; // Always send
 
     return stMsg;
 }
@@ -81,7 +81,7 @@ CANTxMsg TxMsg2()
     stMsg.frame.data16[2] = GetOutputCurrent(6);
     stMsg.frame.data16[3] = GetOutputCurrent(7);
 
-    stMsg.bSend = true; //Always send
+    stMsg.bSend = true; // Always send
 
     return stMsg;
 }
@@ -101,10 +101,10 @@ CANTxMsg TxMsg3()
     stMsg.frame.data8[4] = (GetWiperFastOut() << 1) + GetWiperSlowOut();
     stMsg.frame.data8[5] = (static_cast<uint8_t>(GetWiperState()) << 4) + static_cast<uint8_t>(GetWiperSpeed());
     stMsg.frame.data8[6] = (GetFlasherVal(3) << 3) + (GetFlasherVal(2) << 2) +
-                     (GetFlasherVal(1) << 1) + (GetFlasherVal(0));
+                           (GetFlasherVal(1) << 1) + (GetFlasherVal(0));
     stMsg.frame.data8[7] = 0;
 
-    stMsg.bSend = true; //Always send
+    stMsg.bSend = true; // Always send
 
     return stMsg;
 }
@@ -126,7 +126,7 @@ CANTxMsg TxMsg4()
     stMsg.frame.data8[6] = GetOutputOcCount(6);
     stMsg.frame.data8[7] = GetOutputOcCount(7);
 
-    stMsg.bSend = true; //Always send
+    stMsg.bSend = true; // Always send
 
     return stMsg;
 }
@@ -140,25 +140,25 @@ CANTxMsg TxMsg5()
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 5;
     stMsg.frame.DLC = 8; // Bytes to send
     stMsg.frame.data8[0] = ((GetCanInOutput(7) & 0x01) << 7) + ((GetCanInOutput(6) & 0x01) << 6) + ((GetCanInOutput(5) & 0x01) << 5) +
-                     ((GetCanInOutput(4) & 0x01) << 4) + ((GetCanInOutput(3) & 0x01) << 3) + ((GetCanInOutput(2) & 0x01) << 2) +
-                     ((GetCanInOutput(1) & 0x01) << 1) + (GetCanInOutput(0) & 0x01);
+                           ((GetCanInOutput(4) & 0x01) << 4) + ((GetCanInOutput(3) & 0x01) << 3) + ((GetCanInOutput(2) & 0x01) << 2) +
+                           ((GetCanInOutput(1) & 0x01) << 1) + (GetCanInOutput(0) & 0x01);
     stMsg.frame.data8[1] = ((GetCanInOutput(15) & 0x01) << 7) + ((GetCanInOutput(14) & 0x01) << 6) + ((GetCanInOutput(13) & 0x01) << 5) +
-                     ((GetCanInOutput(12) & 0x01) << 4) + ((GetCanInOutput(11) & 0x01) << 3) + ((GetCanInOutput(10) & 0x01) << 2) +
-                     ((GetCanInOutput(9) & 0x01) << 1) + (GetCanInOutput(8) & 0x01);
+                           ((GetCanInOutput(12) & 0x01) << 4) + ((GetCanInOutput(11) & 0x01) << 3) + ((GetCanInOutput(10) & 0x01) << 2) +
+                           ((GetCanInOutput(9) & 0x01) << 1) + (GetCanInOutput(8) & 0x01);
     stMsg.frame.data8[2] = ((GetCanInOutput(23) & 0x01) << 7) + ((GetCanInOutput(22) & 0x01) << 6) + ((GetCanInOutput(21) & 0x01) << 5) +
-                     ((GetCanInOutput(20) & 0x01) << 4) + ((GetCanInOutput(19) & 0x01) << 3) + ((GetCanInOutput(18) & 0x01) << 2) +
-                     ((GetCanInOutput(17) & 0x01) << 1) + (GetCanInOutput(16) & 0x01);
+                           ((GetCanInOutput(20) & 0x01) << 4) + ((GetCanInOutput(19) & 0x01) << 3) + ((GetCanInOutput(18) & 0x01) << 2) +
+                           ((GetCanInOutput(17) & 0x01) << 1) + (GetCanInOutput(16) & 0x01);
     stMsg.frame.data8[3] = ((GetCanInOutput(31) & 0x01) << 7) + ((GetCanInOutput(30) & 0x01) << 6) + ((GetCanInOutput(29) & 0x01) << 5) +
-                     ((GetCanInOutput(28) & 0x01) << 4) + ((GetCanInOutput(27) & 0x01) << 3) + ((GetCanInOutput(26) & 0x01) << 2) +
-                     ((GetCanInOutput(25) & 0x01) << 1) + (GetCanInOutput(24) & 0x01);
+                           ((GetCanInOutput(28) & 0x01) << 4) + ((GetCanInOutput(27) & 0x01) << 3) + ((GetCanInOutput(26) & 0x01) << 2) +
+                           ((GetCanInOutput(25) & 0x01) << 1) + (GetCanInOutput(24) & 0x01);
     stMsg.frame.data8[4] = ((GetVirtInVal(7) & 0x01) << 7) + ((GetVirtInVal(6) & 0x01) << 6) + ((GetVirtInVal(5) & 0x01) << 5) +
-                     ((GetVirtInVal(4) & 0x01) << 4) + ((GetVirtInVal(3) & 0x01) << 3) + ((GetVirtInVal(2) & 0x01) << 2) +
-                     ((GetVirtInVal(1) & 0x01) << 1) + (GetVirtInVal(0) & 0x01);
+                           ((GetVirtInVal(4) & 0x01) << 4) + ((GetVirtInVal(3) & 0x01) << 3) + ((GetVirtInVal(2) & 0x01) << 2) +
+                           ((GetVirtInVal(1) & 0x01) << 1) + (GetVirtInVal(0) & 0x01);
     stMsg.frame.data8[5] = ((GetVirtInVal(15) & 0x01) << 7) + ((GetVirtInVal(14) & 0x01) << 6) + ((GetVirtInVal(13) & 0x01) << 5) +
-                     ((GetVirtInVal(12) & 0x01) << 4) + ((GetVirtInVal(11) & 0x01) << 3) + ((GetVirtInVal(10) & 0x01) << 2) +
-                     ((GetVirtInVal(9) & 0x01) << 1) + (GetVirtInVal(8) & 0x01);
-     stMsg.frame.data8[6] = 0;
-     stMsg.frame.data8[7] = 0;
+                           ((GetVirtInVal(12) & 0x01) << 4) + ((GetVirtInVal(11) & 0x01) << 3) + ((GetVirtInVal(10) & 0x01) << 2) +
+                           ((GetVirtInVal(9) & 0x01) << 1) + (GetVirtInVal(8) & 0x01);
+    stMsg.frame.data8[6] = 0;
+    stMsg.frame.data8[7] = 0;
 
     stMsg.bSend = GetAnyCanInEnable() || GetAnyVirtInEnable();
 
@@ -178,17 +178,17 @@ CANTxMsg TxMsg6()
     stMsg.frame.data8[2] = GetCounterVal(2);
     stMsg.frame.data8[3] = GetCounterVal(3);
     stMsg.frame.data8[4] = ((GetConditionVal(7) & 0x01) << 7) + ((GetConditionVal(6) & 0x01) << 6) + ((GetConditionVal(5) & 0x01) << 5) +
-                     ((GetConditionVal(4) & 0x01) << 4) + ((GetConditionVal(3) & 0x01) << 3) + ((GetConditionVal(2) & 0x01) << 2) +
-                     ((GetConditionVal(1) & 0x01) << 1) + (GetConditionVal(0) & 0x01);
+                           ((GetConditionVal(4) & 0x01) << 4) + ((GetConditionVal(3) & 0x01) << 3) + ((GetConditionVal(2) & 0x01) << 2) +
+                           ((GetConditionVal(1) & 0x01) << 1) + (GetConditionVal(0) & 0x01);
     stMsg.frame.data8[5] = ((GetConditionVal(15) & 0x01) << 7) + ((GetConditionVal(14) & 0x01) << 6) + ((GetConditionVal(13) & 0x01) << 5) +
-                     ((GetConditionVal(12) & 0x01) << 4) + ((GetConditionVal(11) & 0x01) << 3) + ((GetConditionVal(10) & 0x01) << 2) +
-                     ((GetConditionVal(9) & 0x01) << 1) + (GetConditionVal(8) & 0x01);
+                           ((GetConditionVal(12) & 0x01) << 4) + ((GetConditionVal(11) & 0x01) << 3) + ((GetConditionVal(10) & 0x01) << 2) +
+                           ((GetConditionVal(9) & 0x01) << 1) + (GetConditionVal(8) & 0x01);
     stMsg.frame.data8[6] = ((GetConditionVal(23) & 0x01) << 7) + ((GetConditionVal(22) & 0x01) << 6) + ((GetConditionVal(21) & 0x01) << 5) +
-                     ((GetConditionVal(20) & 0x01) << 4) + ((GetConditionVal(19) & 0x01) << 3) + ((GetConditionVal(18) & 0x01) << 2) +
-                     ((GetConditionVal(17) & 0x01) << 1) + (GetConditionVal(16) & 0x01);
+                           ((GetConditionVal(20) & 0x01) << 4) + ((GetConditionVal(19) & 0x01) << 3) + ((GetConditionVal(18) & 0x01) << 2) +
+                           ((GetConditionVal(17) & 0x01) << 1) + (GetConditionVal(16) & 0x01);
     stMsg.frame.data8[7] = ((GetConditionVal(31) & 0x01) << 7) + ((GetConditionVal(30) & 0x01) << 6) + ((GetConditionVal(29) & 0x01) << 5) +
-                     ((GetConditionVal(28) & 0x01) << 4) + ((GetConditionVal(27) & 0x01) << 3) + ((GetConditionVal(26) & 0x01) << 2) +
-                     ((GetConditionVal(25) & 0x01) << 1) + (GetConditionVal(24) & 0x01);
+                           ((GetConditionVal(28) & 0x01) << 4) + ((GetConditionVal(27) & 0x01) << 3) + ((GetConditionVal(26) & 0x01) << 2) +
+                           ((GetConditionVal(25) & 0x01) << 1) + (GetConditionVal(24) & 0x01);
 
     stMsg.bSend = GetAnyCounterEnable() || GetAnyConditionEnable();
 
@@ -206,7 +206,7 @@ CANTxMsg TxMsg7()
     stMsg.frame.data16[0] = GetCanInVal(0);
     stMsg.frame.data16[1] = GetCanInVal(1);
     stMsg.frame.data16[2] = GetCanInVal(2);
-    stMsg.frame.data16[3] = GetCanInVal(3); 
+    stMsg.frame.data16[3] = GetCanInVal(3);
 
     stMsg.bSend = GetCanInEnable(0) || GetCanInEnable(1) || GetCanInEnable(2) || GetCanInEnable(3);
 
@@ -224,7 +224,7 @@ CANTxMsg TxMsg8()
     stMsg.frame.data16[0] = GetCanInVal(4);
     stMsg.frame.data16[1] = GetCanInVal(5);
     stMsg.frame.data16[2] = GetCanInVal(6);
-    stMsg.frame.data16[3] = GetCanInVal(7); 
+    stMsg.frame.data16[3] = GetCanInVal(7);
 
     stMsg.bSend = GetCanInEnable(4) || GetCanInEnable(5) || GetCanInEnable(6) || GetCanInEnable(7);
 
@@ -242,7 +242,7 @@ CANTxMsg TxMsg9()
     stMsg.frame.data16[0] = GetCanInVal(8);
     stMsg.frame.data16[1] = GetCanInVal(9);
     stMsg.frame.data16[2] = GetCanInVal(10);
-    stMsg.frame.data16[3] = GetCanInVal(11); 
+    stMsg.frame.data16[3] = GetCanInVal(11);
 
     stMsg.bSend = GetCanInEnable(8) || GetCanInEnable(9) || GetCanInEnable(10) || GetCanInEnable(11);
 
@@ -336,9 +336,9 @@ CANTxMsg TxMsg15()
     stMsg.frame.data8[4] = GetOutputDC(4);
     stMsg.frame.data8[5] = GetOutputDC(5);
     stMsg.frame.data8[6] = GetOutputDC(6);
-    stMsg.frame.data8[7] = GetOutputDC(7); 
+    stMsg.frame.data8[7] = GetOutputDC(7);
 
-    stMsg.bSend = true; //Always send
-    
+    stMsg.bSend = true; // Always send
+
     return stMsg;
 }

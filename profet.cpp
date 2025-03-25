@@ -68,6 +68,8 @@ void Profet::Update(bool bOutEnabled)
     // Analog value must be ready before reading to allow for conversion after DSEL change
     // Use the measured VDDA value to calculate volts/step
     // Current = (rawVal * (VDDA / 4095)) / 1.2k) * kILIS
+    // NOTE: IS is converted to nCurrent = A * 10
+    // Example: 0.1A = 1, 1.0A = 10, 10A = 100
     nCurrent = (uint16_t)((((float)nIS * (GetVDDA() / 4095)) / 1200) * fKILIS);
 
     // Ignore current less than a low value
