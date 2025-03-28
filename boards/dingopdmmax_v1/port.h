@@ -15,7 +15,7 @@
 #define PDM_NUM_COUNTERS 4
 #define PDM_NUM_CONDITIONS 32
 
-#define PDM_VAR_MAP_SIZE 133
+#define PDM_VAR_MAP_SIZE 134
 
 #define PDM_NUM_TX_MSGS 16
 
