@@ -48,13 +48,13 @@ void VirtualInput::Update()
     {
     case BoolOperator::And:
         bResultSec1 = bResultSec0 && bResult2;
-        return;
+        break;
     case BoolOperator::Or:
         bResultSec1 = bResultSec0 || bResult2;
-        return;
+        break;
     case BoolOperator::Nor:
         bResultSec1 = !bResultSec0 || !bResult2;
-        return;
+        break;
     }
 
     nVal = input.Check(pConfig->eMode, false, bResultSec1);
