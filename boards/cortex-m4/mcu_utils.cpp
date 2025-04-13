@@ -3,13 +3,7 @@
 
 void EnterStopMode()
 {
-    __disable_irq();
-    
-    SysTick->CTRL = 0;
-	SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;
-	PWR->CR &= ~PWR_CR_PDDS;	// cleared PDDS means stop mode (not standby) 
-	PWR->CR |= PWR_CR_FPDS;	    // turn off flash in stop mode
-    PWR->CR |= PWR_CR_LPDS;	    // regulator in low power mode
+    chSysLock();
 
     //Set wakeup sources
     palEnableLineEvent(LINE_DI1, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_PULLUP);
@@ -17,6 +11,13 @@ void EnterStopMode()
     palSetLineMode(LINE_CAN_RX, PAL_MODE_INPUT);
     palEnableLineEvent(LINE_CAN_RX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
 
+    PWR->CR &= ~PWR_CR_PDDS;	            // cleared PDDS means stop mode (not standby) 
+	PWR->CR |= PWR_CR_CWUF | PWR_CR_CSBF;	// clear wakeup flag, clear standby flag
+    PWR->CR |= PWR_CR_FPDS | PWR_CR_LPDS;	// turn off flash, regulator in low power mode
+    SCB->SCR |= SCB_SCR_SLEEPDEEP_Msk;      // enable deep sleep mode
+
+    __disable_irq();
+    
     __WFI();
 
     // Resume here after wakeup
