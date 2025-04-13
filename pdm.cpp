@@ -44,6 +44,8 @@ bool bBootloaderRequest;
 uint8_t nNumOutputsOn;
 uint8_t nLastNumOutputsOn;
 uint32_t nAllOutputsOffTime;
+bool bLastUsbConnected;
+uint32_t nUsbDisconnectedTime;
 
 void InitVarMap();
 void ApplyAllConfig();
@@ -754,12 +756,18 @@ bool CheckEnterSleep()
             nNumOutputsOn++;
     }
 
-    // All outputs just turned off, save time
+    // All outputs just turned off, save time - wait SLEEP_TIMEOUT before sleep
     if ((nNumOutputsOn == 0) && (nLastNumOutputsOn > 0))
     {
         nAllOutputsOffTime = SYS_TIME;
     }
     nLastNumOutputsOn = nNumOutputsOn;
+
+    //USB disconnected, save time - wait SLEEP_TIMEOUT before sleep
+    if (!GetUsbConnected() && bLastUsbConnected)
+        nUsbDisconnectedTime = SYS_TIME;
+
+    bLastUsbConnected = GetUsbConnected();
 
     // Had issue with SYS_TIME being < GetLastCanRxTime when msgs come in quickly
     // Check that SYS_TIME is greater than or equal to GetLastCanRxTime
@@ -777,6 +785,7 @@ bool CheckEnterSleep()
                   (nNumOutputsOn == 0) &&
                   (nLastNumOutputsOn == 0) &&
                   !GetUsbConnected() &&
+                  ((SYS_TIME - nUsbDisconnectedTime) > SLEEP_TIMEOUT) &&
                   ((SYS_TIME - nAllOutputsOffTime) > SLEEP_TIMEOUT) &&
                   (nCanRxIdleTime > SLEEP_TIMEOUT);
 
