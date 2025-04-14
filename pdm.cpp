@@ -58,6 +58,8 @@ void CheckRequestMsgs(CANRxFrame *frame);
 bool GetAnyOvercurrent();
 bool GetAnyFault();
 bool CheckEnterSleep();
+void EnterSleep();
+void EnableLineEventWithPull(ioline_t line, InputPull pull);
 
 static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
 static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
@@ -194,7 +196,7 @@ void States()
     case PdmState::Sleep:
         bSleepRequest = false;
         palSetLine(LINE_CAN_STANDBY); // CAN disabled
-        EnterStopMode();
+        EnterSleep();
         break;
 
     case PdmState::OverTemp:
@@ -796,3 +798,41 @@ bool CheckEnterSleep()
 
     return bEnterSleep || bSleepRequest;
 }
+
+void EnableLineEventWithPull(ioline_t line, InputPull pull) {
+    uint32_t eventMode = PAL_EVENT_MODE_BOTH_EDGES;
+    
+    switch(pull) {
+        case InputPull::Up:
+            eventMode |= PAL_STM32_PUPDR_PULLUP;
+            break;
+        case InputPull::Down:
+            eventMode |= PAL_STM32_PUPDR_PULLDOWN;
+            break;
+        default:
+            eventMode |= PAL_STM32_PUPDR_FLOATING;
+            break;
+    }
+    
+    palEnableLineEvent(line, eventMode);
+}
+
+void EnterSleep()
+{
+    // Set wakeup sources
+
+    // Digital inputs change detection, with configured pullup or pulldown
+    EnableLineEventWithPull(LINE_DI1, stConfig.stInput[0].ePull);
+    EnableLineEventWithPull(LINE_DI2, stConfig.stInput[1].ePull);
+
+    // CAN receive detection
+    palSetLineMode(LINE_CAN_RX, PAL_MODE_INPUT);
+    palEnableLineEvent(LINE_CAN_RX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
+
+    // USB VBUS detection
+    palSetLineMode(LINE_USB_VBUS, PAL_MODE_INPUT);
+    palEnableLineEvent(LINE_USB_VBUS, PAL_EVENT_MODE_RISING_EDGE | PAL_STM32_PUPDR_PULLDOWN);
+
+    EnterStopMode();
+}
+
