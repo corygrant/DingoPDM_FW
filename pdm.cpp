@@ -829,9 +829,11 @@ void EnterSleep()
     palSetLineMode(LINE_CAN_RX, PAL_MODE_INPUT);
     palEnableLineEvent(LINE_CAN_RX, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
 
-    // USB VBUS detection
-    palSetLineMode(LINE_USB_VBUS, PAL_MODE_INPUT);
-    palEnableLineEvent(LINE_USB_VBUS, PAL_EVENT_MODE_RISING_EDGE | PAL_STM32_PUPDR_PULLDOWN);
+    // USB detection
+    palSetLineMode(LINE_USB_DP, PAL_MODE_INPUT);
+    palEnableLineEvent(LINE_USB_DP, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
+    palSetLineMode(LINE_USB_DM, PAL_MODE_INPUT);
+    palEnableLineEvent(LINE_USB_DM, PAL_EVENT_MODE_BOTH_EDGES | PAL_STM32_PUPDR_FLOATING);
 
     EnterStopMode();
 }
