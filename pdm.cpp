@@ -155,16 +155,25 @@ void InitPdm()
 void States()
 {
 
-    switch (eState)
+    if (eState == PdmState::Run)
     {
-
-    case PdmState::Run:
-
-        if (bDeviceCriticalTemp)
-            Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
-
         if (bDeviceOverTemp)
             eState = PdmState::OverTemp;
+    }
+
+    if (eState == PdmState::OverTemp)
+    {
+        statusLed.Blink();
+        errorLed.Blink();
+
+        if (!bDeviceOverTemp)
+            eState = PdmState::Run;
+    }
+
+    if ((eState == PdmState::Run) || (eState == PdmState::OverTemp))
+    {
+        if (bDeviceCriticalTemp)
+            Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
 
         if (GetAnyOvercurrent() && !GetAnyFault())
         {
@@ -190,31 +199,19 @@ void States()
             errorLed.Solid(false);
             eState = PdmState::Sleep;
         }
+    }
 
-        break;
-
-    case PdmState::Sleep:
+    if (eState == PdmState::Sleep)
+    {
         bSleepRequest = false;
         palSetLine(LINE_CAN_STANDBY); // CAN disabled
         EnterSleep();
-        break;
+    }
 
-    case PdmState::OverTemp:
-        statusLed.Blink();
-        errorLed.Blink();
-
-        if (bDeviceCriticalTemp)
-            Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
-
-        if (!bDeviceOverTemp)
-            eState = PdmState::Run;
-
-        break;
-
-    case PdmState::Error:
+    if (eState == PdmState::Error)
+    {
         // Not required?
         Error::SetFatalError(eError, MsgSrc::State_Error);
-        break;
     }
 
     SendInfoMsgs();
