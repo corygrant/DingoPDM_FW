@@ -18,7 +18,7 @@ bool CanInput::CheckMsg(CANRxFrame rx)
     nData = 0;
     for (int i = 0; i <= (pConfig->nDLC - 1); i++)
     {
-        nData |= rx.data8[pConfig->nStartingByte + i] << (8 * ((pConfig->nDLC - 1) - i));
+        nData |= rx.data8[pConfig->nStartingByte + i] << (8 * i);
     }
 
     //Copy data to shared value
@@ -112,7 +112,7 @@ MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
                         ((conf->stCanInput[nIndex].bTimeoutEnabled & 0x01) << 3) +
                         (conf->stCanInput[nIndex].bEnabled & 0x01);
             tx->data8[3] = ((conf->stCanInput[nIndex].nDLC & 0xF) << 4) +
-                        (conf->stCanInput[nIndex].nStartingByte & 0xF);
+                            (conf->stCanInput[nIndex].nStartingByte & 0xF);
             tx->data8[4] = (uint8_t)(conf->stCanInput[nIndex].nOnVal >> 8);
             tx->data8[5] = (uint8_t)(conf->stCanInput[nIndex].nOnVal & 0xFF);
             tx->data8[6] = (uint8_t)(conf->stCanInput[nIndex].nTimeout / 100);
