@@ -26,6 +26,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          submodules: recursive
 
       # Build machines don't have arm-none-eabi gcc, so let's download it and put it on the path
       - name: Download & Install GCC
@@ -35,6 +37,10 @@ jobs:
           wget 'https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz' -O compiler.tar.xz
           tar -xvf compiler.tar.xz
           echo "::add-path::`pwd`/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin"
+
+      # Make sure the compiler we just downloaded works - just print out the version
+      - name: Test Compiler
+        run: arm-none-eabi-gcc -v
 
       - name: Extract version number
         id: extract_version
