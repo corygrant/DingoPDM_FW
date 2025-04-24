@@ -52,10 +52,23 @@ jobs:
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
+          if [ "$MAJOR" -eq 0 ]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Check if release exists
         id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          if git rev-parse "refs/tags/v${{ steps.extract_version.outputs.version }}" >/dev/null 2>&1; then
+          VERSION="v${{ steps.extract_version.outputs.version }}"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/$VERSION)
+
+          if [ "$RESPONSE" == "200" ]; then
             echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
@@ -66,15 +79,15 @@ jobs:
         run: |
           make clean
           make BOARD=dingopdm_v7
-          cp build/dingopdm_v7.hex build/dingopdm_v7_${{ steps.extract_version.outputs.version }}.hex
-          cp build/dingopdm_v7.bin build/dingopdm_v7_${{ steps.extract_version.outputs.version }}.bin
-          cp build/dingopdm_v7.elf build/dingopdm_v7_${{ steps.extract_version.outputs.version }}.elf
+          cp build/dingopdm_v7.hex build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.hex
+          cp build/dingopdm_v7.bin build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.bin
+          cp build/dingopdm_v7.elf build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.elf
 
           make clean
           make BOARD=dingopdmmax_v1
-          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_${{ steps.extract_version.outputs.version }}.hex
-          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_${{ steps.extract_version.outputs.version }}.bin
-          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_${{ steps.extract_version.outputs.version }}.elf
+          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.hex
+          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.bin
+          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.elf
 
       - name: Create GitHub Release and upload firmware
         if: steps.check_release.outputs.exists == 'false'
@@ -82,8 +95,9 @@ jobs:
         with:
           tag_name: v${{ steps.extract_version.outputs.version }}
           name: Release v${{ steps.extract_version.outputs.version }}
+          prerelease: ${{ steps.extract_version.outputs.prerelease }}
           files: |
-            build/dingopdm_v7_${{ steps.extract_version.outputs.version }}.*
-            build/dingopdmmax_v1_${{ steps.extract_version.outputs.version }}.*
+            build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.*
+            build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.*
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
