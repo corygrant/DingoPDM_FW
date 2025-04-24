@@ -47,7 +47,7 @@ jobs:
         run: |
           MAJOR=$(grep '#define MAJOR_VERSION' dingopdm_config.h | awk '{print $3}')
           MINOR=$(grep '#define MINOR_VERSION' dingopdm_config.h | awk '{print $3}')
-          BUILD=$(grep '#define BUILD_VERSION' dingopdm_config.h | awk '{print $3}')
+          BUILD=$(grep '#define BUILD' dingopdm_config.h | awk '{print $3}')
           VERSION="${MAJOR}.${MINOR}.${BUILD}"
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
