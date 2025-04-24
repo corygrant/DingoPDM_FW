@@ -12,4 +12,4 @@ if __name__ == "__main__":
     for db in dbs:
         with open("./dbc/" + db.name + "_" + db.version + ".dbc", 'w') as f:
             f.write(db.as_dbc_string()) 
-     
+      
