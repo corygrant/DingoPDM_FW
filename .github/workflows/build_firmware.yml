@@ -10,14 +10,13 @@ on:
       - "Makefile"
       - ".github/workflows/build_firmware.yml"
   pull_request:
-    #branches: [main, master]
     paths:
       - "dingopdm_config.h"
       - "**/*.c"
       - "**/*.h"
       - "Makefile"
       - ".github/workflows/build_firmware.yml"
-  workflow_dispatch: # still allows manual trigger
+  workflow_dispatch:
 
 jobs:
   build-and-release:
@@ -36,16 +35,20 @@ jobs:
           MINOR=$(grep '#define MINOR_VERSION' dingopdm_config.h | awk '{print $3}')
           BUILD=$(grep '#define BUILD' dingopdm_config.h | awk '{print $3}')
           VERSION="${MAJOR}.${MINOR}.${BUILD}"
+          VERSION_DASHED="${MAJOR}-${MINOR}-${BUILD}"
+
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_DASHED=$VERSION_DASHED" >> $GITHUB_ENV
           echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_dashed=$VERSION_DASHED" >> $GITHUB_OUTPUT
 
           if [ "$MAJOR" -eq 0 ]; then
             echo "prerelease=true" >> $GITHUB_OUTPUT
           else
             echo "prerelease=false" >> $GITHUB_OUTPUT
           fi
-  
-      - name: Check if release exists
+
+      - name: Check if release already exists
         id: check_release
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -61,52 +64,78 @@ jobs:
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
-      # Build machines don't have arm-none-eabi gcc, so let's download it and put it on the path
-      - name: Download & Install GCC
+      - name: Download & Install ARM GCC Toolchain
         if: steps.check_release.outputs.exists == 'false'
         run: |
           wget 'https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz' -O compiler.tar.xz
-          tar -xvf compiler.tar.xz
+          tar -xf compiler.tar.xz
           echo "$(pwd)/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
 
-      # Make sure the compiler we just downloaded works - just print out the version
-      - name: Test Compiler
+      - name: Verify Compiler
         if: steps.check_release.outputs.exists == 'false'
         run: arm-none-eabi-gcc -v
 
-      - name: Build both firmware variants
+      - name: Build Firmware Variants
         if: steps.check_release.outputs.exists == 'false'
         run: |
           set -e
+
           make clean
           make BOARD=dingopdm_v7
-          cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${VERSION}.hex
-          cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION}.bin
-          cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION}.elf
-          ls -l build/
+          cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${VERSION_DASHED}.hex
+          cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION_DASHED}.bin
+          cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION_DASHED}.elf
 
           make clean
           make BOARD=dingopdmmax_v1
-          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION}.hex
-          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION}.bin
-          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION}.elf
+          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION_DASHED}.hex
+          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION_DASHED}.bin
+          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION_DASHED}.elf
+
           ls -l build/
         env:
-          VERSION: ${{ steps.extract_version.outputs.version }}
+          VERSION_DASHED: ${{ steps.extract_version.outputs.version_dashed }}
 
-      - name: Create GitHub Release and upload firmware
+      - name: Create GitHub Release
         if: steps.check_release.outputs.exists == 'false'
         uses: softprops/action-gh-release@v1
         with:
           tag_name: v${{ steps.extract_version.outputs.version }}
           name: Release v${{ steps.extract_version.outputs.version }}
           prerelease: ${{ steps.extract_version.outputs.prerelease }}
+          body: |
+            ## Firmware Release v${{ steps.extract_version.outputs.version }}
+
+            **dingopdm_v7:**
+            - [HEX](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+            **dingopdmmax_v1:**
+            - [HEX](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Firmware Assets - dingopdm_v7
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
           files: |
-            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.hex
-            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.bin
-            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.elf
-            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.hex
-            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.bin
-            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.elf
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload Firmware Assets - dingopdmmax_v1
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
