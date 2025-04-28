@@ -2,7 +2,7 @@ name: Build Firmware
 
 on:
   push:
-    #branches: [ main, master ]
+    branches: [ main, master ]
     paths:
       - "dingopdm_config.h"
       - "**/*.c"
