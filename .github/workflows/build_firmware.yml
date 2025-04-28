@@ -77,19 +77,20 @@ jobs:
       - name: Build both firmware variants
         if: steps.check_release.outputs.exists == 'false'
         run: |
+          set -e
           make clean
           make BOARD=dingopdm_v7
-          ls -l build/
           cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${VERSION}.hex
           cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION}.bin
           cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION}.elf
+          ls -l build/
 
           make clean
           make BOARD=dingopdmmax_v1
-          ls -l build/
           cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION}.hex
           cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION}.bin
           cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION}.elf
+          ls -l build/
         env:
           VERSION: ${{ steps.extract_version.outputs.version }}
 
@@ -101,7 +102,11 @@ jobs:
           name: Release v${{ steps.extract_version.outputs.version }}
           prerelease: ${{ steps.extract_version.outputs.prerelease }}
           files: |
-            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.*
-            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.*
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.hex
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.bin
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.elf
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.hex
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.bin
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.elf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
