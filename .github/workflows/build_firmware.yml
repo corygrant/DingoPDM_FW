@@ -105,39 +105,23 @@ jobs:
           prerelease: ${{ steps.extract_version.outputs.prerelease }}
           body: |
             ## Firmware Release v${{ steps.extract_version.outputs.version }}
-
+      
             **dingoPDM:**
             - [HEX](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
             - [BIN](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
             - [ELF](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
-
+      
             **dingoPDM-Max:**
             - [HEX](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
             - [BIN](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
             - [ELF](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Firmware Assets - dingopdm_v7
-        if: steps.check_release.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.extract_version.outputs.version }}
           files: |
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-      - name: Upload Firmware Assets - dingopdmmax_v1
-        if: steps.check_release.outputs.exists == 'false'
-        uses: softprops/action-gh-release@v1
-        with:
-          tag_name: v${{ steps.extract_version.outputs.version }}
-          files: |
             build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
             build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
