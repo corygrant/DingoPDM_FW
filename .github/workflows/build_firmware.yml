@@ -79,12 +79,14 @@ jobs:
         run: |
           make clean
           make BOARD=dingopdm_v7
+          ls -l build/
           cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${VERSION}.hex
           cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION}.bin
           cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION}.elf
 
           make clean
           make BOARD=dingopdmmax_v1
+          ls -l build/
           cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION}.hex
           cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION}.bin
           cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION}.elf
