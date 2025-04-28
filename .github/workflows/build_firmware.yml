@@ -86,7 +86,6 @@ jobs:
           cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION_DASHED}.bin
           cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION_DASHED}.elf
 
-          make clean
           make BOARD=dingopdmmax_v1
           cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION_DASHED}.hex
           cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION_DASHED}.bin
@@ -107,14 +106,14 @@ jobs:
             ## Firmware Release v${{ steps.extract_version.outputs.version }}
       
             **dingoPDM:**
-            - [HEX](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
-            - [BIN](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
-            - [ELF](build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
-      
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+            
             **dingoPDM-Max:**
-            - [HEX](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
-            - [BIN](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
-            - [ELF](build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
           files: |
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
