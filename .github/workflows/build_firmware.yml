@@ -64,12 +64,10 @@ jobs:
       # Build machines don't have arm-none-eabi gcc, so let's download it and put it on the path
       - name: Download & Install GCC
         if: steps.check_release.outputs.exists == 'false'
-        env:
-          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
         run: |
           wget 'https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz' -O compiler.tar.xz
           tar -xvf compiler.tar.xz
-          echo "::add-path::`pwd`/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin"
+          echo "$(pwd)/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
 
       # Make sure the compiler we just downloaded works - just print out the version
       - name: Test Compiler
@@ -81,15 +79,17 @@ jobs:
         run: |
           make clean
           make BOARD=dingopdm_v7
-          cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.hex
-          cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.bin
-          cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version }}.elf
+          cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${VERSION}.hex
+          cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION}.bin
+          cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION}.elf
 
           make clean
           make BOARD=dingopdmmax_v1
-          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.hex
-          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.bin
-          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version }}.elf
+          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION}.hex
+          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION}.bin
+          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION}.elf
+        env:
+          VERSION: ${{ steps.extract_version.outputs.version }}
 
       - name: Create GitHub Release and upload firmware
         if: steps.check_release.outputs.exists == 'false'
