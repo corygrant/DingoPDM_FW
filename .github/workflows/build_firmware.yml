@@ -73,6 +73,7 @@ jobs:
 
       # Make sure the compiler we just downloaded works - just print out the version
       - name: Test Compiler
+        if: steps.check_release.outputs.exists == 'false'
         run: arm-none-eabi-gcc -v
 
       - name: Build both firmware variants
