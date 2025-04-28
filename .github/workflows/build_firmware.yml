@@ -1,0 +1,103 @@
+name: Build Firmware
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - "dingopdm_config.h"
+      - "**/*.c"
+      - "**/*.h"
+      - "Makefile"
+      - ".github/workflows/build_firmware.yml"
+  pull_request:
+    #branches: [main, master]
+    paths:
+      - "dingopdm_config.h"
+      - "**/*.c"
+      - "**/*.h"
+      - "Makefile"
+      - ".github/workflows/build_firmware.yml"
+  workflow_dispatch: # still allows manual trigger
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      # Build machines don't have arm-none-eabi gcc, so let's download it and put it on the path
+      - name: Download & Install GCC
+        env:
+          ACTIONS_ALLOW_UNSECURE_COMMANDS: "true"
+        run: |
+          wget 'https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz' -O compiler.tar.xz
+          tar -xvf compiler.tar.xz
+          echo "::add-path::`pwd`/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin"
+
+      # Make sure the compiler we just downloaded works - just print out the version
+      - name: Test Compiler
+        run: arm-none-eabi-gcc -v
+
+      - name: Extract version number
+        id: extract_version
+        run: |
+          MAJOR=$(grep '#define MAJOR_VERSION' dingopdm_config.h | awk '{print $3}')
+          MINOR=$(grep '#define MINOR_VERSION' dingopdm_config.h | awk '{print $3}')
+          BUILD=$(grep '#define BUILD' dingopdm_config.h | awk '{print $3}')
+          VERSION="${MAJOR}.${MINOR}.${BUILD}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+          if [ "$MAJOR" -eq 0 ]; then
+            echo "prerelease=true" >> $GITHUB_OUTPUT
+          else
+            echo "prerelease=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if release exists
+        id: check_release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="v${{ steps.extract_version.outputs.version }}"
+          RESPONSE=$(curl -s -o /dev/null -w "%{http_code}" \
+            -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/$VERSION)
+
+          if [ "$RESPONSE" == "200" ]; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Build both firmware variants
+        if: steps.check_release.outputs.exists == 'false'
+        run: |
+          make clean
+          make BOARD=dingopdm_v7
+          cp build/dingopdm_v7.hex build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.hex
+          cp build/dingopdm_v7.bin build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.bin
+          cp build/dingopdm_v7.elf build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.elf
+
+          make clean
+          make BOARD=dingopdmmax_v1
+          cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.hex
+          cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.bin
+          cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.elf
+
+      - name: Create GitHub Release and upload firmware
+        if: steps.check_release.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.extract_version.outputs.version }}
+          name: Release v${{ steps.extract_version.outputs.version }}
+          prerelease: ${{ steps.extract_version.outputs.prerelease }}
+          files: |
+            build/dingopdm_v7_FW${{ steps.extract_version.outputs.version }}.*
+            build/dingopdmmax_v1_FW${{ steps.extract_version.outputs.version }}.*
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
