@@ -26,6 +26,7 @@ enum class MsgCmd : uint8_t
     //CountersName = 41, //Future use
     Conditions = 45,
     //ConditionsName = 46, //Future use
+    Keypad = 50,
     Version = 120,
     Sleep = 121,
     Bootloader = 125,
@@ -211,4 +212,36 @@ enum class PwmChannel : uint8_t
     Ch2 = 1,
     Ch3 = 2,
     Ch4 = 3
+};
+
+enum class KeypadBrand : uint8_t
+{
+    BLINK_MARINE,
+    GRAYHILL
+};
+
+enum class BlinkMarineButtonColor : uint8_t
+{
+    BTN_OFF = 0x00,
+    BTN_RED = 0x01,
+    BTN_GREEN = 0x02,
+    BTN_ORANGE = 0x03,
+    BTN_BLUE = 0x04,
+    BTN_VIOLET = 0x05,
+    BTN_CYAN = 0x06,
+    BTN_WHITE = 0x07,
+};
+
+enum class BlinkMarineBacklightColor : uint8_t
+{
+    BL_OFF = 0x00,
+    BL_RED = 0x01,
+    BL_GREEN = 0x02,
+    BL_BLUE = 0x03,
+    BL_YELLOW = 0x04, 
+    BL_CYAN = 0x05,
+    BL_VIOLET = 0x06,
+    BL_WHITE = 0x07,
+    BL_AMBER = 0x08,
+    BL_YELLOWGREEN = 0x09
 };

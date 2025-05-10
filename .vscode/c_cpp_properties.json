@@ -48,6 +48,7 @@
                 "${workspaceFolder}/cfg",
                 "${workspaceFolder}/hardware",
                 "${workspaceFolder}/wiper",
+                "${workspaceFolder}/keypad",
                 "${workspaceFolder}/boards/dingopdm_v7",
                 "${workspaceFolder}/boards/dingopdmmax_v1",
                 "${workspaceFolder}/boards/cortex-m4",

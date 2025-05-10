@@ -128,6 +128,37 @@ struct Config_Condition{
   uint16_t nArg;
 };
 
+struct Config_KeypadButton{
+  bool bEnabled;
+  InputMode eMode;
+  uint8_t nValColors[4];
+  uint8_t nFaultColor;
+  uint16_t nValVars[4];
+  uint16_t nFaultVar;
+
+  //Add dial support
+  bool bHasDial;
+  uint8_t nDialMinLed;
+  uint8_t nDialMaxLed;
+  uint8_t nDialLedOffset;
+};
+
+struct Config_Keypad{
+  bool bEnabled;
+  uint16_t nBaseId;
+  bool bTimeoutEnabled;
+  uint16_t nTimeout; //ms
+  KeypadBrand eBrand;
+  uint8_t nNumButtons;
+  uint8_t nBacklightBrightness;
+  uint8_t nDimBacklightBrightness;
+  uint8_t nBacklightColor;
+  uint16_t nDimmingVar;
+  uint8_t nButtonBrightness;
+  uint8_t nDimButtonBrightness;
+  Config_KeypadButton stButton[KEYPAD_MAX_BUTTONS];
+};
+
 struct PdmConfig{
   Config_DeviceConfig stDevConfig;
   Config_Input stInput[PDM_NUM_INPUTS];
@@ -140,6 +171,7 @@ struct PdmConfig{
   Config_CanOutput stCanOutput;
   Config_Counter stCounter[PDM_NUM_COUNTERS];
   Config_Condition stCondition[PDM_NUM_CONDITIONS];
+  Config_Keypad stKeypad[PDM_NUM_KEYPADS];
 };
 
 extern PdmConfig stConfig;

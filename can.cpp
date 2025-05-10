@@ -36,6 +36,10 @@ void CanCyclicTxThread(void *)
             PostTxFrame(&msg.frame);
         }
 
+        //Post keypad messages
+
+        //Post CANboard messages
+
         if (chThdShouldTerminateX())
             chThdExit(MSG_OK);
 

@@ -12,6 +12,9 @@
 
 #define USB_TX_MSG_SPLIT 30 //us
 
+#define KEYPAD_TX_MSG_DELAY 100 //ms
+#define KEYPAD_TX_MSG_SPLIT 5 //ms
+
 #define BATT_LOW_VOLT 10.0f
 #define BATT_HIGH_VOLT 16.0f
 

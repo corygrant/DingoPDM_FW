@@ -178,6 +178,41 @@ void SetDefaultConfig()
         stConfig.stCondition[i].nArg = 0;
     }
 
+    for(uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+    {
+        stConfig.stKeypad[i].bEnabled = false;
+        stConfig.stKeypad[i].nBaseId = 0x15;
+        stConfig.stKeypad[i].bTimeoutEnabled = false;
+        stConfig.stKeypad[i].nTimeout = 2000;
+        stConfig.stKeypad[i].eBrand = KeypadBrand::BLINK_MARINE;
+        stConfig.stKeypad[i].nNumButtons = 12;
+        stConfig.stKeypad[i].nBacklightBrightness = 63;
+        stConfig.stKeypad[i].nDimBacklightBrightness = 31;
+        stConfig.stKeypad[i].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::BL_WHITE;
+        stConfig.stKeypad[i].nDimmingVar = 0;
+        stConfig.stKeypad[i].nButtonBrightness = 63;
+        stConfig.stKeypad[i].nDimButtonBrightness = 31;
+        
+        for (uint8_t j = 0; j < KEYPAD_MAX_BUTTONS ; j++)
+        {
+            stConfig.stKeypad[i].stButton[j].bEnabled = false;
+            stConfig.stKeypad[i].stButton[j].eMode = InputMode::Momentary;
+            stConfig.stKeypad[i].stButton[j].nValColors[0] = (uint8_t)BlinkMarineButtonColor::BTN_OFF;
+            stConfig.stKeypad[i].stButton[j].nValColors[1] = (uint8_t)BlinkMarineButtonColor::BTN_GREEN;
+            stConfig.stKeypad[i].stButton[j].nValColors[2] = (uint8_t)BlinkMarineButtonColor::BTN_VIOLET;
+            stConfig.stKeypad[i].stButton[j].nValColors[3] = (uint8_t)BlinkMarineButtonColor::BTN_BLUE;
+            stConfig.stKeypad[i].stButton[j].nFaultColor = (uint8_t)BlinkMarineButtonColor::BTN_RED;
+            stConfig.stKeypad[i].stButton[j].nValVars[0] = 0;
+            stConfig.stKeypad[i].stButton[j].nValVars[1] = 0;
+            stConfig.stKeypad[i].stButton[j].nValVars[2] = 0;
+            stConfig.stKeypad[i].stButton[j].nValVars[3] = 0;
+            stConfig.stKeypad[i].stButton[j].nFaultVar = 0;
+            stConfig.stKeypad[i].stButton[j].bHasDial = false;
+            stConfig.stKeypad[i].stButton[j].nDialMinLed = 0;
+            stConfig.stKeypad[i].stButton[j].nDialMaxLed = 16;
+            stConfig.stKeypad[i].stButton[j].nDialLedOffset = 0;
+        }
+    }
 }
 
 void InitConfig()

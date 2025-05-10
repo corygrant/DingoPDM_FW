@@ -19,6 +19,7 @@
 #include "msg.h"
 #include "error.h"
 #include "usb.h"
+#include "keypad/keypad.h"
 
 CanInput canIn[PDM_NUM_CAN_INPUTS];
 VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];
@@ -27,6 +28,8 @@ Starter starter;
 Flasher flasher[PDM_NUM_FLASHERS];
 Counter counter[PDM_NUM_COUNTERS];
 Condition condition[PDM_NUM_CONDITIONS];
+
+Keypad keypad[PDM_NUM_KEYPADS];
 
 PdmState eState = PdmState::Run;
 FatalErrorType eError = FatalErrorType::NoError;
@@ -144,6 +147,18 @@ void InitPdm()
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
+    stConfig.stKeypad[0].bEnabled = true;
+    stConfig.stKeypad[0].nBaseId = 0x15;
+    stConfig.stKeypad[0].nNumButtons = 12;
+    stConfig.stKeypad[0].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::BL_AMBER;
+    stConfig.stKeypad[0].stButton[0].bEnabled = true;
+    stConfig.stKeypad[0].stButton[0].nValVars[0] = 97;
+    stConfig.stKeypad[0].stButton[0].nValVars[1] = 97;
+    stConfig.stKeypad[0].stButton[0].nValVars[2] = 97;
+    stConfig.stKeypad[0].stButton[0].nValVars[3] = 97;
+    for(uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+        keypad[i].Init();
+
     InitInfoMsgs();
 
     palClearLine(LINE_CAN_STANDBY); // CAN enabled
@@ -229,6 +244,9 @@ void CyclicUpdate()
             for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
                 canIn[i].CheckMsg(rxMsg);
 
+            for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+                keypad[i].CheckMsg(rxMsg);
+
             CheckRequestMsgs(&rxMsg);
             ApplyConfig(ConfigHandler(&rxMsg));
         }
@@ -258,6 +276,9 @@ void CyclicUpdate()
 
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
         condition[i].Update();
+
+    for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+        keypad[i].CheckTimeout();
 }
 
 void InitVarMap()
@@ -328,9 +349,18 @@ void InitVarMap()
         pVarMap[i + 101] = &condition[i].nVal;
     }
 
-    // 133
+    // 133 - 172
+    for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+    {
+        for (uint8_t j = 0; j < KEYPAD_MAX_BUTTONS; j++)
+        {
+            pVarMap[i * KEYPAD_MAX_BUTTONS + j + 133] = &keypad[i].nVal[j];
+        }
+    }
+
+    // 173
     // Always true
-    pVarMap[133] = const_cast<uint16_t*>(&ALWAYS_TRUE);
+    pVarMap[173] = const_cast<uint16_t*>(&ALWAYS_TRUE);
 }
 
 void ApplyAllConfig()
@@ -344,6 +374,7 @@ void ApplyAllConfig()
     ApplyConfig(MsgCmd::Flashers);
     ApplyConfig(MsgCmd::Counters);
     ApplyConfig(MsgCmd::Conditions);
+    ApplyConfig(MsgCmd::Keypad);
 }
 
 void ApplyConfig(MsgCmd eCmd)
@@ -425,6 +456,12 @@ void ApplyConfig(MsgCmd eCmd)
     {
         for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
             condition[i].SetConfig(&stConfig.stCondition[i], pVarMap);
+    }
+
+    if (eCmd == MsgCmd::Keypad)
+    {
+        for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+            keypad[i].SetConfig(&stConfig.stKeypad[i], pVarMap);
     }
 }
 

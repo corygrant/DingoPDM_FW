@@ -163,6 +163,8 @@ CPPSRC = $(ALLCPPSRC) \
 				 wiper/wiper.cpp \
 				 hardware/mcp9808.cpp \
 				 hardware/mb85rc.cpp \
+				 keypad/keypad_button.cpp \
+				 keypad/keypad.cpp \
 				 main.cpp
 
 # List ASM source files here.
