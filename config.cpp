@@ -146,7 +146,7 @@ void SetDefaultConfig()
     {
         stConfig.stCanInput[i].bEnabled = false;
         stConfig.stCanInput[i].bTimeoutEnabled = true;
-        stConfig.stCanInput[i].nTimeout = 2000;
+        stConfig.stCanInput[i].nTimeout = 20;
         stConfig.stCanInput[i].nIDE = 0;
         stConfig.stCanInput[i].nSID = 0;
         stConfig.stCanInput[i].nEID = 0;
@@ -181,9 +181,9 @@ void SetDefaultConfig()
     for(uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
     {
         stConfig.stKeypad[i].bEnabled = false;
-        stConfig.stKeypad[i].nBaseId = 0x15;
+        stConfig.stKeypad[i].nNodeId = 0x15;
         stConfig.stKeypad[i].bTimeoutEnabled = false;
-        stConfig.stKeypad[i].nTimeout = 2000;
+        stConfig.stKeypad[i].nTimeout = 20;
         stConfig.stKeypad[i].eBrand = KeypadBrand::BLINK_MARINE;
         stConfig.stKeypad[i].nNumButtons = 12;
         stConfig.stKeypad[i].nBacklightBrightness = 63;
