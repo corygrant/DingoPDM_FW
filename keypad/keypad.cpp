@@ -91,7 +91,7 @@ CANTxFrame Keypad::LedOnMsg()
 {
     for (uint8_t i = 0; i < pConfig->nNumButtons; i++)
         ColorToRGB(i, button[i].GetColor());
-        
+
     CANTxFrame msg;
     msg.SID = pConfig->nBaseId + 0x200;
     msg.IDE = CAN_IDE_STD;
@@ -236,4 +236,9 @@ void Keypad::ColorToRGB(uint8_t nBtn, BlinkMarineButtonColor color)
     default:
         break;
     }
+}
+
+MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    
 }

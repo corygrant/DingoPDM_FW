@@ -190,7 +190,10 @@ void Profet::Update(bool bOutEnabled)
 
     pwm.Update();
 
+    // Set var map values
     nOutput = eState == ProfetState::On ? 1 : 0;
+    nOvercurrent = eState == ProfetState::Overcurrent ? 1 : 0;
+    nFault = eState == ProfetState::Fault ? 1 : 0;
 }
 
 MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)

@@ -82,6 +82,8 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nOutput;
+    uint16_t nOvercurrent;
+    uint16_t nFault;
 
 private:
     const uint16_t m_num;

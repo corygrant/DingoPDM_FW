@@ -62,6 +62,13 @@ void Wiper::Update()
     }
 
     pMode->CheckInputs();
+
+    //Set var map values
+    //Fast/Slow set in SetMotorSpeed()
+    nParkOut = eState == WiperState::Parked ? 1 : 0;
+    nInterOut = ((eState == WiperState::IntermittentOn) || (eState == WiperState::IntermittentPause)) ? 1 : 0;
+    nWashOut = (eState == WiperState::Wash) ? 1 : 0;
+    nSwipeOut = (eState == WiperState::Swipe) ? 1 : 0;
 }
 
 void Wiper::Parking()

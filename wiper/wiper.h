@@ -58,6 +58,10 @@ public:
 
     uint16_t nSlowOut;
     uint16_t nFastOut;
+    uint16_t nParkOut;
+    uint16_t nInterOut;
+    uint16_t nWashOut;
+    uint16_t nSwipeOut;
 
 private:
     void Parking();

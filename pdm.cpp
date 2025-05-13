@@ -313,54 +313,60 @@ void InitVarMap()
         pVarMap[i + 67] = &virtIn[i].nVal;
     }
 
-    // 83-90
+    // 83-106
     // Outputs
-    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i+3)
     {
         pVarMap[i + 83] = &pf[i].nOutput;
+        pVarMap[i + 83 + 1] = &pf[i].nOvercurrent;
+        pVarMap[i + 83 + 2] = &pf[i].nFault;
     }
 
     //dingoPDM-Max
-    //Var map 87-90 are not used
+    //Var map 95-106 are not used
 
-    // 91-92
+    // 107-112
     // Wiper
-    pVarMap[91] = &wiper.nSlowOut;
-    pVarMap[92] = &wiper.nFastOut;
+    pVarMap[107] = &wiper.nSlowOut;
+    pVarMap[108] = &wiper.nFastOut;
+    pVarMap[109] = &wiper.nParkOut;
+    pVarMap[110] = &wiper.nInterOut;
+    pVarMap[111] = &wiper.nWashOut;
+    pVarMap[112] = &wiper.nSwipeOut;
 
-    // 93-96
+    // 113-116
     // Flashers
     for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
     {
-        pVarMap[i + 93] = &flasher[i].nVal;
+        pVarMap[i + 113] = &flasher[i].nVal;
     }
 
-    // 97-100
+    // 117-120
     // Counters
     for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
     {
-        pVarMap[i + 97] = &counter[i].nVal;
+        pVarMap[i + 117] = &counter[i].nVal;
     }
 
-    // 101 - 132
+    // 121-152
     // Conditions
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
     {
-        pVarMap[i + 101] = &condition[i].nVal;
+        pVarMap[i + 121] = &condition[i].nVal;
     }
 
-    // 133 - 172
+    // 153 - 192
     for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
     {
         for (uint8_t j = 0; j < KEYPAD_MAX_BUTTONS; j++)
         {
-            pVarMap[i * KEYPAD_MAX_BUTTONS + j + 133] = &keypad[i].nVal[j];
+            pVarMap[i * KEYPAD_MAX_BUTTONS + j + 153] = &keypad[i].nVal[j];
         }
     }
 
-    // 173
+    // 193
     // Always true
-    pVarMap[173] = const_cast<uint16_t*>(&ALWAYS_TRUE);
+    pVarMap[193] = const_cast<uint16_t*>(&ALWAYS_TRUE);
 }
 
 void ApplyAllConfig()
