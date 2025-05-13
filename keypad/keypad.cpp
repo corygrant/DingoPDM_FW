@@ -57,7 +57,7 @@ bool Keypad::CheckMsg(CANRxFrame frame)
     if (!pConfig->bEnabled)
         return false;
 
-    if (frame.SID != pConfig->nBaseId + 0x180)
+    if (frame.SID != pConfig->nNodeId + 0x180)
         return false;
 
     nLastRxTime = SYS_TIME;
@@ -93,7 +93,7 @@ CANTxFrame Keypad::LedOnMsg()
         ColorToRGB(i, button[i].GetColor());
 
     CANTxFrame msg;
-    msg.SID = pConfig->nBaseId + 0x200;
+    msg.SID = pConfig->nNodeId + 0x200;
     msg.IDE = CAN_IDE_STD;
     msg.DLC = 8;
     msg.data64[0] = 0; // Ensure the value is initialized to 0
@@ -112,12 +112,20 @@ CANTxFrame Keypad::LedOnMsg()
     }
 
     return msg;
+
+
+    //Grayhill
+    //All LED off = nValVars[0]
+    //LED 1 = nValVars[1]
+    //LED 2 = nValVars[2]
+    //LED 3 = nValVars[3]
+    //nFaultVar Unused??
 }
 
 CANTxFrame Keypad::LedBrightnessMsg()
 {
     CANTxFrame msg;
-    msg.SID = pConfig->nBaseId + 0x400;
+    msg.SID = pConfig->nNodeId + 0x400;
     msg.IDE = CAN_IDE_STD;
     msg.DLC = 8;
     msg.data8[0] = *pDimmingInput ? pConfig->nDimButtonBrightness : pConfig->nButtonBrightness;
@@ -134,7 +142,7 @@ CANTxFrame Keypad::LedBrightnessMsg()
 CANTxFrame Keypad::BacklightMsg()
 {
     CANTxFrame msg;
-    msg.SID = pConfig->nBaseId + 0x500;
+    msg.SID = pConfig->nNodeId + 0x500;
     msg.IDE = CAN_IDE_STD;
     msg.DLC = 8;
     msg.data8[0] = *pDimmingInput ? pConfig->nDimBacklightBrightness : pConfig->nBacklightBrightness;
@@ -178,7 +186,7 @@ CANTxFrame Keypad::GetStartMsg()
     msg.IDE = CAN_IDE_STD;
     msg.DLC = 8;
     msg.data8[0] = 0x01;
-    msg.data8[1] = pConfig->nBaseId;
+    msg.data8[1] = pConfig->nNodeId;
     msg.data8[2] = 0x00;
     msg.data8[3] = 0x00;
     msg.data8[4] = 0x00;
@@ -238,7 +246,216 @@ void Keypad::ColorToRGB(uint8_t nBtn, BlinkMarineButtonColor color)
     }
 }
 
-MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    
+    // DLC 5 = Set keypad settings
+    // DLC 2 = Get keypad settings
+
+    if ((rx->DLC == 5) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = rx->data8[1];
+
+        if (nIndex < PDM_NUM_KEYPADS)
+        {
+            if (rx->DLC == 5)
+            {
+                conf->stKeypad[nIndex].bEnabled = (rx->data8[2] & 0x01);
+                conf->stKeypad[nIndex].eBrand = static_cast<KeypadBrand>((rx->data8[2] & 0x06) >> 1);
+                conf->stKeypad[nIndex].nNumButtons = (rx->data8[2] & 0xF8) >> 3;
+
+                
+                conf->stKeypad[nIndex].nNodeId = (rx->data8[3] & 0x7F);
+                conf->stKeypad[nIndex].bTimeoutEnabled = (rx->data8[3] & 0x80) >> 7;
+        
+                conf->stKeypad[nIndex].nTimeout = (rx->data8[4] * 100);
+            }
+
+            tx->DLC = 5;
+            tx->IDE = CAN_IDE_STD;
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::Keypad) + 128;
+            tx->data8[1] = nIndex;
+            tx->data8[2] =  (conf->stKeypad[nIndex].bEnabled & 0x01) +
+                            ((static_cast<uint8_t>(conf->stKeypad[nIndex].eBrand) & 0x02) << 1) +
+                            ((conf->stKeypad[nIndex].nNumButtons & 0x1F) << 3);
+            tx->data8[3] =  (conf->stKeypad[nIndex].nNodeId & 0x7F) + 
+                            ((conf->stKeypad[nIndex].bTimeoutEnabled & 0x01) << 7);
+            tx->data8[4] = (uint8_t)(conf->stKeypad[nIndex].nTimeout / 100);
+
+            if(rx->DLC == 5)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult KeypadLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set keypad LED settings
+    // DLC 2 = Get keypad LED settings
+
+    if ((rx->DLC == 8) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = rx->data8[1];
+
+        if (nIndex < PDM_NUM_KEYPADS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stKeypad[nIndex].nBacklightBrightness = rx->data8[2];
+                conf->stKeypad[nIndex].nBacklightColor = rx->data8[3];
+                conf->stKeypad[nIndex].nDimBacklightBrightness = rx->data8[4];
+                conf->stKeypad[nIndex].nDimmingVar = rx->data8[5];
+                conf->stKeypad[nIndex].nButtonBrightness = rx->data8[6];
+                conf->stKeypad[nIndex].nDimButtonBrightness = rx->data8[7];
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadLed) + 128;
+            tx->data8[1] = nIndex;
+            tx->data8[2] = conf->stKeypad[nIndex].nBacklightBrightness;
+            tx->data8[3] = conf->stKeypad[nIndex].nBacklightColor;
+            tx->data8[4] = conf->stKeypad[nIndex].nDimBacklightBrightness;
+            tx->data8[5] = conf->stKeypad[nIndex].nDimmingVar;
+            tx->data8[6] = conf->stKeypad[nIndex].nButtonBrightness;
+            tx->data8[7] = conf->stKeypad[nIndex].nDimButtonBrightness;
+
+            if(rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult KeypadButtonMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set keypad button settings
+    // DLC 2 = Get keypad button settings
+
+    if ((rx->DLC == 8) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = (rx->data8[1] & 0x07);
+        uint8_t nButtonIndex = (rx->data8[1] & 0xF8) >> 3;
+
+        if (nIndex < PDM_NUM_KEYPADS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled = (rx->data8[2] & 0x01);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bHasDial = (rx->data8[2] & 0x02) >> 1;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].eMode = static_cast<InputMode>((rx->data8[2] & 0x0C) >> 2);
+
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0] = rx->data8[3];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1] = rx->data8[4];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2] = rx->data8[5];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3] = rx->data8[6];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar = rx->data8[7];
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButton) + 128;
+            tx->data8[1] = (nIndex & 0x07) + ((nButtonIndex & 0x1F) << 3);
+
+            tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled & 0x01) +
+                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].bHasDial & 0x01) << 1) +
+                           ((static_cast<uint8_t>(conf->stKeypad[nIndex].stButton[nButtonIndex].eMode) & 0x03) << 2);
+
+            tx->data8[3] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0];
+            tx->data8[4] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1];
+            tx->data8[5] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2];
+            tx->data8[6] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3];
+            tx->data8[7] = conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar;
+
+            if(rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult KeypadButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set keypad button LED settings
+    // DLC 2 = Get keypad button LED settings
+
+    if ((rx->DLC == 8) ||
+        (rx->DLC == 2))
+    {
+        uint8_t nIndex = (rx->data8[1] & 0x07);
+        uint8_t nButtonIndex = (rx->data8[1] & 0xF8) >> 3;
+
+        if (nIndex < PDM_NUM_KEYPADS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0] = (rx->data8[2] & 0x0F);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1] = (rx->data8[2] & 0xF0) >> 4;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] = (rx->data8[3] & 0x0F);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] = (rx->data8[3] & 0xF0) >> 4;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor = (rx->data8[4] & 0x0F);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMinLed = rx->data8[5];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMaxLed = rx->data8[6];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nDialLedOffset = rx->data8[7];
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButton) + 128;
+            tx->data8[1] = (nIndex & 0x07) + ((nButtonIndex & 0x1F) << 3);
+
+            tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0] & 0x0F) +
+                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1] & 0x0F) << 4);
+                           
+            tx->data8[3] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] & 0x0F) +
+                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] & 0x0F) << 4);
+
+            tx->data8[4] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor & 0x0F);
+            tx->data8[5] = conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMinLed;
+            tx->data8[6] = conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMaxLed;
+            tx->data8[7] = conf->stKeypad[nIndex].stButton[nButtonIndex].nDialLedOffset;
+
+            if(rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult Keypad::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    MsgCmd cmd = static_cast<MsgCmd>(rx->data8[0]);
+
+    if(cmd == MsgCmd::Keypad)
+        return KeypadMsg(conf, rx, tx);
+    else if(cmd == MsgCmd::KeypadLed)
+        return KeypadLedMsg(conf, rx, tx);
+    else if(cmd == MsgCmd::KeypadButton)
+        return KeypadButtonMsg(conf, rx, tx);
+    else if(cmd == MsgCmd::KeypadButtonLed)
+        return KeypadButtonLedMsg(conf, rx, tx);
+    return MsgCmdResult::Invalid;
 }

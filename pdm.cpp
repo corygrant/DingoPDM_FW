@@ -148,7 +148,7 @@ void InitPdm()
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
     stConfig.stKeypad[0].bEnabled = true;
-    stConfig.stKeypad[0].nBaseId = 0x15;
+    stConfig.stKeypad[0].nNodeId = 0x15;
     stConfig.stKeypad[0].nNumButtons = 12;
     stConfig.stKeypad[0].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::BL_AMBER;
     stConfig.stKeypad[0].stButton[0].bEnabled = true;
@@ -367,6 +367,10 @@ void InitVarMap()
     // 193
     // Always true
     pVarMap[193] = const_cast<uint16_t*>(&ALWAYS_TRUE);
+
+
+    //Note: Var map max size 255
+    // 1 byte per var used in CAN messages
 }
 
 void ApplyAllConfig()

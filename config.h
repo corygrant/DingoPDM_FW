@@ -145,9 +145,9 @@ struct Config_KeypadButton{
 
 struct Config_Keypad{
   bool bEnabled;
-  uint16_t nBaseId;
+  uint8_t nNodeId;
   bool bTimeoutEnabled;
-  uint16_t nTimeout; //ms
+  uint8_t nTimeout; //ms
   KeypadBrand eBrand;
   uint8_t nNumButtons;
   uint8_t nBacklightBrightness;

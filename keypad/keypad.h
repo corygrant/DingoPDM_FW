@@ -27,7 +27,7 @@ public:
 
     bool CheckMsg(CANRxFrame frame);
 
-    MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     CANTxFrame GetTxMsg(uint8_t nIndex);
     CANTxFrame GetStartMsg();

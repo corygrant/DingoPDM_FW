@@ -11,6 +11,7 @@
 #include "starter.h"
 #include "virtual_input.h"
 #include "wiper/wiper.h"
+#include "keypad/keypad.h"
 
 MsgCmd ConfigHandler(CANRxFrame *frame)
 {
@@ -62,6 +63,12 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
             break;
         case MsgCmd::Conditions:
             res = Condition::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::Keypad:
+        case MsgCmd::KeypadLed:
+        case MsgCmd::KeypadButton:
+        case MsgCmd::KeypadButtonLed:
+            res = Keypad::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         default:
             break;

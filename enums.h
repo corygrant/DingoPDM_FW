@@ -27,6 +27,9 @@ enum class MsgCmd : uint8_t
     Conditions = 45,
     //ConditionsName = 46, //Future use
     Keypad = 50,
+    KeypadLed = 51,
+    KeypadButton = 52,
+    KeypadButtonLed = 53,
     Version = 120,
     Sleep = 121,
     Bootloader = 125,
