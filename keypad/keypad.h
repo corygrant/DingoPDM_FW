@@ -43,18 +43,25 @@ protected:
 
     KeypadButton button[KEYPAD_MAX_BUTTONS];
 
-    // Blink Marine specific variables
+    uint8_t nNumButtons;
+    
+
+    // Blink Marine specific
     CANTxFrame LedOnMsg();
+    CANTxFrame LedBlinkMsg();
     CANTxFrame LedBrightnessMsg();
     CANTxFrame BacklightMsg();
 
-    void ColorToRGB(uint8_t nBtn, BlinkMarineButtonColor color);
+    uint64_t BuildLedMsg(bool bBlink); 
 
-    bool bBtnLedOnRed[KEYPAD_MAX_BUTTONS];
-    bool bBtnLedOnGreen[KEYPAD_MAX_BUTTONS];
-    bool bBtnLedOnBlue[KEYPAD_MAX_BUTTONS];
+    bool ColorToRed(BlinkMarineButtonColor eColor);
+    bool ColorToGreen(BlinkMarineButtonColor eColor);
+    bool ColorToBlue(BlinkMarineButtonColor eColor);
 
-    // Grayhill specific variables
+    uint8_t nNumDials;
+
+
+    // Grayhill specific
     CANTxFrame IndicatorMsg();
     CANTxFrame BrightnessMsg();
 };

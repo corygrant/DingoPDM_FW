@@ -1,6 +1,8 @@
 #include "keypad.h"
 #include "dingopdm_config.h"
 
+#define KEYPAD_NUM_TX_MSGS 4
+
 static THD_WORKING_AREA(waKeypadThread, 128);
 void KeypadThread(void *arg)
 {
@@ -14,14 +16,12 @@ void KeypadThread(void *arg)
 
     while (1)
     {
-        msg = keypad->GetTxMsg(0);
-        PostTxFrame(&msg);
-        chThdSleepMilliseconds(KEYPAD_TX_MSG_SPLIT);
-        msg = keypad->GetTxMsg(1);
-        PostTxFrame(&msg);
-        chThdSleepMilliseconds(KEYPAD_TX_MSG_SPLIT);
-        msg = keypad->GetTxMsg(2);
-        PostTxFrame(&msg);
+        for(uint8_t i = 0; i < KEYPAD_NUM_TX_MSGS; i++)
+        {
+            msg = keypad->GetTxMsg(i);
+            PostTxFrame(&msg);
+            chThdSleepMilliseconds(KEYPAD_TX_MSG_SPLIT);
+        }
 
         chThdSleepMilliseconds(KEYPAD_TX_MSG_DELAY);
     }
@@ -29,8 +29,73 @@ void KeypadThread(void *arg)
 
 msg_t Keypad::Init()
 {
-    if (!pConfig->bEnabled)
-        return MSG_OK;
+    if(pConfig->bEnabled == false)
+        return MSG_RESET;
+        
+    switch(pConfig->eModel)
+    {
+        case KeypadModel:: BLINK_2_KEY:
+            nNumButtons = 2;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_4_KEY:
+            nNumButtons = 4;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_5_KEY:
+            nNumButtons = 5;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_6_KEY:
+            nNumButtons = 6;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_8_KEY:
+            nNumButtons = 8;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_10_KEY:
+            nNumButtons = 10;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_12_KEY:
+            nNumButtons = 12;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_15_KEY:
+            nNumButtons = 15;
+            nNumDials = 0;
+            break;
+        case KeypadModel::BLINK_13_KEY_2_DIAL:
+            nNumButtons = 13;
+            nNumDials = 2;
+            break;
+        case KeypadModel::BLINK_RACEPAD:
+            nNumButtons = 12;
+            nNumDials = 4;
+            break;
+        case KeypadModel::GRAYHILL_6_KEY:
+            nNumButtons = 6;
+            nNumDials = 0;
+            break;
+        case KeypadModel::GRAYHILL_8_KEY:
+            nNumButtons = 8;
+            nNumDials = 0;
+            break;
+        case KeypadModel::GRAYHILL_15_KEY:
+            nNumButtons = 15;
+            nNumDials = 0;
+            break;
+        case KeypadModel::GRAYHILL_20_KEY:  
+            nNumButtons = 20;
+            nNumDials = 0;
+            break;
+        default:
+            nNumButtons = 0;
+            nNumDials = 0;
+            return MSG_RESET;
+    }
+
     chThdCreateStatic(waKeypadThread, sizeof(waKeypadThread), NORMALPRIO, KeypadThread, this);
     return MSG_OK;
 }
@@ -86,33 +151,74 @@ bool Keypad::CheckMsg(CANRxFrame frame)
     return true;
 }
 
+uint64_t Keypad::BuildLedMsg(bool bBlink)
+{
+    uint64_t nMsg = 0;
+    //Blink Marine PKP-2600SI 12 button keypad
+    //Has different LED mapping than other keypads
+    //Stacked
+    if (pConfig->eModel == KeypadModel::BLINK_12_KEY)
+    {
+        uint8_t nIndex = 0;
+        for (uint8_t i = 0; i < nNumButtons; i++)
+        {
+            nMsg |= (ColorToRed(bBlink ? button[i].eLedBlinkColor : button[i].eLedOnColor) << nIndex++);
+        }
+        for (uint8_t i = 0; i < nNumButtons; i++)
+        {
+            nMsg |= (ColorToGreen(bBlink ? button[i].eLedBlinkColor : button[i].eLedOnColor) << nIndex++);
+        }
+        for (uint8_t i = 0; i < nNumButtons; i++)
+        {
+            nMsg |= (ColorToBlue(bBlink ? button[i].eLedBlinkColor : button[i].eLedOnColor) << nIndex++);
+        }
+
+        return nMsg;
+    }
+     
+    //All other Blink keypads have padding
+    //Padded
+    uint8_t nBytesPerColor = (nNumButtons + 7) / 8;  // Ceiling
+    uint8_t nByteIndex = 0;
+    uint8_t nBitIndex = 0;
+    uint8_t nBitPosition = 0;
+
+    for (uint8_t i = 0; i < nNumButtons; i++) {
+        nByteIndex = i / 8;
+        nBitIndex = i % 8;
+        nBitPosition = (nByteIndex * 8) + nBitIndex;
+        nMsg |= (ColorToRed(bBlink ? button[i].eLedBlinkColor : button[i].eLedOnColor) << nBitPosition);
+    }
+    
+    for (uint8_t i = 0; i < nNumButtons; i++) {
+        nByteIndex = nBytesPerColor + (i / 8);
+        nBitIndex = i % 8;
+        nBitPosition = (nByteIndex * 8) + nBitIndex;
+        nMsg |= (ColorToGreen(bBlink ? button[i].eLedBlinkColor : button[i].eLedOnColor) << nBitPosition);
+    }
+    
+    for (uint8_t i = 0; i < nNumButtons; i++) {
+        nByteIndex = 2 * nBytesPerColor + (i / 8);
+        nBitIndex = i % 8;
+        nBitPosition = (nByteIndex * 8) + nBitIndex;
+        nMsg |= (ColorToBlue(bBlink ? button[i].eLedBlinkColor : button[i].eLedOnColor) << nBitPosition);
+    }
+
+    return nMsg;
+}
 
 CANTxFrame Keypad::LedOnMsg()
 {
-    for (uint8_t i = 0; i < pConfig->nNumButtons; i++)
-        ColorToRGB(i, button[i].GetColor());
+    for (uint8_t i = 0; i < nNumButtons; i++)
+        button[i].UpdateLed();
 
     CANTxFrame msg;
     msg.SID = pConfig->nNodeId + 0x200;
     msg.IDE = CAN_IDE_STD;
     msg.DLC = 8;
-    msg.data64[0] = 0; // Ensure the value is initialized to 0
-    uint8_t nIndex = 0;
-    for (uint8_t i = 0; i < pConfig->nNumButtons; i++)
-    {
-        msg.data64[0] |= (uint64_t(bBtnLedOnRed[i]) << nIndex++);
-    }
-    for (uint8_t i = 0; i < pConfig->nNumButtons; i++)
-    {
-        msg.data64[0] |= (uint64_t(bBtnLedOnGreen[i]) << nIndex++);
-    }
-    for (uint8_t i = 0; i < pConfig->nNumButtons; i++)
-    {
-        msg.data64[0] |= (uint64_t(bBtnLedOnBlue[i]) << nIndex++);
-    }
-
+    msg.data64[0] = BuildLedMsg(false);
+    
     return msg;
-
 
     //Grayhill
     //All LED off = nValVars[0]
@@ -120,6 +226,20 @@ CANTxFrame Keypad::LedOnMsg()
     //LED 2 = nValVars[2]
     //LED 3 = nValVars[3]
     //nFaultVar Unused??
+}
+
+CANTxFrame Keypad::LedBlinkMsg()
+{
+    for (uint8_t i = 0; i < nNumButtons; i++)
+        button[i].UpdateLed();
+
+    CANTxFrame msg;
+    msg.SID = pConfig->nNodeId + 0x300;
+    msg.IDE = CAN_IDE_STD;
+    msg.DLC = 8;
+    msg.data64[0] = BuildLedMsg(true);
+    
+    return msg;
 }
 
 CANTxFrame Keypad::LedBrightnessMsg()
@@ -157,6 +277,21 @@ CANTxFrame Keypad::BacklightMsg()
     return msg;
 }
 
+bool Keypad::ColorToRed(BlinkMarineButtonColor eColor)
+{
+    return (static_cast<uint8_t>(eColor) & 0x01);
+}
+
+bool Keypad::ColorToGreen(BlinkMarineButtonColor eColor)
+{
+    return ((static_cast<uint8_t>(eColor) & 0x02) >> 1);
+}
+
+bool Keypad::ColorToBlue(BlinkMarineButtonColor eColor)
+{
+    return ((static_cast<uint8_t>(eColor) & 0x04) >> 2);
+}
+
 CANTxFrame Keypad::GetTxMsg(uint8_t nIndex)
 {
     CANTxFrame msg;
@@ -167,9 +302,12 @@ CANTxFrame Keypad::GetTxMsg(uint8_t nIndex)
         msg = LedOnMsg();
         break;
     case 1:
-        msg = LedBrightnessMsg();
+        msg = LedBlinkMsg();
         break;
     case 2:
+        msg = LedBrightnessMsg();
+        break;
+    case 3:
         msg = BacklightMsg();
         break;
     default:
@@ -197,55 +335,6 @@ CANTxFrame Keypad::GetStartMsg()
     return msg;
 }
 
-void Keypad::ColorToRGB(uint8_t nBtn, BlinkMarineButtonColor color)
-{
-    switch (color)
-    {
-    case BlinkMarineButtonColor::BTN_OFF:
-        bBtnLedOnRed[nBtn] = false;
-        bBtnLedOnGreen[nBtn] = false;
-        bBtnLedOnBlue[nBtn] = false;
-        break;
-    case BlinkMarineButtonColor::BTN_RED:
-        bBtnLedOnRed[nBtn] = true;
-        bBtnLedOnGreen[nBtn] = false;
-        bBtnLedOnBlue[nBtn] = false;
-        break;
-    case BlinkMarineButtonColor::BTN_GREEN:
-        bBtnLedOnRed[nBtn] = false;
-        bBtnLedOnGreen[nBtn] = true;
-        bBtnLedOnBlue[nBtn] = false;
-        break;
-    case BlinkMarineButtonColor::BTN_ORANGE:
-        bBtnLedOnRed[nBtn] = true;
-        bBtnLedOnGreen[nBtn] = true;
-        bBtnLedOnBlue[nBtn] = false;
-        break;
-    case BlinkMarineButtonColor::BTN_BLUE:
-        bBtnLedOnRed[nBtn] = false;
-        bBtnLedOnGreen[nBtn] = false;
-        bBtnLedOnBlue[nBtn] = true;
-        break;
-    case BlinkMarineButtonColor::BTN_VIOLET:
-        bBtnLedOnRed[nBtn] = true;
-        bBtnLedOnGreen[nBtn] = false;
-        bBtnLedOnBlue[nBtn] = true;
-        break;
-    case BlinkMarineButtonColor::BTN_CYAN:
-        bBtnLedOnRed[nBtn] = false;
-        bBtnLedOnGreen[nBtn] = true;
-        bBtnLedOnBlue[nBtn] = true;
-        break;
-    case BlinkMarineButtonColor::BTN_WHITE:
-        bBtnLedOnRed[nBtn] = true;
-        bBtnLedOnGreen[nBtn] = true;
-        bBtnLedOnBlue[nBtn] = true;
-        break;
-    default:
-        break;
-    }
-}
-
 MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
     // DLC 5 = Set keypad settings
@@ -261,9 +350,6 @@ MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             if (rx->DLC == 5)
             {
                 conf->stKeypad[nIndex].bEnabled = (rx->data8[2] & 0x01);
-                conf->stKeypad[nIndex].eBrand = static_cast<KeypadBrand>((rx->data8[2] & 0x06) >> 1);
-                conf->stKeypad[nIndex].nNumButtons = (rx->data8[2] & 0xF8) >> 3;
-
                 
                 conf->stKeypad[nIndex].nNodeId = (rx->data8[3] & 0x7F);
                 conf->stKeypad[nIndex].bTimeoutEnabled = (rx->data8[3] & 0x80) >> 7;
@@ -275,9 +361,7 @@ MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             tx->IDE = CAN_IDE_STD;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::Keypad) + 128;
             tx->data8[1] = nIndex;
-            tx->data8[2] =  (conf->stKeypad[nIndex].bEnabled & 0x01) +
-                            ((static_cast<uint8_t>(conf->stKeypad[nIndex].eBrand) & 0x02) << 1) +
-                            ((conf->stKeypad[nIndex].nNumButtons & 0x1F) << 3);
+            tx->data8[2] =  (conf->stKeypad[nIndex].bEnabled & 0x01);
             tx->data8[3] =  (conf->stKeypad[nIndex].nNodeId & 0x7F) + 
                             ((conf->stKeypad[nIndex].bTimeoutEnabled & 0x01) << 7);
             tx->data8[4] = (uint8_t)(conf->stKeypad[nIndex].nTimeout / 100);

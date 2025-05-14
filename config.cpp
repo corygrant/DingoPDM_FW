@@ -184,8 +184,7 @@ void SetDefaultConfig()
         stConfig.stKeypad[i].nNodeId = 0x15;
         stConfig.stKeypad[i].bTimeoutEnabled = false;
         stConfig.stKeypad[i].nTimeout = 20;
-        stConfig.stKeypad[i].eBrand = KeypadBrand::BLINK_MARINE;
-        stConfig.stKeypad[i].nNumButtons = 12;
+        stConfig.stKeypad[i].eModel = KeypadModel::BLINK_12_KEY;
         stConfig.stKeypad[i].nBacklightBrightness = 63;
         stConfig.stKeypad[i].nDimBacklightBrightness = 31;
         stConfig.stKeypad[i].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::BL_WHITE;
@@ -197,6 +196,7 @@ void SetDefaultConfig()
         {
             stConfig.stKeypad[i].stButton[j].bEnabled = false;
             stConfig.stKeypad[i].stButton[j].eMode = InputMode::Momentary;
+            stConfig.stKeypad[i].stButton[j].nNumOfValColors = 4;
             stConfig.stKeypad[i].stButton[j].nValColors[0] = (uint8_t)BlinkMarineButtonColor::BTN_OFF;
             stConfig.stKeypad[i].stButton[j].nValColors[1] = (uint8_t)BlinkMarineButtonColor::BTN_GREEN;
             stConfig.stKeypad[i].stButton[j].nValColors[2] = (uint8_t)BlinkMarineButtonColor::BTN_VIOLET;
@@ -207,6 +207,16 @@ void SetDefaultConfig()
             stConfig.stKeypad[i].stButton[j].nValVars[2] = 0;
             stConfig.stKeypad[i].stButton[j].nValVars[3] = 0;
             stConfig.stKeypad[i].stButton[j].nFaultVar = 0;
+            stConfig.stKeypad[i].stButton[j].bValBlinking[0] = false;
+            stConfig.stKeypad[i].stButton[j].bValBlinking[1] = false;
+            stConfig.stKeypad[i].stButton[j].bValBlinking[2] = false;
+            stConfig.stKeypad[i].stButton[j].bValBlinking[3] = false;
+            stConfig.stKeypad[i].stButton[j].bFaultBlinking = false;
+            stConfig.stKeypad[i].stButton[j].nValBlinkingColors[0] = (uint8_t)BlinkMarineButtonColor::BTN_BLUE;
+            stConfig.stKeypad[i].stButton[j].nValBlinkingColors[1] = (uint8_t)BlinkMarineButtonColor::BTN_VIOLET;
+            stConfig.stKeypad[i].stButton[j].nValBlinkingColors[2] = (uint8_t)BlinkMarineButtonColor::BTN_GREEN;
+            stConfig.stKeypad[i].stButton[j].nValBlinkingColors[3] = (uint8_t)BlinkMarineButtonColor::BTN_WHITE;
+            stConfig.stKeypad[i].stButton[j].nFaultBlinkingColor = (uint8_t)BlinkMarineButtonColor::BTN_ORANGE;
             stConfig.stKeypad[i].stButton[j].bHasDial = false;
             stConfig.stKeypad[i].stButton[j].nDialMinLed = 0;
             stConfig.stKeypad[i].stButton[j].nDialMaxLed = 16;

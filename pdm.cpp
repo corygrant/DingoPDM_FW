@@ -149,7 +149,6 @@ void InitPdm()
 
     stConfig.stKeypad[0].bEnabled = true;
     stConfig.stKeypad[0].nNodeId = 0x15;
-    stConfig.stKeypad[0].nNumButtons = 12;
     stConfig.stKeypad[0].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::BL_AMBER;
     stConfig.stKeypad[0].stButton[0].bEnabled = true;
     stConfig.stKeypad[0].stButton[0].nValVars[0] = 97;

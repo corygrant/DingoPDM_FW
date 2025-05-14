@@ -217,10 +217,22 @@ enum class PwmChannel : uint8_t
     Ch4 = 3
 };
 
-enum class KeypadBrand : uint8_t
+enum class KeypadModel : uint8_t
 {
-    BLINK_MARINE,
-    GRAYHILL
+    BLINK_2_KEY,
+    BLINK_4_KEY,
+    BLINK_5_KEY,
+    BLINK_6_KEY,
+    BLINK_8_KEY,
+    BLINK_10_KEY,
+    BLINK_12_KEY,
+    BLINK_15_KEY,
+    BLINK_13_KEY_2_DIAL,
+    BLINK_RACEPAD,
+    GRAYHILL_6_KEY,
+    GRAYHILL_8_KEY,
+    GRAYHILL_15_KEY,
+    GRAYHILL_20_KEY
 };
 
 enum class BlinkMarineButtonColor : uint8_t

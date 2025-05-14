@@ -131,10 +131,15 @@ struct Config_Condition{
 struct Config_KeypadButton{
   bool bEnabled;
   InputMode eMode;
+  uint8_t nNumOfValColors;
   uint8_t nValColors[4];
   uint8_t nFaultColor;
   uint16_t nValVars[4];
   uint16_t nFaultVar;
+  bool bValBlinking[4];
+  bool bFaultBlinking;
+  uint8_t nValBlinkingColors[4];
+  uint8_t nFaultBlinkingColor;
 
   //Add dial support
   bool bHasDial;
@@ -148,8 +153,7 @@ struct Config_Keypad{
   uint8_t nNodeId;
   bool bTimeoutEnabled;
   uint8_t nTimeout; //ms
-  KeypadBrand eBrand;
-  uint8_t nNumButtons;
+  KeypadModel eModel;
   uint8_t nBacklightBrightness;
   uint8_t nDimBacklightBrightness;
   uint8_t nBacklightColor;

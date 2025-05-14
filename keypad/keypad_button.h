@@ -20,7 +20,13 @@ public:
 
     bool Update(bool bNewVal);
 
-    BlinkMarineButtonColor GetColor();
+    void UpdateLed();
+
+    //Bit 0 = Red
+    //Bit 1 = Green
+    //Bit 2 = Blue
+    BlinkMarineButtonColor eLedOnColor;
+    BlinkMarineButtonColor eLedBlinkColor;
 
 private:
     Config_KeypadButton *pConfig;
