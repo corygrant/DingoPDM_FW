@@ -34,59 +34,59 @@ msg_t Keypad::Init()
         
     switch(pConfig->eModel)
     {
-        case KeypadModel:: BLINK_2_KEY:
+        case KeypadModel:: Blink2Key:
             nNumButtons = 2;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_4_KEY:
+        case KeypadModel::Blink4Key:
             nNumButtons = 4;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_5_KEY:
+        case KeypadModel::Blink5Key:
             nNumButtons = 5;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_6_KEY:
+        case KeypadModel::Blink6Key:
             nNumButtons = 6;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_8_KEY:
+        case KeypadModel::Blink8Key:
             nNumButtons = 8;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_10_KEY:
+        case KeypadModel::Blink10Key:
             nNumButtons = 10;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_12_KEY:
+        case KeypadModel::Blink12Key:
             nNumButtons = 12;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_15_KEY:
+        case KeypadModel::Blink15Key:
             nNumButtons = 15;
             nNumDials = 0;
             break;
-        case KeypadModel::BLINK_13_KEY_2_DIAL:
+        case KeypadModel::Blink13Key2Dial:
             nNumButtons = 13;
             nNumDials = 2;
             break;
-        case KeypadModel::BLINK_RACEPAD:
+        case KeypadModel::BlinkRacepad:
             nNumButtons = 12;
             nNumDials = 4;
             break;
-        case KeypadModel::GRAYHILL_6_KEY:
+        case KeypadModel::Grayhill6Key:
             nNumButtons = 6;
             nNumDials = 0;
             break;
-        case KeypadModel::GRAYHILL_8_KEY:
+        case KeypadModel::Grayhill8Key:
             nNumButtons = 8;
             nNumDials = 0;
             break;
-        case KeypadModel::GRAYHILL_15_KEY:
+        case KeypadModel::Grayhill15Key:
             nNumButtons = 15;
             nNumDials = 0;
             break;
-        case KeypadModel::GRAYHILL_20_KEY:  
+        case KeypadModel::Grayhill20Key:  
             nNumButtons = 20;
             nNumDials = 0;
             break;
@@ -163,7 +163,7 @@ uint64_t Keypad::BuildLedMsg(bool bBlink)
     //Blink Marine PKP-2600SI 12 button keypad
     //Has different LED mapping than other keypads
     //Stacked
-    if (pConfig->eModel == KeypadModel::BLINK_12_KEY)
+    if (pConfig->eModel == KeypadModel::Blink12Key)
     {
         uint8_t nIndex = 0;
         for (uint8_t i = 0; i < nNumButtons; i++)

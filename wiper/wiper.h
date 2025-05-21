@@ -50,8 +50,6 @@ public:
     };
 
     void Update();
-    bool GetEnable() { return pConfig->bEnabled; }
-    WiperMode GetMode() { return pConfig->eMode; }
     WiperSpeed GetSpeed() { return eSelectedSpeed; }
     WiperState GetState() { return eState; }
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);

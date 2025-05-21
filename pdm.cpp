@@ -149,7 +149,7 @@ void InitPdm()
 
     stConfig.stKeypad[0].bEnabled = true;
     stConfig.stKeypad[0].nNodeId = 0x15;
-    stConfig.stKeypad[0].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::BL_AMBER;
+    stConfig.stKeypad[0].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::Amber;
     stConfig.stKeypad[0].stButton[0].bEnabled = true;
     stConfig.stKeypad[0].stButton[0].nValVars[0] = 97;
     stConfig.stKeypad[0].stButton[0].nValVars[1] = 97;
@@ -579,6 +579,14 @@ void InitInfoMsgs()
     }
 }
 
+uint16_t GetVarMap(VarMap eVar)
+{
+    if (static_cast<uint8_t>(eVar) >= PDM_VAR_MAP_SIZE)
+        return 0;
+
+    return *pVarMap[static_cast<uint8_t>(eVar)];
+}
+
 PdmState GetPdmState()
 {
     return eState;
@@ -607,7 +615,6 @@ bool GetAnyOvercurrent()
     {
         if (pf[i].GetState() == ProfetState::Overcurrent)
         {
-            // TODO: Send overcurrent message
             return true;
         }
     }
@@ -621,20 +628,11 @@ bool GetAnyFault()
     {
         if (pf[i].GetState() == ProfetState::Fault)
         {
-            // TODO: Send fault message
             return true;
         }
     }
 
     return false;
-}
-
-bool GetInputVal(uint8_t nInput)
-{
-    if (nInput >= PDM_NUM_INPUTS)
-        return false;
-
-    return in[nInput].nVal;
 }
 
 uint16_t GetOutputCurrent(uint8_t nOutput)
@@ -673,7 +671,7 @@ bool GetAnyCanInEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
     {
-        if (canIn[i].GetEnable())
+        if (stConfig.stCanInput[i].bEnabled)
             return true;
     }
     return false;
@@ -684,56 +682,44 @@ bool GetCanInEnable(uint8_t nInput)
     if (nInput >= PDM_NUM_CAN_INPUTS)
         return false;
 
-    return canIn[nInput].GetEnable();
+    return stConfig.stCanInput[nInput].bEnabled;
 }
 
-bool GetCanInOutput(uint8_t nInput)
+uint32_t GetCanInOutputs()
 {
-    if (nInput >= PDM_NUM_CAN_INPUTS)
-        return false;
-
-    return canIn[nInput].nOutput;
-}
-
-uint16_t GetCanInVal(uint8_t nInput)
-{
-    if (nInput >= PDM_NUM_CAN_INPUTS)
-        return false;
-
-    return canIn[nInput].nVal;
+    uint32_t result = 0;
+    
+    for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++) {
+        result |= ((canIn[i].nVal & 0x01) << i);
+    }
+    
+    return result;
 }
 
 bool GetAnyVirtInEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
     {
-        if (virtIn[i].GetEnable())
+        if (stConfig.stVirtualInput[i].bEnabled)
             return true;
     }
     return false;
 }
 
-bool GetVirtInVal(uint8_t nInput)
+uint32_t GetVirtIns()
 {
-    if (nInput >= PDM_NUM_VIRT_INPUTS)
-        return false;
-
-    return virtIn[nInput].nVal;
+    uint32_t result = 0;
+    
+    for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++) {
+        result |= ((virtIn[i].nVal & 0x01) << i);
+    }
+    
+    return result;
 }
 
 bool GetWiperEnable()
 {
-    return wiper.GetEnable();
-}
-
-bool GetWiperFastOut()
-{
-    return wiper.nFastOut;
-}
-
-bool GetWiperSlowOut()
-{
-    return wiper.nSlowOut;
+    return stConfig.stWiper.bEnabled;
 }
 
 WiperState GetWiperState()
@@ -750,54 +736,41 @@ bool GetAnyFlasherEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
     {
-        if (flasher[i].GetEnable())
+        if (stConfig.stFlasher[i].bEnabled)
             return true;
     }
     return false;
-}
-
-bool GetFlasherVal(uint8_t nFlasher)
-{
-    if (nFlasher >= PDM_NUM_FLASHERS)
-        return false;
-
-    return flasher[nFlasher].nVal;
 }
 
 bool GetAnyCounterEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
     {
-        if (counter[i].GetEnable())
+        if (stConfig.stCounter[i].bEnabled)
             return true;
     }
     return false;
-}
-
-uint16_t GetCounterVal(uint8_t nCounter)
-{
-    if (nCounter >= PDM_NUM_COUNTERS)
-        return 0;
-
-    return counter[nCounter].nVal;
 }
 
 bool GetAnyConditionEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
     {
-        if (condition[i].GetEnable())
+        if (stConfig.stCondition[i].bEnabled)
             return true;
     }
     return false;
 }
 
-bool GetConditionVal(uint8_t nCondition)
+uint32_t GetConditions()
 {
-    if (nCondition >= PDM_NUM_CONDITIONS)
-        return false;
-
-    return condition[nCondition].nVal;
+    uint32_t result = 0;
+    
+    for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++) {
+        result |= ((condition[i].nVal & 0x01) << i);
+    }
+    
+    return result;
 }
 
 bool GetAnyKeypadEnable()
@@ -818,54 +791,19 @@ bool GetKeypadEnable(uint8_t nKeypad)
     return stConfig.stKeypad[nKeypad].bEnabled;
 }
 
-bool GetKeypadButtonVal(uint8_t nKeypad, uint8_t nButton)
-{
-    if (nKeypad >= PDM_NUM_KEYPADS)
-        return false;
-
-    if (nButton >= KEYPAD_MAX_BUTTONS)
-        return false;
-
-    return keypad[nKeypad].nVal[nButton];
-}
-
 uint32_t GetKeypadButtons(uint8_t nKeypad)
 {
     if (nKeypad >= PDM_NUM_KEYPADS)
         return 0;
 
-    return (keypad[nKeypad].nVal[0] & 0x01) |
-           ((keypad[nKeypad].nVal[1] & 0x01) << 1) |
-           ((keypad[nKeypad].nVal[2] & 0x01) << 2) |
-           ((keypad[nKeypad].nVal[3] & 0x01) << 3) |
-           ((keypad[nKeypad].nVal[4] & 0x01) << 4) |
-           ((keypad[nKeypad].nVal[5] & 0x01) << 5) |
-           ((keypad[nKeypad].nVal[6] & 0x01) << 6) |
-           ((keypad[nKeypad].nVal[7] & 0x01) << 7) |
-           ((keypad[nKeypad].nVal[8] & 0x01) << 8) |
-           ((keypad[nKeypad].nVal[9] & 0x01) << 9) |
-           ((keypad[nKeypad].nVal[10] & 0x01) << 10) |
-           ((keypad[nKeypad].nVal[11] & 0x01) << 11) |
-           ((keypad[nKeypad].nVal[12] & 0x01) << 12) |
-           ((keypad[nKeypad].nVal[13] & 0x01) << 13) |
-           ((keypad[nKeypad].nVal[14] & 0x01) << 14) |
-           ((keypad[nKeypad].nVal[15] & 0x01) << 15) |
-           ((keypad[nKeypad].nVal[16] & 0x01) << 16) |
-           ((keypad[nKeypad].nVal[17] & 0x01) << 17) |
-           ((keypad[nKeypad].nVal[18] & 0x01) << 18) |
-           ((keypad[nKeypad].nVal[19] & 0x01) << 19);
+    uint32_t result = 0;
+    
+    for (uint8_t i = 0; i < KEYPAD_MAX_BUTTONS; i++) {
+        result |= ((keypad[nKeypad].nVal[i] & 0x01) << i);
+    }
+    
+    return result;
 }
-
-uint16_t GetKeypadDials(uint8_t nKeypad, uint8_t nDial)
-{
-    if (nKeypad >= PDM_NUM_KEYPADS)
-        return 0;
-
-    if (nDial >= KEYPAD_MAX_DIALS)
-        return 0;
-
-    return keypad[nKeypad].nVal[nDial];
-}   
 
 bool CheckEnterSleep()
 {

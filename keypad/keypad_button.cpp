@@ -16,8 +16,8 @@ void KeypadButton::UpdateLed()
     if (!pConfig->bEnabled)
         return;
 
-    BlinkMarineButtonColor eColor = BlinkMarineButtonColor::BTN_OFF;
-    BlinkMarineButtonColor eBlinkColor = BlinkMarineButtonColor::BTN_OFF;
+    BlinkMarineButtonColor eColor = BlinkMarineButtonColor::Off;
+    BlinkMarineButtonColor eBlinkColor = BlinkMarineButtonColor::Off;
 
     for (uint8_t i = 0; i < pConfig->nNumOfValColors; i++)
     {

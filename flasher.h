@@ -17,7 +17,6 @@ public:
     }
 
     void Update(uint32_t timeNow);
-    bool GetEnable() { return pConfig->bEnabled; }
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
 
     uint16_t nVal;
