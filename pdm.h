@@ -13,6 +13,7 @@ uint16_t GetOutputCurrent(uint8_t nOutput);
 ProfetState GetOutputState(uint8_t nOutput);
 uint8_t GetOutputOcCount(uint8_t nOutput);
 uint8_t GetOutputDC(uint8_t nOutput);
+bool GetAnyPwmEnable();
 bool GetAnyCanInEnable();
 bool GetCanInEnable(uint8_t nInput);
 uint32_t GetCanInOutputs();

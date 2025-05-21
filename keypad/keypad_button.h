@@ -18,6 +18,8 @@ public:
         pFaultInput = pVarMap[config->nFaultVar];
     }
 
+    static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    
     bool Update(bool bNewVal);
 
     void UpdateLed();

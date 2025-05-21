@@ -327,7 +327,7 @@ CANTxMsg TxMsg15()
     stMsg.frame.data8[6] = GetOutputDC(6);
     stMsg.frame.data8[7] = GetOutputDC(7);
 
-    stMsg.bSend = true; // Always send
+    stMsg.bSend = GetAnyPwmEnable();
 
     return stMsg;
 }

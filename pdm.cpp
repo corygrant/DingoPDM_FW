@@ -667,6 +667,16 @@ uint8_t GetOutputDC(uint8_t nOutput)
     return pf[nOutput].GetDutyCycle();
 }
 
+bool GetAnyPwmEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+    {
+        if (stConfig.stOutput[i].stPwm.bEnabled)
+            return true;
+    }
+    return false;
+}
+
 bool GetAnyCanInEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
