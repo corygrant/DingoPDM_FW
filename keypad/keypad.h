@@ -33,6 +33,7 @@ public:
     CANTxFrame GetStartMsg();
 
     uint16_t nVal[KEYPAD_MAX_BUTTONS];
+    uint16_t nDialVal[KEYPAD_MAX_DIALS];
 
 protected:
     Config_Keypad* pConfig;

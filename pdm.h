@@ -30,3 +30,8 @@ bool GetAnyCounterEnable();
 uint16_t GetCounterVal(uint8_t nCounter);
 bool GetAnyConditionEnable();
 bool GetConditionVal(uint8_t nCondition);
+bool GetAnyKeypadEnable();
+bool GetKeypadEnable(uint8_t nKeypad);
+bool GetKeypadButtonVal(uint8_t nKeypad, uint8_t nButton);
+uint32_t GetKeypadButtons(uint8_t nKeypad);
+uint16_t GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial);

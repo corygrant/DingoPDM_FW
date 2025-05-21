@@ -30,6 +30,7 @@ enum class MsgCmd : uint8_t
     KeypadLed = 51,
     KeypadButton = 52,
     KeypadButtonLed = 53,
+    KeypadDial = 54,
     Version = 120,
     Sleep = 121,
     Bootloader = 125,

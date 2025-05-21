@@ -148,6 +148,12 @@ bool Keypad::CheckMsg(CANRxFrame frame)
     nVal[18] = 0;
     nVal[19] = 0;
 
+
+    nDialVal[0] = 0;
+    nDialVal[1] = 0;
+    nDialVal[2] = 0;
+    nDialVal[3] = 0;
+
     return true;
 }
 
@@ -219,13 +225,6 @@ CANTxFrame Keypad::LedOnMsg()
     msg.data64[0] = BuildLedMsg(false);
     
     return msg;
-
-    //Grayhill
-    //All LED off = nValVars[0]
-    //LED 1 = nValVars[1]
-    //LED 2 = nValVars[2]
-    //LED 3 = nValVars[3]
-    //nFaultVar Unused??
 }
 
 CANTxFrame Keypad::LedBlinkMsg()

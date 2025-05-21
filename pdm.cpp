@@ -355,6 +355,7 @@ void InitVarMap()
     }
 
     // 153 - 192
+    // Keypad Buttons
     for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
     {
         for (uint8_t j = 0; j < KEYPAD_MAX_BUTTONS; j++)
@@ -363,9 +364,19 @@ void InitVarMap()
         }
     }
 
-    // 193
+    // 193 - 200
+    // Keypad Dials
+    for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+    {
+        for (uint8_t j = 0; j < KEYPAD_MAX_DIALS; j++)
+        {
+            pVarMap[i * KEYPAD_MAX_DIALS + j + 193] = &keypad[i].nDialVal[j];
+        }
+    }
+
+    // 201
     // Always true
-    pVarMap[193] = const_cast<uint16_t*>(&ALWAYS_TRUE);
+    pVarMap[201] = const_cast<uint16_t*>(&ALWAYS_TRUE);
 
 
     //Note: Var map max size 255
@@ -788,6 +799,73 @@ bool GetConditionVal(uint8_t nCondition)
 
     return condition[nCondition].nVal;
 }
+
+bool GetAnyKeypadEnable()
+{
+    for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
+    {
+        if (stConfig.stKeypad[i].bEnabled)
+            return true;
+    }
+    return false;
+}
+
+bool GetKeypadEnable(uint8_t nKeypad)
+{
+    if (nKeypad >= PDM_NUM_KEYPADS)
+        return false;
+
+    return stConfig.stKeypad[nKeypad].bEnabled;
+}
+
+bool GetKeypadButtonVal(uint8_t nKeypad, uint8_t nButton)
+{
+    if (nKeypad >= PDM_NUM_KEYPADS)
+        return false;
+
+    if (nButton >= KEYPAD_MAX_BUTTONS)
+        return false;
+
+    return keypad[nKeypad].nVal[nButton];
+}
+
+uint32_t GetKeypadButtons(uint8_t nKeypad)
+{
+    if (nKeypad >= PDM_NUM_KEYPADS)
+        return 0;
+
+    return (keypad[nKeypad].nVal[0] & 0x01) |
+           ((keypad[nKeypad].nVal[1] & 0x01) << 1) |
+           ((keypad[nKeypad].nVal[2] & 0x01) << 2) |
+           ((keypad[nKeypad].nVal[3] & 0x01) << 3) |
+           ((keypad[nKeypad].nVal[4] & 0x01) << 4) |
+           ((keypad[nKeypad].nVal[5] & 0x01) << 5) |
+           ((keypad[nKeypad].nVal[6] & 0x01) << 6) |
+           ((keypad[nKeypad].nVal[7] & 0x01) << 7) |
+           ((keypad[nKeypad].nVal[8] & 0x01) << 8) |
+           ((keypad[nKeypad].nVal[9] & 0x01) << 9) |
+           ((keypad[nKeypad].nVal[10] & 0x01) << 10) |
+           ((keypad[nKeypad].nVal[11] & 0x01) << 11) |
+           ((keypad[nKeypad].nVal[12] & 0x01) << 12) |
+           ((keypad[nKeypad].nVal[13] & 0x01) << 13) |
+           ((keypad[nKeypad].nVal[14] & 0x01) << 14) |
+           ((keypad[nKeypad].nVal[15] & 0x01) << 15) |
+           ((keypad[nKeypad].nVal[16] & 0x01) << 16) |
+           ((keypad[nKeypad].nVal[17] & 0x01) << 17) |
+           ((keypad[nKeypad].nVal[18] & 0x01) << 18) |
+           ((keypad[nKeypad].nVal[19] & 0x01) << 19);
+}
+
+uint16_t GetKeypadDials(uint8_t nKeypad, uint8_t nDial)
+{
+    if (nKeypad >= PDM_NUM_KEYPADS)
+        return 0;
+
+    if (nDial >= KEYPAD_MAX_DIALS)
+        return 0;
+
+    return keypad[nKeypad].nVal[nDial];
+}   
 
 bool CheckEnterSleep()
 {

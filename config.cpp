@@ -240,8 +240,7 @@ void InitConfig()
         if(!WriteConfig()){
             //Couldn't write default config
             //FRAM issue 
-            if(fram.GetErrors() != 0)
-                Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
+            Error::SetFatalError(FatalErrorType::ErrFRAM, MsgSrc::Config);
         }
         else
         {

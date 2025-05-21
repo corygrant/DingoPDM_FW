@@ -252,6 +252,9 @@ CANTxMsg TxMsg9()
 CANTxMsg TxMsg10()
 {
     CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 10 (CAN Input Values 13-16)
+    //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 10;
     stMsg.frame.DLC = 8;
     stMsg.frame.data16[0] = GetCanInVal(12);
@@ -267,6 +270,9 @@ CANTxMsg TxMsg10()
 CANTxMsg TxMsg11()
 {
     CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 11 (CAN Input Values 17-20)
+    //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 11;
     stMsg.frame.DLC = 8;
     stMsg.frame.data16[0] = GetCanInVal(16);
@@ -282,6 +288,9 @@ CANTxMsg TxMsg11()
 CANTxMsg TxMsg12()
 {
     CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 12 (CAN Input Values 21-24)
+    //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 12;
     stMsg.frame.DLC = 8;
     stMsg.frame.data16[0] = GetCanInVal(20);
@@ -297,6 +306,9 @@ CANTxMsg TxMsg12()
 CANTxMsg TxMsg13()
 {
     CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 13 (CAN Input Values 25-28)
+    //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 13;
     stMsg.frame.DLC = 8;
     stMsg.frame.data16[0] = GetCanInVal(24);
@@ -312,6 +324,9 @@ CANTxMsg TxMsg13()
 CANTxMsg TxMsg14()
 {
     CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 14 (CAN Input Values 29-32)
+    //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 14;
     stMsg.frame.DLC = 8;
     stMsg.frame.data16[0] = GetCanInVal(28);
@@ -327,6 +342,9 @@ CANTxMsg TxMsg14()
 CANTxMsg TxMsg15()
 {
     CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 15 (Output Duty Cycle)
+    //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 15;
     stMsg.frame.DLC = 8;
     stMsg.frame.data8[0] = GetOutputDC(0);
@@ -339,6 +357,72 @@ CANTxMsg TxMsg15()
     stMsg.frame.data8[7] = GetOutputDC(7);
 
     stMsg.bSend = true; // Always send
+
+    return stMsg;
+}
+
+CANTxMsg TxMsg16()
+{
+    CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 16 (Keypad Button States)
+    //=======================================================
+    stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 16;
+    stMsg.frame.DLC = 8;
+    stMsg.frame.data8[0] =  GetKeypadButtons(0) & 0xFF;
+    stMsg.frame.data8[1] = (GetKeypadButtons(0) >> 8) & 0xFF;
+    stMsg.frame.data8[2] = (GetKeypadButtons(0) >> 16) & 0xFF;
+    stMsg.frame.data8[3] =  GetKeypadButtons(1) & 0xFF;
+    stMsg.frame.data8[4] = (GetKeypadButtons(1) >> 8) & 0xFF;
+    stMsg.frame.data8[5] = (GetKeypadButtons(1) >> 16) & 0xFF;
+    stMsg.frame.data8[6] = 0;
+    stMsg.frame.data8[7] = 0;
+
+    stMsg.bSend = GetAnyKeypadEnable();
+
+    return stMsg;
+}
+
+CANTxMsg TxMsg17()
+{
+    CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 17 (Keypad 1 Dials)
+    //=======================================================
+    stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 17;
+    stMsg.frame.DLC = 8;
+    stMsg.frame.data8[0] =  GetKeypadDialVal(0, 0) & 0xFF;
+    stMsg.frame.data8[1] = (GetKeypadDialVal(0, 0) >> 8) & 0xFF;
+    stMsg.frame.data8[2] = (GetKeypadDialVal(0, 1) & 0xFF);
+    stMsg.frame.data8[3] = (GetKeypadDialVal(0, 1) >> 8) & 0xFF;
+    stMsg.frame.data8[4] =  GetKeypadDialVal(0, 2) & 0xFF;
+    stMsg.frame.data8[5] = (GetKeypadDialVal(0, 2) >> 8) & 0xFF;
+    stMsg.frame.data8[6] =  GetKeypadDialVal(0, 3) & 0xFF;
+    stMsg.frame.data8[7] = (GetKeypadDialVal(0, 3) >> 8) & 0xFF;
+
+    stMsg.bSend = GetKeypadEnable(0);
+
+    return stMsg;
+}
+
+CANTxMsg TxMsg18()
+{
+    CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 18 (Keypad 2 Dials)
+    //=======================================================
+    stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 18;
+    stMsg.frame.DLC = 8;
+    stMsg.frame.data8[0] =  GetKeypadDialVal(1, 0) & 0xFF;
+    stMsg.frame.data8[1] = (GetKeypadDialVal(1, 0) >> 8) & 0xFF;
+    stMsg.frame.data8[2] = (GetKeypadDialVal(1, 1) & 0xFF);
+    stMsg.frame.data8[3] = (GetKeypadDialVal(1, 1) >> 8) & 0xFF;
+    stMsg.frame.data8[4] =  GetKeypadDialVal(1, 2) & 0xFF;
+    stMsg.frame.data8[5] = (GetKeypadDialVal(1, 2) >> 8) & 0xFF;
+    stMsg.frame.data8[6] =  GetKeypadDialVal(1, 3) & 0xFF;
+    stMsg.frame.data8[7] = (GetKeypadDialVal(1, 3) >> 8) & 0xFF;
+
+    stMsg.bSend = GetKeypadEnable(1);
 
     return stMsg;
 }
