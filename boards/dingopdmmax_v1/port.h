@@ -17,8 +17,9 @@
 #define PDM_NUM_KEYPADS 2
 
 #define KEYPAD_MAX_BUTTONS 20
+#define KEYPAD_MAX_DIALS 4
 
-#define PDM_VAR_MAP_SIZE 194
+#define PDM_VAR_MAP_SIZE 202
 
 #define PDM_NUM_TX_MSGS 16
 
