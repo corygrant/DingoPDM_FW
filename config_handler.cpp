@@ -68,6 +68,7 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
         case MsgCmd::KeypadLed:
         case MsgCmd::KeypadButton:
         case MsgCmd::KeypadButtonLed:
+        case MsgCmd::KeypadDial:
             res = Keypad::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         default:

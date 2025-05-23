@@ -130,6 +130,7 @@ struct Config_Condition{
 
 struct Config_KeypadButton{
   bool bEnabled;
+  bool bHasDial;
   InputMode eMode;
   uint8_t nNumOfValColors;
   uint8_t nValColors[4];
@@ -140,9 +141,9 @@ struct Config_KeypadButton{
   bool bFaultBlinking;
   uint8_t nValBlinkingColors[4];
   uint8_t nFaultBlinkingColor;
+};
 
-  //Add dial support
-  bool bHasDial;
+struct Config_KeypadDial{
   uint8_t nDialMinLed;
   uint8_t nDialMaxLed;
   uint8_t nDialLedOffset;
@@ -161,6 +162,7 @@ struct Config_Keypad{
   uint8_t nButtonBrightness;
   uint8_t nDimButtonBrightness;
   Config_KeypadButton stButton[KEYPAD_MAX_BUTTONS];
+  Config_KeypadDial stDial[KEYPAD_MAX_DIALS];
 };
 
 struct PdmConfig{

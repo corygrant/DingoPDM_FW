@@ -481,7 +481,8 @@ void ApplyConfig(MsgCmd eCmd)
             condition[i].SetConfig(&stConfig.stCondition[i], pVarMap);
     }
 
-    if (eCmd == MsgCmd::Keypad)
+    if ((eCmd == MsgCmd::Keypad) || (eCmd == MsgCmd::KeypadLed) || (eCmd == MsgCmd::KeypadButton) ||
+        (eCmd == MsgCmd::KeypadButtonLed) || (eCmd == MsgCmd::KeypadDial))
     {
         for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
             keypad[i].SetConfig(&stConfig.stKeypad[i], pVarMap);

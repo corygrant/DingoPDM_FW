@@ -149,10 +149,24 @@ bool Keypad::CheckMsg(CANRxFrame frame)
     nVal[19] = 0;
 
 
-    nDialVal[0] = 0;
-    nDialVal[1] = 0;
-    nDialVal[2] = 0;
-    nDialVal[3] = 0;
+    //nNodeId + 0x280
+        //If not racepad:
+        //dial[0].Update(frame.data64[0]);
+        //If racepad:
+        //dial[0].Update(frame.data64[0]);
+        //dial[1].Update(frame.data64[0]);
+
+    //nNodeId + 0x380
+        //If not racepad:
+        //dial[1].Update(frame.data64[0]);
+        //If racepad:
+        //dial[2].Update(frame.data64[0]);
+        //dial[3].Update(frame.data64[0]);
+
+    nDialVal[0] = dial[0].GetTicks();
+    nDialVal[1] = dial[1].GetTicks();
+    nDialVal[2] = dial[2].GetTicks();
+    nDialVal[3] = dial[3].GetTicks();
 
     return true;
 }
@@ -434,5 +448,7 @@ MsgCmdResult Keypad::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFr
         return KeypadButton::ProcessSettingsMsg(conf, rx, tx);
     else if(cmd == MsgCmd::KeypadButtonLed)
         return KeypadButton::ProcessSettingsMsg(conf, rx, tx);
+    else if(cmd == MsgCmd::KeypadDial)
+        return KeypadDial::ProcessSettingsMsg(conf, rx, tx);
     return MsgCmdResult::Invalid;
 }

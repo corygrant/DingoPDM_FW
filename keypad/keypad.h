@@ -5,6 +5,7 @@
 #include "mailbox.h"
 #include "dingopdm_config.h"
 #include "keypad_button.h"
+#include "keypad_dial.h"
 
 class Keypad
 {
@@ -43,6 +44,7 @@ protected:
     uint16_t *pDimmingInput;
 
     KeypadButton button[KEYPAD_MAX_BUTTONS];
+    
 
     uint8_t nNumButtons;
     
@@ -59,6 +61,8 @@ protected:
     bool ColorToGreen(BlinkMarineButtonColor eColor);
     bool ColorToBlue(BlinkMarineButtonColor eColor);
 
+    KeypadDial dial[KEYPAD_MAX_DIALS];
+    
     uint8_t nNumDials;
 
 
