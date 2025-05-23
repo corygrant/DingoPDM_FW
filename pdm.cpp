@@ -282,6 +282,9 @@ void CyclicUpdate()
 
 void InitVarMap()
 {
+    //Numbers in comments below are only valid for dingoPDM/dingoPDM-Max
+    //Other combinations of inputs/outputs will have different numbers
+
     // 0
     // None - set to 0
     pVarMap[0] = const_cast<uint16_t*>(&ALWAYS_FALSE);

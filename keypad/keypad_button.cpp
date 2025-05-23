@@ -120,9 +120,12 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
                 conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] = (rx->data8[3] & 0x0F);
                 conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] = (rx->data8[3] & 0xF0) >> 4;
                 conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor = (rx->data8[4] & 0x0F);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMinLed = rx->data8[5];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMaxLed = rx->data8[6];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nDialLedOffset = rx->data8[7];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nNumOfValColors = (rx->data8[4] & 0xF0) >> 4;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] = (rx->data8[5] & 0x0F);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] = (rx->data8[5] & 0xF0) >> 4;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] = (rx->data8[6] & 0x0F);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] = (rx->data8[6] & 0xF0) >> 4;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor = (rx->data8[7] & 0x0F);
             }
 
             tx->DLC = 8;
@@ -136,11 +139,17 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             tx->data8[3] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] & 0x0F) +
                            ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] & 0x0F) << 4);
 
-            tx->data8[4] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor & 0x0F);
-            tx->data8[5] = conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMinLed;
-            tx->data8[6] = conf->stKeypad[nIndex].stButton[nButtonIndex].nDialMaxLed;
-            tx->data8[7] = conf->stKeypad[nIndex].stButton[nButtonIndex].nDialLedOffset;
+            tx->data8[4] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor & 0x0F) +
+                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nNumOfValColors & 0x0F) << 4);
 
+            tx->data8[5] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] & 0x0F) +
+                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] & 0x0F) << 4);
+
+            tx->data8[6] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] & 0x0F) +
+                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] & 0x0F) << 4);
+
+            tx->data8[7] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor & 0x0F);
+            
             if(rx->DLC == 8)
                 return MsgCmdResult::Write;
             else
