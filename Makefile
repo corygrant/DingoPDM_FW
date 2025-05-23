@@ -164,6 +164,7 @@ CPPSRC = $(ALLCPPSRC) \
 				 hardware/mcp9808.cpp \
 				 hardware/mb85rc.cpp \
 				 keypad/keypad_button.cpp \
+				 keypad/keypad_dial.cpp \
 				 keypad/keypad.cpp \
 				 main.cpp
 

@@ -20,6 +20,10 @@ public:
         {
             button[i].SetConfig(&pConfig->stButton[i], pVarMap);
         }
+        for (uint8_t i = 0; i < KEYPAD_MAX_DIALS; i++)
+        {
+            dial[i].SetConfig(&pConfig->stDial[i]);
+        }
     };
 
     msg_t Init();
@@ -62,7 +66,7 @@ protected:
     bool ColorToBlue(BlinkMarineButtonColor eColor);
 
     KeypadDial dial[KEYPAD_MAX_DIALS];
-    
+
     uint8_t nNumDials;
 
 

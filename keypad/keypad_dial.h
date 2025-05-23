@@ -10,7 +10,7 @@ class KeypadDial
 public:
 KeypadDial() {};
 
-    void SetConfig(Config_KeypadDial *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_KeypadDial *config)
     {
         pConfig = config;
     }

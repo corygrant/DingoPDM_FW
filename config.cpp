@@ -218,9 +218,13 @@ void SetDefaultConfig()
             stConfig.stKeypad[i].stButton[j].nValBlinkingColors[3] = (uint8_t)BlinkMarineButtonColor::White;
             stConfig.stKeypad[i].stButton[j].nFaultBlinkingColor = (uint8_t)BlinkMarineButtonColor::Orange;
             stConfig.stKeypad[i].stButton[j].bHasDial = false;
-            stConfig.stKeypad[i].stButton[j].nDialMinLed = 0;
-            stConfig.stKeypad[i].stButton[j].nDialMaxLed = 16;
-            stConfig.stKeypad[i].stButton[j].nDialLedOffset = 0;
+        }
+
+        for (uint8_t j = 0; j < KEYPAD_MAX_DIALS ; j++)
+        {
+            stConfig.stKeypad[i].stDial[j].nDialMinLed = 0;
+            stConfig.stKeypad[i].stDial[j].nDialMaxLed = 0;
+            stConfig.stKeypad[i].stDial[j].nDialLedOffset = 0;
         }
     }
 }
