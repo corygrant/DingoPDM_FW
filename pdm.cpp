@@ -579,14 +579,6 @@ void InitInfoMsgs()
     }
 }
 
-uint16_t GetVarMap(VarMap eVar)
-{
-    if (static_cast<uint8_t>(eVar) >= PDM_VAR_MAP_SIZE)
-        return 0;
-
-    return *pVarMap[static_cast<uint8_t>(eVar)];
-}
-
 PdmState GetPdmState()
 {
     return eState;
@@ -633,6 +625,14 @@ bool GetAnyFault()
     }
 
     return false;
+}
+
+bool GetInputVal(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_INPUTS)
+        return false;
+
+    return in[nInput].nVal;
 }
 
 uint16_t GetOutputCurrent(uint8_t nOutput)
@@ -695,6 +695,22 @@ bool GetCanInEnable(uint8_t nInput)
     return stConfig.stCanInput[nInput].bEnabled;
 }
 
+bool GetCanInOutput(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_CAN_INPUTS)
+        return false;
+
+    return canIn[nInput].nOutput;
+}
+
+uint16_t GetCanInVal(uint8_t nInput)
+{
+    if (nInput >= PDM_NUM_CAN_INPUTS)
+        return false;
+
+    return canIn[nInput].nVal;
+}
+
 uint32_t GetCanInOutputs()
 {
     uint32_t result = 0;
@@ -732,6 +748,16 @@ bool GetWiperEnable()
     return stConfig.stWiper.bEnabled;
 }
 
+bool GetWiperFastOut()
+{
+    return wiper.nFastOut;
+}
+
+bool GetWiperSlowOut()
+{
+    return wiper.nSlowOut;
+}
+
 WiperState GetWiperState()
 {
     return wiper.GetState();
@@ -752,6 +778,14 @@ bool GetAnyFlasherEnable()
     return false;
 }
 
+bool GetFlasherVal(uint8_t nFlasher)
+{
+    if (nFlasher >= PDM_NUM_FLASHERS)
+        return false;
+
+    return flasher[nFlasher].nVal;
+}
+
 bool GetAnyCounterEnable()
 {
     for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
@@ -760,6 +794,14 @@ bool GetAnyCounterEnable()
             return true;
     }
     return false;
+}
+
+uint16_t GetCounterVal(uint8_t nCounter)
+{
+    if (nCounter >= PDM_NUM_COUNTERS)
+        return 0;
+
+    return counter[nCounter].nVal;
 }
 
 bool GetAnyConditionEnable()
@@ -814,6 +856,17 @@ uint32_t GetKeypadButtons(uint8_t nKeypad)
     
     return result;
 }
+
+uint16_t GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial)
+{
+    if (nKeypad >= PDM_NUM_KEYPADS)
+        return 0;
+
+    if (nDial >= KEYPAD_MAX_DIALS)
+        return 0;
+
+    return keypad[nKeypad].nVal[nDial];
+}  
 
 bool CheckEnterSleep()
 {

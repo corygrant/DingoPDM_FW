@@ -39,7 +39,7 @@ CANTxMsg TxMsg0()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 0;
     stMsg.frame.DLC = 8; // Bytes to send
-    stMsg.frame.data8[0] = ((GetVarMap(VarMap::DigitalIn2) & 0x01) << 1) + (GetVarMap(VarMap::DigitalIn1) & 0x01);
+    stMsg.frame.data8[0] = (GetInputVal(1) << 1) + GetInputVal(0);
     stMsg.frame.data8[1] = static_cast<uint8_t>(GetPdmState()) + (PDM_TYPE << 4);
     stMsg.frame.data16[1] = (uint16_t)GetTotalCurrent(); //Already scaled by 10
     stMsg.frame.data16[2] = (uint16_t)(GetBattVolt() * 10.0);
@@ -98,10 +98,10 @@ CANTxMsg TxMsg3()
     stMsg.frame.data8[1] = (static_cast<uint8_t>(GetOutputState(3)) << 4) + static_cast<uint8_t>(GetOutputState(2));
     stMsg.frame.data8[2] = (static_cast<uint8_t>(GetOutputState(5)) << 4) + static_cast<uint8_t>(GetOutputState(4));
     stMsg.frame.data8[3] = (static_cast<uint8_t>(GetOutputState(7)) << 4) + static_cast<uint8_t>(GetOutputState(6));
-    stMsg.frame.data8[4] = ((GetVarMap(VarMap::WiperFast) & 0x01) << 1) + (GetVarMap(VarMap::WiperSlow) & 0x01);
+    stMsg.frame.data8[4] = (GetWiperFastOut() << 1) + GetWiperSlowOut();
     stMsg.frame.data8[5] = (static_cast<uint8_t>(GetWiperState()) << 4) + static_cast<uint8_t>(GetWiperSpeed());
-    stMsg.frame.data8[6] = ((GetVarMap(VarMap::Flasher4) & 0x01) << 3) + ((GetVarMap(VarMap::Flasher3) & 0x01) << 2) +
-                           ((GetVarMap(VarMap::Flasher2) & 0x01) << 1) + (GetVarMap(VarMap::Flasher1) & 0x01);
+    stMsg.frame.data8[6] = (GetFlasherVal(3) << 3) + (GetFlasherVal(2) << 2) +
+                           (GetFlasherVal(1) << 1) + GetFlasherVal(0);
     stMsg.frame.data8[7] = 0;
 
     stMsg.bSend = true; // Always send
@@ -155,10 +155,10 @@ CANTxMsg TxMsg6()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 6;
     stMsg.frame.DLC = 8; // Bytes to send
-    stMsg.frame.data8[0] = GetVarMap(VarMap::CounterVal1);
-    stMsg.frame.data8[1] = GetVarMap(VarMap::CounterVal2);
-    stMsg.frame.data8[2] = GetVarMap(VarMap::CounterVal3);
-    stMsg.frame.data8[3] = GetVarMap(VarMap::CounterVal4);
+    stMsg.frame.data8[0] = GetCounterVal(0);
+    stMsg.frame.data8[1] = GetCounterVal(1);
+    stMsg.frame.data8[2] = GetCounterVal(2);
+    stMsg.frame.data8[3] = GetCounterVal(3);
     stMsg.frame.data32[1] = GetConditions();
 
     stMsg.bSend = GetAnyCounterEnable() || GetAnyConditionEnable();
@@ -174,10 +174,10 @@ CANTxMsg TxMsg7()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 7;
     stMsg.frame.DLC = 8; // Bytes to send
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal1);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal2);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal3);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal4);
+    stMsg.frame.data16[0] = GetCanInVal(0);
+    stMsg.frame.data16[1] = GetCanInVal(1);
+    stMsg.frame.data16[2] = GetCanInVal(2);
+    stMsg.frame.data16[3] = GetCanInVal(3);
 
     stMsg.bSend = GetCanInEnable(0) || GetCanInEnable(1) || GetCanInEnable(2) || GetCanInEnable(3);
 
@@ -192,10 +192,10 @@ CANTxMsg TxMsg8()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 8;
     stMsg.frame.DLC = 8; // Bytes to send
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal5);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal6);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal7);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal8);
+    stMsg.frame.data16[0] = GetCanInVal(4);
+    stMsg.frame.data16[1] = GetCanInVal(5);
+    stMsg.frame.data16[2] = GetCanInVal(6);
+    stMsg.frame.data16[3] = GetCanInVal(7);
 
     stMsg.bSend = GetCanInEnable(4) || GetCanInEnable(5) || GetCanInEnable(6) || GetCanInEnable(7);
 
@@ -210,10 +210,10 @@ CANTxMsg TxMsg9()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 9;
     stMsg.frame.DLC = 8; // Bytes to send
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal9);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal10);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal11);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal12);
+    stMsg.frame.data16[0] = GetCanInVal(8);
+    stMsg.frame.data16[1] = GetCanInVal(9);
+    stMsg.frame.data16[2] = GetCanInVal(10);
+    stMsg.frame.data16[3] = GetCanInVal(11);
 
     stMsg.bSend = GetCanInEnable(8) || GetCanInEnable(9) || GetCanInEnable(10) || GetCanInEnable(11);
 
@@ -228,10 +228,10 @@ CANTxMsg TxMsg10()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 10;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal13);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal14);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal15);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal16);
+    stMsg.frame.data16[0] = GetCanInVal(12);
+    stMsg.frame.data16[1] = GetCanInVal(13);
+    stMsg.frame.data16[2] = GetCanInVal(14);
+    stMsg.frame.data16[3] = GetCanInVal(15);
 
     stMsg.bSend = GetCanInEnable(12) || GetCanInEnable(13) || GetCanInEnable(14) || GetCanInEnable(15);
 
@@ -246,10 +246,10 @@ CANTxMsg TxMsg11()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 11;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal17);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal18);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal19);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal20);
+    stMsg.frame.data16[0] = GetCanInVal(16);
+    stMsg.frame.data16[1] = GetCanInVal(17);
+    stMsg.frame.data16[2] = GetCanInVal(18);
+    stMsg.frame.data16[3] = GetCanInVal(19);
 
     stMsg.bSend = GetCanInEnable(16) || GetCanInEnable(17) || GetCanInEnable(18) || GetCanInEnable(19);
 
@@ -264,10 +264,10 @@ CANTxMsg TxMsg12()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 12;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal21);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal22);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal23);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal24);
+    stMsg.frame.data16[0] = GetCanInVal(20);
+    stMsg.frame.data16[1] = GetCanInVal(21);
+    stMsg.frame.data16[2] = GetCanInVal(22);
+    stMsg.frame.data16[3] = GetCanInVal(23);
 
     stMsg.bSend = GetCanInEnable(20) || GetCanInEnable(21) || GetCanInEnable(22) || GetCanInEnable(23);
 
@@ -282,10 +282,10 @@ CANTxMsg TxMsg13()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 13;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal25);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal26);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal27);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal28);
+    stMsg.frame.data16[0] = GetCanInVal(24);
+    stMsg.frame.data16[1] = GetCanInVal(25);
+    stMsg.frame.data16[2] = GetCanInVal(26);
+    stMsg.frame.data16[3] = GetCanInVal(27);
 
     stMsg.bSend = GetCanInEnable(24) || GetCanInEnable(25) || GetCanInEnable(26) || GetCanInEnable(27);
 
@@ -300,10 +300,10 @@ CANTxMsg TxMsg14()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 14;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data16[0] = GetVarMap(VarMap::CANInVal29);
-    stMsg.frame.data16[1] = GetVarMap(VarMap::CANInVal30);
-    stMsg.frame.data16[2] = GetVarMap(VarMap::CANInVal31);
-    stMsg.frame.data16[3] = GetVarMap(VarMap::CANInVal32);
+    stMsg.frame.data16[0] = GetCanInVal(28);
+    stMsg.frame.data16[1] = GetCanInVal(29);
+    stMsg.frame.data16[2] = GetCanInVal(30);
+    stMsg.frame.data16[3] = GetCanInVal(31);
 
     stMsg.bSend = GetCanInEnable(28) || GetCanInEnable(29) || GetCanInEnable(30) || GetCanInEnable(31);
 
@@ -362,14 +362,14 @@ CANTxMsg TxMsg17()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 17;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data8[0] =  GetVarMap(VarMap::Keypad1Dial1) & 0xFF;
-    stMsg.frame.data8[1] = (GetVarMap(VarMap::Keypad1Dial1) >> 8) & 0xFF;
-    stMsg.frame.data8[2] = (GetVarMap(VarMap::Keypad1Dial2) & 0xFF);
-    stMsg.frame.data8[3] = (GetVarMap(VarMap::Keypad1Dial2) >> 8) & 0xFF;
-    stMsg.frame.data8[4] =  GetVarMap(VarMap::Keypad1Dial3) & 0xFF;
-    stMsg.frame.data8[5] = (GetVarMap(VarMap::Keypad1Dial3) >> 8) & 0xFF;
-    stMsg.frame.data8[6] =  GetVarMap(VarMap::Keypad1Dial4) & 0xFF;
-    stMsg.frame.data8[7] = (GetVarMap(VarMap::Keypad1Dial4) >> 8) & 0xFF;
+    stMsg.frame.data8[0] =  GetKeypadDialVal(0,0) & 0xFF;
+    stMsg.frame.data8[1] = (GetKeypadDialVal(0,0) >> 8) & 0xFF;
+    stMsg.frame.data8[2] = (GetKeypadDialVal(0,1) & 0xFF);
+    stMsg.frame.data8[3] = (GetKeypadDialVal(0,1) >> 8) & 0xFF;
+    stMsg.frame.data8[4] =  GetKeypadDialVal(0,2) & 0xFF;
+    stMsg.frame.data8[5] = (GetKeypadDialVal(0,2) >> 8) & 0xFF;
+    stMsg.frame.data8[6] =  GetKeypadDialVal(0,3) & 0xFF;
+    stMsg.frame.data8[7] = (GetKeypadDialVal(0,3) >> 8) & 0xFF;
 
     stMsg.bSend = GetKeypadEnable(0);
 
@@ -384,14 +384,14 @@ CANTxMsg TxMsg18()
     //=======================================================
     stMsg.frame.SID = stConfig.stCanOutput.nBaseId + 18;
     stMsg.frame.DLC = 8;
-    stMsg.frame.data8[0] =  GetVarMap(VarMap::Keypad2Dial1) & 0xFF;
-    stMsg.frame.data8[1] = (GetVarMap(VarMap::Keypad2Dial1) >> 8) & 0xFF;
-    stMsg.frame.data8[2] = (GetVarMap(VarMap::Keypad2Dial2) & 0xFF);
-    stMsg.frame.data8[3] = (GetVarMap(VarMap::Keypad2Dial2) >> 8) & 0xFF;
-    stMsg.frame.data8[4] =  GetVarMap(VarMap::Keypad2Dial3) & 0xFF;
-    stMsg.frame.data8[5] = (GetVarMap(VarMap::Keypad2Dial3) >> 8) & 0xFF;
-    stMsg.frame.data8[6] =  GetVarMap(VarMap::Keypad2Dial4) & 0xFF;
-    stMsg.frame.data8[7] = (GetVarMap(VarMap::Keypad2Dial4) >> 8) & 0xFF;
+    stMsg.frame.data8[0] =  GetKeypadDialVal(1,0) & 0xFF;
+    stMsg.frame.data8[1] = (GetKeypadDialVal(1,0) >> 8) & 0xFF;
+    stMsg.frame.data8[2] = (GetKeypadDialVal(1,1) & 0xFF);
+    stMsg.frame.data8[3] = (GetKeypadDialVal(1,1) >> 8) & 0xFF;
+    stMsg.frame.data8[4] =  GetKeypadDialVal(1,2) & 0xFF;
+    stMsg.frame.data8[5] = (GetKeypadDialVal(1,2) >> 8) & 0xFF;
+    stMsg.frame.data8[6] =  GetKeypadDialVal(1,3) & 0xFF;
+    stMsg.frame.data8[7] = (GetKeypadDialVal(1,3) >> 8) & 0xFF;
 
     stMsg.bSend = GetKeypadEnable(1);
 
