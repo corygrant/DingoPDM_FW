@@ -56,7 +56,7 @@ MsgCmdResult ButtonMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         (rx->DLC == 2))
     {
         uint8_t nIndex = (rx->data8[1] & 0x07);
-        uint8_t nButtonIndex = (rx->data8[1] & 0xF8) >> 3;
+        uint8_t nButtonIndex = rx->data8[1] >> 3;
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
@@ -76,7 +76,7 @@ MsgCmdResult ButtonMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButton) + 128;
-            tx->data8[1] = (nIndex & 0x07) + ((nButtonIndex & 0x1F) << 3);
+            tx->data8[1] = (nIndex & 0x07) + (nButtonIndex << 3);
 
             tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled & 0x01) +
                            ((conf->stKeypad[nIndex].stButton[nButtonIndex].bHasDial & 0x01) << 1) +
@@ -109,7 +109,7 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         (rx->DLC == 2))
     {
         uint8_t nIndex = (rx->data8[1] & 0x07);
-        uint8_t nButtonIndex = (rx->data8[1] & 0xF8) >> 3;
+        uint8_t nButtonIndex = rx->data8[1] >> 3;
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
@@ -130,8 +130,8 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButton) + 128;
-            tx->data8[1] = (nIndex & 0x07) + ((nButtonIndex & 0x1F) << 3);
+            tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButtonLed) + 128;
+            tx->data8[1] = (nIndex & 0x07) + (nButtonIndex << 3);
 
             tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0] & 0x0F) +
                            ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1] & 0x0F) << 4);

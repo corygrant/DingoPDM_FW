@@ -350,17 +350,17 @@ CANTxFrame Keypad::GetStartMsg()
 
 MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // DLC 5 = Set keypad settings
+    // DLC 6 = Set keypad settings
     // DLC 2 = Get keypad settings
 
-    if ((rx->DLC == 5) ||
+    if ((rx->DLC == 6) ||
         (rx->DLC == 2))
     {
         uint8_t nIndex = rx->data8[1];
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
-            if (rx->DLC == 5)
+            if (rx->DLC == 6)
             {
                 conf->stKeypad[nIndex].bEnabled = (rx->data8[2] & 0x01);
                 
@@ -368,9 +368,11 @@ MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
                 conf->stKeypad[nIndex].bTimeoutEnabled = (rx->data8[3] & 0x80) >> 7;
         
                 conf->stKeypad[nIndex].nTimeout = (rx->data8[4] * 100);
+
+                conf->stKeypad[nIndex].eModel = static_cast<KeypadModel>(rx->data8[5]);
             }
 
-            tx->DLC = 5;
+            tx->DLC = 6;
             tx->IDE = CAN_IDE_STD;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::Keypad) + 128;
             tx->data8[1] = nIndex;
@@ -378,8 +380,9 @@ MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             tx->data8[3] =  (conf->stKeypad[nIndex].nNodeId & 0x7F) + 
                             ((conf->stKeypad[nIndex].bTimeoutEnabled & 0x01) << 7);
             tx->data8[4] = (uint8_t)(conf->stKeypad[nIndex].nTimeout / 100);
+            tx->data8[5] = static_cast<uint8_t>(conf->stKeypad[nIndex].eModel);
 
-            if(rx->DLC == 5)
+            if(rx->DLC == 6)
                 return MsgCmdResult::Write;
             else
                 return MsgCmdResult::Request;
