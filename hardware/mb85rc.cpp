@@ -57,12 +57,13 @@ bool MB85RC::GetId(uint16_t *nManufId, uint16_t *nProdId)
 bool MB85RC::Read(uint16_t nMemAddr, uint8_t *pData, uint16_t nByteLen)
 {
     msg_t status;
+    uint8_t addrBytes[2] = {static_cast<uint8_t>(nMemAddr >> 8), static_cast<uint8_t>(nMemAddr & 0xFF)};
 
     i2cAcquireBus(m_driver);
 
     status = i2cMasterTransmitTimeout(  m_driver,
                                         m_addr,
-                                        reinterpret_cast<const uint8_t*>(&nMemAddr),
+                                        addrBytes,
                                         2,
                                         pData,
                                         nByteLen,
@@ -81,31 +82,38 @@ bool MB85RC::Read(uint16_t nMemAddr, uint8_t *pData, uint16_t nByteLen)
 bool MB85RC::Write(uint16_t nMemAddr, uint8_t *nMemVals, uint16_t nByteLen)
 {   
     msg_t status;
-    uint8_t addrBytes[2] = {static_cast<uint8_t>(nMemAddr & 0xFF), static_cast<uint8_t>(nMemAddr >> 8)};
+    uint16_t totalSize = 2 + nByteLen;
+    
+    // Allocate memory dynamically
+    uint8_t *txData = (uint8_t*)chHeapAlloc(NULL, totalSize);
+    if (txData == NULL) {
+        return false; // Allocation failed
+    }
+
+    // Set up address bytes (MSB first, LSB second)
+    txData[0] = static_cast<uint8_t>(nMemAddr >> 8);
+    txData[1] = static_cast<uint8_t>(nMemAddr & 0xFF);
+
+    // Copy data
+    for (uint16_t i = 0; i < nByteLen; i++)
+    {
+        txData[2 + i] = nMemVals[i];
+    }
 
     i2cAcquireBus(m_driver);
 
-    // First send the address
     status = i2cMasterTransmitTimeout(m_driver,
-                                     m_addr,
-                                     addrBytes,
-                                     2,
-                                     NULL,
-                                     0,
-                                     TIME_MS2I(MB85RC_TIMEOUT));
-
-    if (status == MSG_OK) {
-        // Then send the data without releasing the bus
-        status = i2cMasterTransmitTimeout(m_driver,
-                                         m_addr,
-                                         nMemVals,
-                                         nByteLen,
-                                         NULL,
-                                         0,
-                                         TIME_MS2I(MB85RC_TIMEOUT));
-    }
+                                    m_addr,
+                                    txData,
+                                    totalSize,
+                                    NULL,
+                                    0,
+                                    TIME_MS2I(MB85RC_TIMEOUT));
 
     i2cReleaseBus(m_driver);
+
+    // Free the allocated memory
+    chHeapFree(txData);
 
     if (status != MSG_OK) {
        lastErrors = i2cGetErrors(&I2CD1);
