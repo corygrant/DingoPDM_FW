@@ -103,8 +103,6 @@ struct SlowThread : chibios_rt::BaseStaticThread<256>
             //=================================================================
             // Perform tasks that don't need to be done every cycle here
             //=================================================================
-            if (chThdShouldTerminateX())
-                chThdExit(MSG_OK);
 
             fBattVolt = GetBattVolt();
 
@@ -146,15 +144,6 @@ void InitPdm()
 
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
-
-    stConfig.stKeypad[0].bEnabled = true;
-    stConfig.stKeypad[0].nNodeId = 0x15;
-    stConfig.stKeypad[0].nBacklightColor = (uint8_t)BlinkMarineBacklightColor::Amber;
-    stConfig.stKeypad[0].stButton[0].bEnabled = true;
-    stConfig.stKeypad[0].stButton[0].nValVars[0] = 97;
-    stConfig.stKeypad[0].stButton[0].nValVars[1] = 97;
-    stConfig.stKeypad[0].stButton[0].nValVars[2] = 97;
-    stConfig.stKeypad[0].stButton[0].nValVars[3] = 97;
 
     for(uint8_t i = 0; i < KEYPAD_MAX_BUTTONS; i++)
     {

@@ -5,7 +5,7 @@
 #include "enums.h"
 #include "hardware/mb85rc.h"
 
-#define CONFIG_VERSION 0x0001 //Increment when config structure changes
+#define CONFIG_VERSION 0x0002 //Increment when config structure changes
 
 struct Config_DeviceConfig{
   uint16_t nConfigVersion;

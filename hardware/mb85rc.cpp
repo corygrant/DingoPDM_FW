@@ -80,29 +80,30 @@ bool MB85RC::Read(uint16_t nMemAddr, uint8_t *pData, uint16_t nByteLen)
 
 bool MB85RC::Write(uint16_t nMemAddr, uint8_t *nMemVals, uint16_t nByteLen)
 {   
-    //Have to prepend the memory address to the data to be written
     msg_t status;
-
-    uint16_t totalSize = 2 + nByteLen;
-    uint8_t txData[totalSize];
-
-    txData[0] = nMemAddr & 0xFF;
-    txData[1] = nMemAddr >> 8;
-
-    for (uint16_t i = 0; i < nByteLen; i++)
-    {
-        txData[2 + i] = nMemVals[i];
-    }
+    uint8_t addrBytes[2] = {static_cast<uint8_t>(nMemAddr & 0xFF), static_cast<uint8_t>(nMemAddr >> 8)};
 
     i2cAcquireBus(m_driver);
 
-    status = i2cMasterTransmitTimeout(  m_driver,
-                                        m_addr,
-                                        txData,
-                                        sizeof(txData),
-                                        NULL,
-                                        0,
-                                        TIME_MS2I(MB85RC_TIMEOUT));                                                  
+    // First send the address
+    status = i2cMasterTransmitTimeout(m_driver,
+                                     m_addr,
+                                     addrBytes,
+                                     2,
+                                     NULL,
+                                     0,
+                                     TIME_MS2I(MB85RC_TIMEOUT));
+
+    if (status == MSG_OK) {
+        // Then send the data without releasing the bus
+        status = i2cMasterTransmitTimeout(m_driver,
+                                         m_addr,
+                                         nMemVals,
+                                         nByteLen,
+                                         NULL,
+                                         0,
+                                         TIME_MS2I(MB85RC_TIMEOUT));
+    }
 
     i2cReleaseBus(m_driver);
 
