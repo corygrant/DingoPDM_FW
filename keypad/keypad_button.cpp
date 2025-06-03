@@ -126,6 +126,12 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
                 conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] = (rx->data8[6] & 0x0F);
                 conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] = (rx->data8[6] & 0xF0) >> 4;
                 conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor = (rx->data8[7] & 0x0F);
+
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bValBlinking[0] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] > 0;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bValBlinking[1] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] > 0;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bValBlinking[2] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] > 0;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bValBlinking[3] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] > 0;
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bFaultBlinking = conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor > 0;
             }
 
             tx->DLC = 8;
