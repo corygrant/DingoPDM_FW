@@ -147,6 +147,7 @@ CPPSRC = $(ALLCPPSRC) \
 				 digital.cpp \
 				 error.cpp \
 				 flasher.cpp \
+				 infomsg.cpp \
 				 input.cpp \
 				 led.cpp \
 				 mailbox.cpp \
@@ -154,7 +155,10 @@ CPPSRC = $(ALLCPPSRC) \
 				 pwm.cpp \
 				 profet.cpp \
 				 hw_devices.cpp \
+				 request_msg.cpp \
+				 sleep.cpp \
 				 starter.cpp \
+				 status.cpp \
 				 usb.cpp \
 				 virtual_input.cpp \
 				 wiper/wiper_digin.cpp \

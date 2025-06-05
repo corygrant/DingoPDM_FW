@@ -2,20 +2,18 @@
 #include "pdm.h"
 #include "config.h"
 #include "dingopdm_config.h"
+#include "profet.h"
+#include "digital.h"
+#include "can_input.h"
+#include "virtual_input.h"
+#include "wiper/wiper.h"
+#include "starter.h"
+#include "flasher.h"
+#include "counter.h"
+#include "condition.h"
+#include "keypad/keypad.h"
 
-// External variables from pdm.cpp that we need access to
-extern PdmState eState;
-extern float fTempSensor;
-extern PdmConfig stConfig;
-extern Digital in[PDM_NUM_INPUTS];
-extern CanInput canIn[PDM_NUM_CAN_INPUTS];
-extern VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];
-extern Profet pf[PDM_NUM_OUTPUTS];
-extern Wiper wiper;
-extern Flasher flasher[PDM_NUM_FLASHERS];
-extern Counter counter[PDM_NUM_COUNTERS];
-extern Condition condition[PDM_NUM_CONDITIONS];
-extern Keypad keypad[PDM_NUM_KEYPADS];
+// All extern declarations are now in pdm.h - no need to redeclare them here
 
 PdmState GetPdmState()
 {

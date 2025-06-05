@@ -3,6 +3,8 @@
 #include "port.h"
 #include "can.h"
 #include "usb.h"
+#include "status.h"
+#include "mcu_utils.h"
 #include "dingopdm_config.h"
 
 // Static variables that were in pdm.cpp
@@ -25,7 +27,7 @@ bool CheckEnterSleep()
     nNumOutputsOn = 0;
     for (int i = 0; i < PDM_NUM_OUTPUTS; i++)
     {
-        if (pf[i].GetState() != ProfetState::Off)
+        if (GetOutputState(i) != ProfetState::Off)
             nNumOutputsOn++;
     }
 

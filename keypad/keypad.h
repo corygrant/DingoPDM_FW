@@ -7,18 +7,20 @@
 #include "keypad_button.h"
 #include "keypad_dial.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class Keypad
 {
 public: 
     Keypad() {};
 
-    void SetConfig(Config_Keypad* config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_Keypad* config)
     {
         pConfig = config;
         pDimmingInput = &pVarMap[config->nDimmingVar][0];
         for (uint8_t i = 0; i < KEYPAD_MAX_BUTTONS; i++)
         {
-            button[i].SetConfig(&pConfig->stButton[i], pVarMap);
+            button[i].SetConfig(&pConfig->stButton[i]);
         }
         for (uint8_t i = 0; i < KEYPAD_MAX_DIALS; i++)
         {

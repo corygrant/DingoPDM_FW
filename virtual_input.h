@@ -4,6 +4,8 @@
 #include "config.h"
 #include "input.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class VirtualInput
 {
 public:
@@ -11,7 +13,7 @@ public:
     {
     };
 
-    void SetConfig(Config_VirtualInput *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_VirtualInput *config)
     {
         pConfig = config;
         pVar0 = pVarMap[config->nVar0];

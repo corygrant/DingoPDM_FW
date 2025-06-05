@@ -6,6 +6,8 @@
 #include "enums.h"
 #include "pwm.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 //=============================================================================
 // PWM read delay = timer count from PWM going high till ready to read ADC
 //=============================================================================
@@ -31,9 +33,9 @@
 class Profet
 {
 public:
-    Profet( int num, ProfetModel model, ioline_t in, ioline_t den, ioline_t dsel, AnalogChannel ain, 
+    Profet( int num, ProfetModel model, ioline_t inLine, ioline_t den, ioline_t dsel, AnalogChannel ain, 
             PWMDriver *pwmDriver, const PWMConfig *pwmCfg, PwmChannel pwmCh)
-        :   m_num(num), m_model(model), m_in(in), m_den(den), m_dsel(dsel), m_ain(ain), 
+        :   m_num(num), m_model(model), m_in(inLine), m_den(den), m_dsel(dsel), m_ain(ain), 
             m_pwmDriver(pwmDriver), m_pwmCfg(pwmCfg), m_pwmChannel(pwmCh),
             pwm(pwmDriver, pwmCfg, pwmCh)
     {
@@ -58,12 +60,12 @@ public:
         }
     }
 
-    void SetConfig(Config_Output *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_Output *config)
     {
         pConfig = config;
         pInput = pVarMap[config->nInput];
 
-        pwm.SetConfig(&config->stPwm, pVarMap);
+        pwm.SetConfig(&config->stPwm);
     }
 
     void Update(bool bOutEnabled);

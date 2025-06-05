@@ -1,6 +1,6 @@
 #include "error.h"
 #include "config.h"
-#include "msg.h"
+#include "infomsg.h"
 
 Led* Error::statusLed = nullptr;
 Led* Error::errorLed = nullptr;

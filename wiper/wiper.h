@@ -9,6 +9,8 @@
 #include "wiper_intin.h"
 #include "wiper_mixin.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class Wiper
 {
     friend class Wiper_DigIn;
@@ -21,7 +23,7 @@ public:
               intInMode(*this),
               mixInMode(*this) {}
 
-    void SetConfig(Config_Wiper *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_Wiper *config)
     {
         pConfig = config;
         pParkSw = pVarMap[config->nParkInput];

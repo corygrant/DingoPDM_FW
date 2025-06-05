@@ -3,6 +3,8 @@
 #include <cstdint>
 #include "config.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class Starter
 {
 public:
@@ -10,7 +12,7 @@ public:
 
     };
 
-    void SetConfig(Config_Starter* config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_Starter* config)
     {
         pConfig = config;
         pInput = pVarMap[config->nInput];

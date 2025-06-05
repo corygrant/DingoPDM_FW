@@ -3,12 +3,14 @@
 #include <cstdint>
 #include "input.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class KeypadButton
 {
 public:
     KeypadButton() {};
 
-    void SetConfig(Config_KeypadButton *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_KeypadButton *config)
     {
         pConfig = config;
         pValInput[0] = pVarMap[config->nValVars[0]];

@@ -4,6 +4,8 @@
 #include "config.h"
 #include "dingopdm_config.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class Counter
 {
 public:
@@ -11,7 +13,7 @@ public:
 
     };
 
-    void SetConfig(Config_Counter* config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_Counter* config)
     {
         pConfig = config;
         pIncInput = pVarMap[config->nIncInput];

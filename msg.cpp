@@ -3,7 +3,7 @@
 #include "profet.h"
 #include "digital.h"
 #include "pdm.h"
-
+#include "status.h"
 
 
 CANTxMsg TxMsg0()

@@ -6,6 +6,8 @@
 
 #define PWM_UPDATE_TIME 2.0 //ms
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class Pwm
 {
 public:
@@ -14,7 +16,7 @@ public:
     {
     }
 
-    void SetConfig(Config_PwmOutput *config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_PwmOutput *config)
     {
         pConfig = config;
         pInput = pVarMap[config->nDutyCycleInput];

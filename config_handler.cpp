@@ -156,47 +156,47 @@ void ApplyConfig(MsgCmd eCmd)
     if (eCmd == MsgCmd::VirtualInputs)
     {
         for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
-            virtIn[i].SetConfig(&stConfig.stVirtualInput[i], pVarMap);
+            virtIn[i].SetConfig(&stConfig.stVirtualInput[i]);
     }
 
     if (eCmd == MsgCmd::Outputs)
     {
         for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
-            pf[i].SetConfig(&stConfig.stOutput[i], pVarMap);
+            pf[i].SetConfig(&stConfig.stOutput[i]);
     }
 
     if ((eCmd == MsgCmd::Wiper) || (eCmd == MsgCmd::WiperSpeed) || (eCmd == MsgCmd::WiperDelays))
     {
-        wiper.SetConfig(&stConfig.stWiper, pVarMap);
+        wiper.SetConfig(&stConfig.stWiper);
     }
 
     if (eCmd == MsgCmd::StarterDisable)
     {
-        starter.SetConfig(&stConfig.stStarter, pVarMap);
+        starter.SetConfig(&stConfig.stStarter);
     }
 
     if (eCmd == MsgCmd::Flashers)
     {
         for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
-            flasher[i].SetConfig(&stConfig.stFlasher[i], pVarMap);
+            flasher[i].SetConfig(&stConfig.stFlasher[i]);
     }
 
     if (eCmd == MsgCmd::Counters)
     {
         for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
-            counter[i].SetConfig(&stConfig.stCounter[i], pVarMap);
+            counter[i].SetConfig(&stConfig.stCounter[i]);
     }
 
     if (eCmd == MsgCmd::Conditions)
     {
         for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
-            condition[i].SetConfig(&stConfig.stCondition[i], pVarMap);
+            condition[i].SetConfig(&stConfig.stCondition[i]);
     }
 
     if ((eCmd == MsgCmd::Keypad) || (eCmd == MsgCmd::KeypadLed) || (eCmd == MsgCmd::KeypadButton) ||
         (eCmd == MsgCmd::KeypadButtonLed) || (eCmd == MsgCmd::KeypadDial))
     {
         for (uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
-            keypad[i].SetConfig(&stConfig.stKeypad[i], pVarMap);
+            keypad[i].SetConfig(&stConfig.stKeypad[i]);
     }
 }

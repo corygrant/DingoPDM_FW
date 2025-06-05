@@ -3,13 +3,15 @@
 #include <cstdint>
 #include "config.h"
 
+extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+
 class Condition
 {
 public:
     Condition() {
     };
 
-    void SetConfig(Config_Condition* config, uint16_t *pVarMap[PDM_VAR_MAP_SIZE])
+    void SetConfig(Config_Condition* config)
     {
         pConfig = config;
         pInput = pVarMap[config->nInput];
