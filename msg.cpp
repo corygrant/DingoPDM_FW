@@ -4,32 +4,7 @@
 #include "digital.h"
 #include "pdm.h"
 
-void InfoMsg::Check(bool bTrigger, uint16_t nId, uint16_t nData0, uint16_t nData1, uint16_t nData2)
-{
-    if (!bTrigger)
-    {
-        bSent = false;
-        return;
-    }
 
-    if (bSent)
-        return;
-
-    CANTxFrame tx;
-    tx.DLC = 8;
-
-    tx.data8[0] = static_cast<uint8_t>(m_type);
-    tx.data8[1] = static_cast<uint8_t>(m_src);
-    tx.data16[1] = nData0;
-    tx.data16[2] = nData1;
-    tx.data16[3] = nData2;
-
-    tx.SID = nId + TX_MSG_ID_OFFSET;
-    tx.IDE = CAN_IDE_STD;
-    PostTxFrame(&tx);
-
-    bSent = true;
-}
 
 CANTxMsg TxMsg0()
 {
