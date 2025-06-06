@@ -25,17 +25,17 @@ void KeypadButton::UpdateLed()
         // If so, set the color to the corresponding value color
         // Boolean values only check values 0 and 1
         // Integer values check values 0 to nNumOfValColors - 1
-        if (*pValInput[i] == i)
+        if (static_cast<uint8_t>(*pLedVar) == i)
         {
-            eColor = (BlinkMarineButtonColor)pConfig->nValColors[i];
+            eColor = static_cast<BlinkMarineButtonColor>(pConfig->nValColors[i]);
 
-            if(pConfig->bValBlinking[i])
-                eBlinkColor = (BlinkMarineButtonColor)pConfig->nValBlinkingColors[i];
+            if (pConfig->bValBlinking[i])
+            eBlinkColor = static_cast<BlinkMarineButtonColor>(pConfig->nValBlinkingColors[i]);
         }
     }
 
     // Fault color takes precedence over value colors
-    if (*pFaultInput)
+    if (*pFaultLedVar == 1)
     {
         eColor = (BlinkMarineButtonColor)pConfig->nFaultColor;
 
@@ -49,10 +49,10 @@ void KeypadButton::UpdateLed()
 
 MsgCmdResult ButtonMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // DLC 8 = Set keypad button settings
+    // DLC 5 = Set keypad button settings
     // DLC 2 = Get keypad button settings
 
-    if ((rx->DLC == 8) ||
+    if ((rx->DLC == 5) ||
         (rx->DLC == 2))
     {
         uint8_t nIndex = (rx->data8[1] & 0x07);
@@ -60,35 +60,27 @@ MsgCmdResult ButtonMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
-            if (rx->DLC == 8)
+            if (rx->DLC == 5)
             {
                 conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled = (rx->data8[2] & 0x01);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].bHasDial = (rx->data8[2] & 0x02) >> 1;
                 conf->stKeypad[nIndex].stButton[nButtonIndex].eMode = static_cast<InputMode>((rx->data8[2] & 0x0C) >> 2);
 
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0] = rx->data8[3];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1] = rx->data8[4];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2] = rx->data8[5];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3] = rx->data8[6];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar = rx->data8[7];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nVar = rx->data8[3];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar = rx->data8[4];
             }
 
-            tx->DLC = 8;
+            tx->DLC = 5;
             tx->IDE = CAN_IDE_STD;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButton) + 128;
             tx->data8[1] = (nIndex & 0x07) + (nButtonIndex << 3);
 
             tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled & 0x01) +
-                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].bHasDial & 0x01) << 1) +
                            ((static_cast<uint8_t>(conf->stKeypad[nIndex].stButton[nButtonIndex].eMode) & 0x03) << 2);
 
-            tx->data8[3] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0];
-            tx->data8[4] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1];
-            tx->data8[5] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2];
-            tx->data8[6] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3];
-            tx->data8[7] = conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar;
+            tx->data8[3] = conf->stKeypad[nIndex].stButton[nButtonIndex].nVar;
+            tx->data8[4] = conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar;
 
-            if(rx->DLC == 8)
+            if(rx->DLC == 5)
                 return MsgCmdResult::Write;
             else
                 return MsgCmdResult::Request;

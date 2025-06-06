@@ -125,13 +125,6 @@ void InitPdm()
     if (!tempSensor.Init(BOARD_TEMP_WARN, BOARD_TEMP_CRIT))
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
-    for(uint8_t i = 0; i < KEYPAD_MAX_BUTTONS; i++)
-    {
-        stConfig.stKeypad[0].stButton[i].bEnabled = true;
-        stConfig.stKeypad[0].stButton[i].bHasDial = false;
-        stConfig.stKeypad[0].stButton[i].eMode = InputMode::Momentary;
-    }
-
     for(uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
         keypad[i].Init();
 

@@ -13,11 +13,8 @@ public:
     void SetConfig(Config_KeypadButton *config)
     {
         pConfig = config;
-        pValInput[0] = pVarMap[config->nValVars[0]];
-        pValInput[1] = pVarMap[config->nValVars[1]];
-        pValInput[2] = pVarMap[config->nValVars[2]];
-        pValInput[3] = pVarMap[config->nValVars[3]];
-        pFaultInput = pVarMap[config->nFaultVar];
+        pLedVar = pVarMap[config->nVar];
+        pFaultLedVar = pVarMap[config->nFaultVar];
     }
 
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
@@ -36,8 +33,8 @@ private:
     Config_KeypadButton *pConfig;
     Input input;
 
-    uint16_t *pValInput[4];
-    uint16_t *pFaultInput;
+    uint16_t *pLedVar;
+    uint16_t *pFaultLedVar;
 
     bool bVal;
 };

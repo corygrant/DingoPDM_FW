@@ -130,12 +130,11 @@ struct Config_Condition{
 
 struct Config_KeypadButton{
   bool bEnabled;
-  bool bHasDial;
   InputMode eMode;
   uint8_t nNumOfValColors;
   uint8_t nValColors[4];
   uint8_t nFaultColor;
-  uint16_t nValVars[4];
+  uint16_t nVar;
   uint16_t nFaultVar;
   bool bValBlinking[4];
   bool bFaultBlinking;
