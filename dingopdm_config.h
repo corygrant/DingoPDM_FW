@@ -1,8 +1,8 @@
 #pragma once
 
 #define MAJOR_VERSION 0
-#define MINOR_VERSION 4
-#define BUILD 18
+#define MINOR_VERSION 5
+#define BUILD 0
 
 #define TX_SETTINGS_ID_OFFSET 30
 #define TX_MSG_ID_OFFSET 31
