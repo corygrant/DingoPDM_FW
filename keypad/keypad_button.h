@@ -13,7 +13,10 @@ public:
     void SetConfig(Config_KeypadButton *config)
     {
         pConfig = config;
-        pLedVar = pVarMap[config->nVar];
+        pLedVars[0] = pVarMap[config->nValVars[0]];
+        pLedVars[1] = pVarMap[config->nValVars[1]];
+        pLedVars[2] = pVarMap[config->nValVars[2]];
+        pLedVars[3] = pVarMap[config->nValVars[3]];
         pFaultLedVar = pVarMap[config->nFaultVar];
     }
 
@@ -33,7 +36,7 @@ private:
     Config_KeypadButton *pConfig;
     Input input;
 
-    uint16_t *pLedVar;
+    uint16_t *pLedVars[4];
     uint16_t *pFaultLedVar;
 
     bool bVal;
