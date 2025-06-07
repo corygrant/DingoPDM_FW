@@ -16,6 +16,7 @@ KeypadDial() {};
     }
 
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_KeypadDial *config);
     
     void Update(uint64_t data);
 

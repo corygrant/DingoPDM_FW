@@ -82,6 +82,7 @@ public:
     };
 
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_Output *config);
 
     uint16_t nOutput;
     uint16_t nOvercurrent;

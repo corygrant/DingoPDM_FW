@@ -89,5 +89,12 @@ MsgCmdResult Condition::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANT
     }
 
     return MsgCmdResult::Invalid;
-   
+}
+
+void Condition::SetDefaultConfig(Config_Condition *config)
+{
+    config->bEnabled = false;
+    config->eOperator = Operator::Equal;
+    config->nInput = 0;
+    config->nArg = 0;
 }

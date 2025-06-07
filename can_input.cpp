@@ -183,3 +183,18 @@ MsgCmdResult CanInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTx
 
     return MsgCmdResult::Invalid;
 }
+
+void CanInput::SetDefaultConfig(Config_CanInput *config)
+{
+    config->bEnabled = false;
+    config->bTimeoutEnabled = true;
+    config->nTimeout = 20;
+    config->nIDE = 0;
+    config->nSID = 0;
+    config->nEID = 0;
+    config->nDLC = 0;
+    config->nStartingByte = 0;
+    config->eOperator = Operator::Equal;
+    config->nOnVal = 0;
+    config->eMode = InputMode::Momentary;
+}

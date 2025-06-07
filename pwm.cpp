@@ -140,3 +140,15 @@ MsgCmdResult Pwm::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame
     }
     return MsgCmdResult::Invalid;
 }
+
+void Pwm::SetDefaultConfig(Config_PwmOutput *config)
+{
+    config->bEnabled = false;
+    config->bSoftStart = false;
+    config->bVariableDutyCycle = false;
+    config->nDutyCycleInput = 0;
+    config->nFixedDutyCycle = 50;
+    config->nFreq = 100;
+    config->nSoftStartRampTime = 1000;
+    config->nDutyCycleInputDenom = 100;
+}

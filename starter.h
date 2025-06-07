@@ -20,6 +20,7 @@ public:
 
     void Update();
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_Starter *config);
 
     uint16_t nVal[PDM_NUM_OUTPUTS];
 

@@ -21,6 +21,7 @@ public:
     }
 
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_KeypadButton *config);
     
     bool Update(bool bNewVal);
 

@@ -23,6 +23,7 @@ public:
 
     void Update();
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_VirtualInput *config);
 
     uint16_t nVal;
 

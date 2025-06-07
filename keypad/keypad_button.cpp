@@ -176,3 +176,31 @@ MsgCmdResult KeypadButton::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, C
         return ButtonLedMsg(conf, rx, tx);
     return MsgCmdResult::Invalid;
 }
+
+void KeypadButton::SetDefaultConfig(Config_KeypadButton *config)
+{
+    config->bEnabled = false;
+    config->eMode = InputMode::Momentary;
+    config->nNumOfValColors = 4;
+    config->nValColors[0] = (uint8_t)BlinkMarineButtonColor::Off;
+    config->nValColors[1] = (uint8_t)BlinkMarineButtonColor::Green;
+    config->nValColors[2] = (uint8_t)BlinkMarineButtonColor::Violet;
+    config->nValColors[3] = (uint8_t)BlinkMarineButtonColor::Blue;
+    config->nFaultColor = (uint8_t)BlinkMarineButtonColor::Red;
+    config->nValVars[0] = 0;
+    config->nValVars[1] = 0;
+    config->nValVars[2] = 0;
+    config->nValVars[3] = 0;
+    config->nFaultVar = 0;
+    config->bValBlinking[0] = false;
+    config->bValBlinking[1] = false;
+    config->bValBlinking[2] = false;
+    config->bValBlinking[3] = false;
+    config->bFaultBlinking = false;
+    config->nValBlinkingColors[0] = (uint8_t)BlinkMarineButtonColor::Blue;
+    config->nValBlinkingColors[1] = (uint8_t)BlinkMarineButtonColor::Violet;
+    config->nValBlinkingColors[2] = (uint8_t)BlinkMarineButtonColor::Green;
+    config->nValBlinkingColors[3] = (uint8_t)BlinkMarineButtonColor::White;
+    config->nFaultBlinkingColor = (uint8_t)BlinkMarineButtonColor::Orange;
+    config->bHasDial = false;
+}

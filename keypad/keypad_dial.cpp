@@ -56,3 +56,10 @@ MsgCmdResult KeypadDial::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CAN
 
     return MsgCmdResult::Invalid;
 }
+
+void KeypadDial::SetDefaultConfig(Config_KeypadDial *config)
+{
+    config->nDialMinLed = 0;
+    config->nDialMaxLed = 0;
+    config->nDialLedOffset = 0;
+}

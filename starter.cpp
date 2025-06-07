@@ -59,3 +59,13 @@ MsgCmdResult Starter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
     }
     return MsgCmdResult::Invalid;
 }
+
+void Starter::SetDefaultConfig(Config_Starter *config)
+{
+    config->bEnabled = false;
+    config->nInput = 0;
+    for(uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+    {
+        config->bDisableOut[i] = false;
+    }
+}

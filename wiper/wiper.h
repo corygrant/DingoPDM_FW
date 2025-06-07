@@ -55,6 +55,7 @@ public:
     WiperSpeed GetSpeed() { return eSelectedSpeed; }
     WiperState GetState() { return eState; }
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_Wiper *config);
 
     uint16_t nSlowOut;
     uint16_t nFastOut;

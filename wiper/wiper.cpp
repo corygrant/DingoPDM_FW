@@ -369,3 +369,33 @@ MsgCmdResult Wiper::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFra
 
     return MsgCmdResult::Invalid;
 }
+
+void Wiper::SetDefaultConfig(Config_Wiper *config)
+{
+    config->bEnabled = false;
+    config->eMode = WiperMode::DigIn;
+    config->nSlowInput = 0;
+    config->nFastInput = 0;
+    config->nInterInput = 0;
+    config->nOnInput = 0;
+    config->nSpeedInput = 0;
+    config->nParkInput = 0;
+    config->bParkStopLevel = false;
+    config->nSwipeInput = 0;
+    config->nWashInput = 0;
+    config->nWashWipeCycles = 0;
+    config->eSpeedMap[0] = WiperSpeed::Intermittent1;
+    config->eSpeedMap[1] = WiperSpeed::Intermittent2;
+    config->eSpeedMap[2] = WiperSpeed::Intermittent3;
+    config->eSpeedMap[3] = WiperSpeed::Intermittent4;  
+    config->eSpeedMap[4] = WiperSpeed::Intermittent5;
+    config->eSpeedMap[5] = WiperSpeed::Intermittent6;
+    config->eSpeedMap[6] = WiperSpeed::Slow;
+    config->eSpeedMap[7] = WiperSpeed::Fast;
+    config->nIntermitTime[0] = 1000;
+    config->nIntermitTime[1] = 2000;
+    config->nIntermitTime[2] = 3000;
+    config->nIntermitTime[3] = 4000;
+    config->nIntermitTime[4] = 5000;
+    config->nIntermitTime[5] = 6000;
+}

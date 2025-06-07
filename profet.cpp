@@ -241,3 +241,17 @@ MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFr
     }
     return MsgCmdResult::Invalid;
 }
+
+void Profet::SetDefaultConfig(Config_Output *config)
+{
+    config->bEnabled = false;
+    config->nInput = 0;
+    config->nCurrentLimit = 20;
+    config->nInrushLimit = 30;
+    config->nInrushTime = 1000;
+    config->eResetMode = ProfetResetMode::None;
+    config->nResetTime = 1000;
+    config->nResetLimit = 0;
+    
+    Pwm::SetDefaultConfig(&config->stPwm);
+}
