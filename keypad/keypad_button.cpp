@@ -202,5 +202,4 @@ void KeypadButton::SetDefaultConfig(Config_KeypadButton *config)
     config->nValBlinkingColors[2] = (uint8_t)BlinkMarineButtonColor::Green;
     config->nValBlinkingColors[3] = (uint8_t)BlinkMarineButtonColor::White;
     config->nFaultBlinkingColor = (uint8_t)BlinkMarineButtonColor::Orange;
-    config->bHasDial = false;
 }
