@@ -455,3 +455,28 @@ MsgCmdResult Keypad::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFr
         return KeypadDial::ProcessSettingsMsg(conf, rx, tx);
     return MsgCmdResult::Invalid;
 }
+
+void Keypad::SetDefaultConfig(Config_Keypad *config)
+{
+    config->bEnabled = false;
+    config->nNodeId = 0x15;
+    config->bTimeoutEnabled = false;
+    config->nTimeout = 20;
+    config->eModel = KeypadModel::Blink12Key;
+    config->nBacklightBrightness = 63;
+    config->nDimBacklightBrightness = 31;
+    config->nBacklightColor = (uint8_t)BlinkMarineBacklightColor::White;
+    config->nDimmingVar = 0;
+    config->nButtonBrightness = 63;
+    config->nDimButtonBrightness = 31;
+    
+    for (uint8_t j = 0; j < KEYPAD_MAX_BUTTONS; j++)
+    {
+        KeypadButton::SetDefaultConfig(&config->stButton[j]);
+    }
+
+    for (uint8_t j = 0; j < KEYPAD_MAX_DIALS; j++)
+    {
+        KeypadDial::SetDefaultConfig(&config->stDial[j]);
+    }
+}

@@ -20,6 +20,7 @@ public:
 
     void Update(uint32_t timeNow);
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_Flasher *config);
 
     uint16_t nVal;
 

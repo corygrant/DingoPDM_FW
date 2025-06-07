@@ -35,6 +35,7 @@ public:
     bool CheckMsg(CANRxFrame frame);
 
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_Keypad *config);
 
     CANTxFrame GetTxMsg(uint8_t nIndex);
     CANTxFrame GetStartMsg();

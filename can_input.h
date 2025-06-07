@@ -16,6 +16,7 @@ public:
     void SetConfig(Config_CanInput* config) { pConfig = config; }
     void CheckTimeout();
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
+    static void SetDefaultConfig(Config_CanInput *config);
 
     uint16_t nOutput;
     uint16_t nVal;
