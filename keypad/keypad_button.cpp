@@ -30,7 +30,12 @@ void KeypadButton::UpdateLed()
             eColor = static_cast<BlinkMarineButtonColor>(pConfig->nValColors[i]);
 
             if (pConfig->bValBlinking[i])
-                eBlinkColor = static_cast<BlinkMarineButtonColor>(pConfig->nValBlinkingColors[i]);
+            {
+                if (eColor == BlinkMarineButtonColor::Off)
+                    eBlinkColor = static_cast<BlinkMarineButtonColor>(pConfig->nValBlinkingColors[i]);
+                else
+                    eBlinkColor = static_cast<BlinkMarineButtonColor>(pConfig->nValBlinkingColors[i] ^ pConfig->nValColors[i]);
+            }
         }
     }
 
@@ -40,7 +45,12 @@ void KeypadButton::UpdateLed()
         eColor = (BlinkMarineButtonColor)pConfig->nFaultColor;
 
         if(pConfig->bFaultBlinking)
-            eBlinkColor = (BlinkMarineButtonColor)pConfig->nFaultBlinkingColor;
+        {
+            if (eColor == BlinkMarineButtonColor::Off)
+                eBlinkColor = (BlinkMarineButtonColor)pConfig->nFaultBlinkingColor;
+            else
+                eBlinkColor = (BlinkMarineButtonColor)(pConfig->nFaultBlinkingColor ^ pConfig->nFaultColor);
+        }
     }
 
     eLedOnColor = eColor;
