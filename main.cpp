@@ -10,6 +10,8 @@ int main(void) {
   halInit();
   chSysInit();
   
+  chThdSleepMilliseconds(500);
+  
   InitPdm();
   
   while (true) {
