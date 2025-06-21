@@ -16,18 +16,22 @@ extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 // NOTE: Section 9.4 of the datasheet says this should be multiplied by 3x
 // NOTE: Other datasheets do not say this, not using 3x
 // ADC conversion = 20us
-#define PWM_READ_DELAY_SINGLE_CH 160
-// Min duty cycle @ 100Hz = 160us / 10ms  = 1.6%
-// Min duty cycle @ 200Hz = 160us / 5ms   = 3.2%
-// Min duty cycle @ 400Hz = 160us / 2.5ms = 6.4%
+// Rise time = 20us
+// 140us + 20us + 20us = 180us
+#define PWM_READ_DELAY_SINGLE_CH 180
+// Min duty cycle @ 100Hz = 180us / 10ms  = 1.8%
+// Min duty cycle @ 200Hz = 180us / 5ms   = 3.6%
+// Min duty cycle @ 400Hz = 180us / 2.5ms = 7.2%
 
 // BTS7008-2EPA
 // Typical switch on time + current sense settle time = 60us + 5us = 65us, round up to 70us
 // ADC conversion = 20us
-#define PWM_READ_DELAY_DOUBLE_CH 90
-// Min duty cycle @ 100Hz = 90us / 10ms  = 0.9%
-// Min duty cycle @ 200Hz = 90us / 5ms   = 1.8%
-// Min duty cycle @ 400Hz = 90us / 2.5ms = 3.6%
+// Rise time = 20us
+// 70us + 20us + 20us = 110us
+#define PWM_READ_DELAY_DOUBLE_CH1 110
+// Min duty cycle @ 100Hz = 110us / 10ms  = 1.1%
+// Min duty cycle @ 200Hz = 110us / 5ms   = 2.2%
+// Min duty cycle @ 400Hz = 110us / 2.5ms = 4.4%
 //=============================================================================
 
 class Profet
