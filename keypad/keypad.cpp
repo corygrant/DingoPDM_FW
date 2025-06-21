@@ -3,7 +3,8 @@
 
 #define KEYPAD_NUM_TX_MSGS 4
 
-static THD_WORKING_AREA(waKeypadThread, 128);
+static THD_WORKING_AREA(waKeypadThread0, 128);
+static THD_WORKING_AREA(waKeypadThread1, 128);
 void KeypadThread(void *arg)
 {
     Keypad *keypad = static_cast<Keypad *>(arg);
@@ -27,7 +28,7 @@ void KeypadThread(void *arg)
     }
 }
 
-msg_t Keypad::Init()
+msg_t Keypad::Init(uint8_t index)
 {
     if(pConfig->bEnabled == false)
         return MSG_RESET;
@@ -96,7 +97,11 @@ msg_t Keypad::Init()
             return MSG_RESET;
     }
 
-    chThdCreateStatic(waKeypadThread, sizeof(waKeypadThread), NORMALPRIO, KeypadThread, this);
+    if (index == 0) {
+        chThdCreateStatic(waKeypadThread0, sizeof(waKeypadThread0), NORMALPRIO, KeypadThread, this);
+    } else {
+        chThdCreateStatic(waKeypadThread1, sizeof(waKeypadThread1), NORMALPRIO, KeypadThread, this);
+    }
     return MSG_OK;
 }
 

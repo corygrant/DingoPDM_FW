@@ -34,8 +34,8 @@ void Profet::Update(bool bOutEnabled)
         chThdSleepMicroseconds(60);
     }
 
-    uint32_t nCNT = 0;
-    uint32_t nCCR = 0;
+    static uint32_t nCNT = 0;
+    static uint32_t nCCR = 0;
 
     if (pwm.IsEnabled() && eState == ProfetState::On)
     {
@@ -53,6 +53,7 @@ void Profet::Update(bool bOutEnabled)
             (nCNT > nPwmReadDelay) &&
             (nCNT < nCCR))
         {
+            palSetLine(LINE_E2);
             nIS = GetAdcRaw(m_ain);
             nLastIS = nIS;
         }
@@ -194,6 +195,8 @@ void Profet::Update(bool bOutEnabled)
     nOutput = eState == ProfetState::On ? 1 : 0;
     nOvercurrent = eState == ProfetState::Overcurrent ? 1 : 0;
     nFault = eState == ProfetState::Fault ? 1 : 0;
+
+    palClearLine(LINE_E2);
 }
 
 MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)

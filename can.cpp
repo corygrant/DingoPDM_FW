@@ -96,7 +96,7 @@ void CanRxThread(void *)
             nLastCanRxTime = SYS_TIME;
 
             res = PostRxFrame(&msg);
-            palToggleLine(LINE_E2);
+            //palToggleLine(LINE_E2);
             // TODO:What to do if mailbox is full?
         }
 

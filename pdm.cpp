@@ -126,7 +126,7 @@ void InitPdm()
         Error::SetFatalError(FatalErrorType::ErrTempSensor, MsgSrc::Init);
 
     for(uint8_t i = 0; i < PDM_NUM_KEYPADS; i++)
-        keypad[i].Init();
+        keypad[i].Init(i);
 
     InitInfoMsgs();
 

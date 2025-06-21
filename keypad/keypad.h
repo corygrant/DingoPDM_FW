@@ -28,7 +28,7 @@ public:
         }
     };
 
-    msg_t Init();
+    msg_t Init(uint8_t index = 0);
 
     void CheckTimeout();
 
