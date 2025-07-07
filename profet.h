@@ -28,7 +28,7 @@ extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 // ADC conversion = 20us
 // Rise time = 20us
 // 70us + 20us + 20us = 110us
-#define PWM_READ_DELAY_DOUBLE_CH1 110
+#define PWM_READ_DELAY_DOUBLE_CH 110
 // Min duty cycle @ 100Hz = 110us / 10ms  = 1.1%
 // Min duty cycle @ 200Hz = 110us / 5ms   = 2.2%
 // Min duty cycle @ 400Hz = 110us / 2.5ms = 4.4%
