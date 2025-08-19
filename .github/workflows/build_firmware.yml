@@ -80,18 +80,26 @@ jobs:
         run: |
           set -e
 
+          # Create temp directory for artifacts
+          mkdir -p firmware_artifacts
+
+          # Build first variant, put in firmware_artifacts
           make clean
           make BOARD=dingopdm_v7
-          cp build/dingopdm_v7.hex build/dingopdm_v7_FW_v${VERSION_DASHED}.hex
-          cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION_DASHED}.bin
-          cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION_DASHED}.elf
+          cp build/dingopdm_v7.hex firmware_artifacts/dingopdm_v7_FW_v${VERSION_DASHED}.hex
+          cp build/dingopdm_v7.bin firmware_artifacts/dingopdm_v7_FW_v${VERSION_DASHED}.bin
+          cp build/dingopdm_v7.elf firmware_artifacts/dingopdm_v7_FW_v${VERSION_DASHED}.elf
 
+          # Build second variant, in build directory
           make clean
           make BOARD=dingopdmmax_v1
           cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION_DASHED}.hex
           cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION_DASHED}.bin
           cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION_DASHED}.elf
 
+          # Copy back to build for the release action
+          cp firmware_artifacts/* build/
+          
           ls -l build/
         env:
           VERSION_DASHED: ${{ steps.extract_version.outputs.version_dashed }}
