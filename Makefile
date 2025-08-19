@@ -8,6 +8,8 @@ ifeq ($(BOARD),)
 	#BOARD = dingopdmmax_v1
 endif
 
+$(info BOARD is set to: $(BOARD))
+
 BOARDDIR = boards/$(BOARD)
 
 # Compiler options here.
