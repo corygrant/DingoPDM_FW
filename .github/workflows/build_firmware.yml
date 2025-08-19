@@ -86,6 +86,7 @@ jobs:
           cp build/dingopdm_v7.bin build/dingopdm_v7_FW_v${VERSION_DASHED}.bin
           cp build/dingopdm_v7.elf build/dingopdm_v7_FW_v${VERSION_DASHED}.elf
 
+          make clean
           make BOARD=dingopdmmax_v1
           cp build/dingopdmmax_v1.hex build/dingopdmmax_v1_FW_v${VERSION_DASHED}.hex
           cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION_DASHED}.bin
