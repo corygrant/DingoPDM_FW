@@ -54,7 +54,9 @@ protected:
     
 
     uint8_t nNumButtons;
-    
+
+    void SetModel();
+    KeypadModel eLastModel;
 
     // Blink Marine specific
     CANTxFrame LedOnMsg();

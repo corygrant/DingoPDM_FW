@@ -20,7 +20,8 @@ void KeypadThread(void *arg)
         for(uint8_t i = 0; i < KEYPAD_NUM_TX_MSGS; i++)
         {
             msg = keypad->GetTxMsg(i);
-            PostTxFrame(&msg);
+            if(msg.SID != 0)
+                PostTxFrame(&msg);
             chThdSleepMilliseconds(KEYPAD_TX_MSG_SPLIT);
         }
 
@@ -30,9 +31,18 @@ void KeypadThread(void *arg)
 
 msg_t Keypad::Init(uint8_t index)
 {
-    if(pConfig->bEnabled == false)
-        return MSG_RESET;
-        
+    SetModel();
+
+    if (index == 0) {
+        chThdCreateStatic(waKeypadThread0, sizeof(waKeypadThread0), NORMALPRIO, KeypadThread, this);
+    } else {
+        chThdCreateStatic(waKeypadThread1, sizeof(waKeypadThread1), NORMALPRIO, KeypadThread, this);
+    }
+    return MSG_OK;
+}
+
+void Keypad::SetModel()
+{
     switch(pConfig->eModel)
     {
         case KeypadModel:: Blink2Key:
@@ -94,15 +104,15 @@ msg_t Keypad::Init(uint8_t index)
         default:
             nNumButtons = 0;
             nNumDials = 0;
-            return MSG_RESET;
     }
 
-    if (index == 0) {
-        chThdCreateStatic(waKeypadThread0, sizeof(waKeypadThread0), NORMALPRIO, KeypadThread, this);
-    } else {
-        chThdCreateStatic(waKeypadThread1, sizeof(waKeypadThread1), NORMALPRIO, KeypadThread, this);
+    // Disabled, no buttons or dials
+    // Keep thread running to allow re-enabling
+    if(pConfig->bEnabled == false)
+    {
+        nNumButtons = 0;
+        nNumDials = 0;
     }
-    return MSG_OK;
 }
 
 void Keypad::CheckTimeout()
@@ -314,6 +324,16 @@ CANTxFrame Keypad::GetTxMsg(uint8_t nIndex)
 {
     CANTxFrame msg;
 
+    if (pConfig->bEnabled == false)
+    {
+        return msg;
+    }
+
+    if (pConfig->eModel != eLastModel)
+    {
+        SetModel();
+    }
+
     switch (nIndex)
     {
     case 0:
@@ -331,6 +351,8 @@ CANTxFrame Keypad::GetTxMsg(uint8_t nIndex)
     default:
         break;
     }
+
+    eLastModel = pConfig->eModel;
 
     return msg;
 }

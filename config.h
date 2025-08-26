@@ -152,7 +152,7 @@ struct Config_Keypad{
   bool bEnabled;
   uint8_t nNodeId;
   bool bTimeoutEnabled;
-  uint8_t nTimeout; //ms
+  uint16_t nTimeout; //ms
   KeypadModel eModel;
   uint8_t nBacklightBrightness;
   uint8_t nDimBacklightBrightness;
