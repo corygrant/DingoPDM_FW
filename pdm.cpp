@@ -289,11 +289,11 @@ void InitVarMap()
     }
 
     // 83-106 - Outputs
-    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i += 3)
+    for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
     {
-        pVarMap[i + 83] = &pf[i].nOutput;
-        pVarMap[i + 83 + 1] = &pf[i].nOvercurrent;
-        pVarMap[i + 83 + 2] = &pf[i].nFault;
+        pVarMap[i * 3 + 83] = &pf[i].nOutput;
+        pVarMap[i * 3 + 83 + 1] = &pf[i].nOvercurrent;
+        pVarMap[i * 3 + 83 + 2] = &pf[i].nFault;
     }
 
     // 107-112 - Wiper
