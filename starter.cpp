@@ -23,14 +23,9 @@ MsgCmdResult Starter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
         {
             conf->stStarter.bEnabled = (rx->data8[1] & 0x01);
             conf->stStarter.nInput = rx->data8[2];
-            conf->stStarter.bDisableOut[0] = (rx->data8[3] & 0x01);
-            conf->stStarter.bDisableOut[1] = (rx->data8[3] & 0x02) >> 1;
-            conf->stStarter.bDisableOut[2] = (rx->data8[3] & 0x04) >> 2;
-            conf->stStarter.bDisableOut[3] = (rx->data8[3] & 0x08) >> 3;
-            conf->stStarter.bDisableOut[4] = (rx->data8[3] & 0x10) >> 4;
-            conf->stStarter.bDisableOut[5] = (rx->data8[3] & 0x20) >> 5;
-            conf->stStarter.bDisableOut[6] = (rx->data8[3] & 0x40) >> 6;
-            conf->stStarter.bDisableOut[7] = (rx->data8[3] & 0x80) >> 7;
+            for(int i = 0; i < PDM_NUM_OUTPUTS && i < 8; i++) {
+                conf->stStarter.bDisableOut[i] = (rx->data8[3] & (1 << i)) >> i;
+            }
         }
 
         tx->DLC = 4;
