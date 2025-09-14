@@ -71,13 +71,13 @@ static const ADCConversionGroup adc1_cfg = {
     .error_cb = NULL,
     .cr1 = 0,
     .cr2 = ADC_CR2_SWSTART | ADC_CR2_CONT,
-    .smpr1 = ADC_SMPR1_SMP_AN12(ADC_SAMPLE_3) |
-             ADC_SMPR1_SMP_AN13(ADC_SAMPLE_3) |
-             ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_3) |
-             ADC_SMPR1_SMP_VREF(ADC_SAMPLE_3),
-    .smpr2 = ADC_SMPR2_SMP_AN0(ADC_SAMPLE_3) |
-             ADC_SMPR2_SMP_AN1(ADC_SAMPLE_3) |
-             ADC_SMPR2_SMP_AN3(ADC_SAMPLE_3),
+    .smpr1 = ADC_SMPR1_SMP_AN12(ADC_SAMPLE_15) |
+             ADC_SMPR1_SMP_AN13(ADC_SAMPLE_15) |
+             ADC_SMPR1_SMP_SENSOR(ADC_SAMPLE_15) |
+             ADC_SMPR1_SMP_VREF(ADC_SAMPLE_15),
+    .smpr2 = ADC_SMPR2_SMP_AN0(ADC_SAMPLE_15) |
+             ADC_SMPR2_SMP_AN1(ADC_SAMPLE_15) |
+             ADC_SMPR2_SMP_AN3(ADC_SAMPLE_15),
     .htr = 0,
     .ltr = 0,
     .sqr1 = 0,
