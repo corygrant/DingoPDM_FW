@@ -154,26 +154,19 @@ void InitPdm()
 
 void States()
 {
+    if (bDeviceCriticalTemp)
+    {
+        //Turn off all outputs
+        for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+            pf[i].Update(false);
+            
+        Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
+    }
 
     if (eState == PdmState::Run)
     {
         if (bDeviceOverTemp)
             eState = PdmState::OverTemp;
-    }
-
-    if (eState == PdmState::OverTemp)
-    {
-        statusLed.Blink();
-        errorLed.Blink();
-
-        if (!bDeviceOverTemp)
-            eState = PdmState::Run;
-    }
-
-    if ((eState == PdmState::Run) || (eState == PdmState::OverTemp))
-    {
-        if (bDeviceCriticalTemp)
-            Error::SetFatalError(FatalErrorType::ErrTemp, MsgSrc::State_Overtemp);
 
         if (GetAnyOvercurrent() && !GetAnyFault())
         {
@@ -192,13 +185,22 @@ void States()
             statusLed.Solid(true);
             errorLed.Solid(false);
         }
+    }
 
-        if (CheckEnterSleep())
-        {
-            statusLed.Solid(false);
-            errorLed.Solid(false);
-            eState = PdmState::Sleep;
-        }
+    if (eState == PdmState::OverTemp)
+    {
+        statusLed.Blink();
+        errorLed.Blink();
+
+        if (!bDeviceOverTemp)
+            eState = PdmState::Run;
+    }
+
+    if (CheckEnterSleep())
+    {
+        statusLed.Solid(false);
+        errorLed.Solid(false);
+        eState = PdmState::Sleep;
     }
 
     if (eState == PdmState::Sleep)
@@ -211,6 +213,11 @@ void States()
     if (eState == PdmState::Error)
     {
         // Not required?
+
+        //Turn off all outputs
+        for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+            pf[i].Update(false);
+
         Error::SetFatalError(eError, MsgSrc::State_Error);
     }
 
