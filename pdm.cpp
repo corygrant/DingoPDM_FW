@@ -63,7 +63,7 @@ void EnableLineEventWithPull(ioline_t line, InputPull pull);
 
 static InfoMsg StateRunMsg(MsgType::Info, MsgSrc::State_Run);
 static InfoMsg StateSleepMsg(MsgType::Info, MsgSrc::State_Sleep);
-static InfoMsg StateOvertempMsg(MsgType::Error, MsgSrc::State_Overtemp);
+static InfoMsg StateOvertempMsg(MsgType::Warning, MsgSrc::State_Overtemp);
 static InfoMsg StateErrorMsg(MsgType::Error, MsgSrc::State_Error);
 
 static InfoMsg BattOvervoltageMsg(MsgType::Warning, MsgSrc::Voltage);
@@ -242,7 +242,7 @@ void CyclicUpdate()
     }
 
     for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
-        pf[i].Update((eState == PdmState::Run) && starter.nVal[i]);
+        pf[i].Update(starter.nVal[i]);
 
     for (uint8_t i = 0; i < PDM_NUM_INPUTS; i++)
         in[i].Update();
