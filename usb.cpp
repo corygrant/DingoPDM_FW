@@ -404,6 +404,8 @@ void UsbRxThread(void *)
     CANRxFrame msg;
     uint8_t buf[8];
 
+    CANTxFrame canTx;
+
     while (true)
     {
         if ((SDU1.state == SDU_READY) &&
@@ -423,6 +425,14 @@ void UsbRxThread(void *)
 
                 PostRxFrame(&msg);
                 // TODO:What to do if mailbox is full?
+
+                //Copy data to CAN for data pass through
+                canTx.SID = msg.SID;
+                canTx.IDE = CAN_IDE_STD;
+                canTx.DLC = msg.DLC;
+                for(size_t i = 0; i < msg.DLC; i++)
+                    canTx.data8[i] = msg.data8[i];
+                PostTxFrame(&canTx);
             }
 
             chThdSleepMicroseconds(30);

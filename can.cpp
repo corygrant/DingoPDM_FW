@@ -81,6 +81,8 @@ void CanRxThread(void *)
 {
     CANRxFrame msg;
 
+    CANTxFrame usbTx;
+
     chRegSetThreadName("CAN Rx");
 
     while (true)
@@ -92,6 +94,16 @@ void CanRxThread(void *)
             nLastCanRxTime = SYS_TIME;
 
             res = PostRxFrame(&msg);
+
+            //Copy data to USB for data pass through
+            //If USB not connected, mailbox will fill up and messages will be dropped
+            usbTx.SID = msg.SID;
+            usbTx.IDE = CAN_IDE_STD;
+            usbTx.DLC = msg.DLC;
+            for(size_t i = 0; i < msg.DLC; i++)
+                usbTx.data8[i] = msg.data8[i];
+            res = PostTxUsbFrame(&usbTx);
+
             palToggleLine(LINE_E2);
             // TODO:What to do if mailbox is full?
         }
