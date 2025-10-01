@@ -98,7 +98,7 @@ void CanRxThread(void *)
             //Copy data to USB for data pass through
             //If USB not connected, mailbox will fill up and messages will be dropped
             usbTx.SID = msg.SID;
-            usbTx.IDE = CAN_IDE_STD;
+            usbTx.IDE = msg.IDE;
             usbTx.DLC = msg.DLC;
             for(size_t i = 0; i < msg.DLC; i++)
                 usbTx.data8[i] = msg.data8[i];

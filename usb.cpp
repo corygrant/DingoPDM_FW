@@ -428,7 +428,7 @@ void UsbRxThread(void *)
 
                 //Copy data to CAN for data pass through
                 canTx.SID = msg.SID;
-                canTx.IDE = CAN_IDE_STD;
+                canTx.IDE = msg.IDE;
                 canTx.DLC = msg.DLC;
                 for(size_t i = 0; i < msg.DLC; i++)
                     canTx.data8[i] = msg.data8[i];
