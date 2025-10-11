@@ -1,5 +1,7 @@
 #include "profet.h"
 
+ioline_t followerLines[PDM_NUM_OUTPUTS];
+
 void Profet::Update(bool bOutEnabled)
 {
     //Nothing to do if follower output
@@ -195,6 +197,22 @@ void Profet::Update(bool bOutEnabled)
     pwm.Update();
 
     nOutput = eState == ProfetState::On ? 1 : 0;
+}
+
+void Profet::SetFollowerLine(uint8_t nPairOutNum)
+{
+    if ((pConfig->stPair.eMode == PairOutputMode::Leader) && pConfig->stPair.bUsePwm)
+            followerLines[m_num] = GetFollowerLine(nPairOutNum, m_in);
+        else
+            followerLines[m_num] = m_in;
+}
+
+void Profet::SetFollowerVals(uint16_t current, ProfetState state, uint16_t count, uint8_t dc)
+{
+    nCurrent = current;
+    eState = state;
+    nOcCount = count;
+    pwm.SetDutyCycle(dc);
 }
 
 MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)

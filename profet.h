@@ -28,8 +28,6 @@
 // Min duty cycle @ 400Hz = 90us / 2.5ms = 3.6%
 //=============================================================================
 
-ioline_t followerLines[PDM_NUM_OUTPUTS];
-
 class Profet
 {
 public:
@@ -67,11 +65,7 @@ public:
 
         pwm.SetConfig(&config->stPwm, pVarMap);
 
-        if ((pConfig->stPair.eMode == PairOutputMode::Leader) && pConfig->stPair.bUsePwm)
-            followerLines[m_num] = GetFollowerLine(config->stPair.nPairOutNum);
-        else
-            followerLines[m_num] = m_in;
-
+        SetFollowerLine(config->stPair.nPairOutNum);
     }
 
     void Update(bool bOutEnabled);
@@ -125,4 +119,6 @@ private:
 
     Pwm pwm;
     uint16_t nPwmReadDelay = 0;
+
+    void SetFollowerLine(uint8_t nPairOutNum);
 };

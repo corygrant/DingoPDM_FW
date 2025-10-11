@@ -135,3 +135,23 @@ float GetVDDA()
 {
     return ((float)STM32_VREF_INT_CAL / (float)GetAdcRaw(AnalogChannel::VRefInt)) * 3.3;
 }
+
+ioline_t GetFollowerLine(uint8_t index, ioline_t leaderLine)
+{
+    if(index >= PDM_NUM_OUTPUTS)
+        return leaderLine;
+
+    switch(index)
+    {
+        case 0:
+            return LINE_PF1_IN;
+        case 1:
+            return LINE_PF2_IN;
+        case 2:
+            return LINE_PF3_IN;
+        case 3:
+            return LINE_PF4_IN;
+        default:
+            return leaderLine;
+    }
+}
