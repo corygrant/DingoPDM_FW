@@ -5,7 +5,7 @@
 #include "enums.h"
 #include "hardware/mb85rc.h"
 
-#define CONFIG_VERSION 0x0001 //Increment when config structure changes
+#define CONFIG_VERSION 0x0002 //Increment when config structure changes
 
 struct Config_DeviceConfig{
   uint16_t nConfigVersion;
@@ -46,6 +46,12 @@ struct Config_PwmOutput{
   uint16_t nDutyCycleInputDenom; //0-5000
 };
 
+struct Config_PairOutput{
+  PairOutputMode eMode; //None, Leader, Follower
+  uint8_t nPairOutNum; //0-7, 0-3 for dingoPDM-Max
+  bool bUsePwm;
+};
+
 struct Config_Output{
   bool bEnabled;
   uint8_t nInput;
@@ -57,6 +63,7 @@ struct Config_Output{
   uint8_t nResetLimit;
 
   Config_PwmOutput stPwm;
+  Config_PairOutput stPair;
 };
 
 struct Config_Wiper{

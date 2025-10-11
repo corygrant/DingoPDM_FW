@@ -8,6 +8,7 @@
 #include "digital.h"
 #include "flasher.h"
 #include "profet.h"
+#include "pair.h"
 #include "starter.h"
 #include "virtual_input.h"
 #include "wiper/wiper.h"
@@ -38,6 +39,9 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
             break;
         case MsgCmd::OutputsPwm:
             res = Pwm::ProcessSettingsMsg(&stConfig, frame, &tx);
+            break;
+        case MsgCmd::OutputsPair:
+            res = Pair_ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::CanInputs:
         case MsgCmd::CanInputsId:

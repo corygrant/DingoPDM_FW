@@ -23,8 +23,8 @@ bool ReadConfig(){
     }
     
     // Calculate CRC of the data we just read
-    uint32_t calculatedCrc = CalculateCRC32(&stConfig, sizeof(stConfig));
-    
+    uint32_t calculatedCrc = CalculateCRC32(&stConfig, sizeof(stConfig), 0xFFFFFFFF);
+
     // Compare CRCs to verify data integrity
     if(storedCrc != calculatedCrc) {
         return false; // Data corrupt or changed
@@ -47,7 +47,7 @@ bool WriteConfig(){
     }
     
     // Calculate config CRC
-    uint32_t dataCrc = CalculateCRC32(&stConfig, sizeof(stConfig));
+    uint32_t dataCrc = CalculateCRC32(&stConfig, sizeof(stConfig), 0xFFFFFFFF);
     
     // Write CRC after config
     if(!fram.Write(sizeof(stConfig), (uint8_t*)&dataCrc, sizeof(dataCrc))) {
@@ -97,6 +97,19 @@ void SetDefaultConfig()
         stConfig.stOutput[i].eResetMode = ProfetResetMode::None;
         stConfig.stOutput[i].nResetTime = 1000;
         stConfig.stOutput[i].nResetLimit = 0;
+
+        stConfig.stOutput[i].stPwm.bEnabled = false;
+        stConfig.stOutput[i].stPwm.bSoftStart = false;
+        stConfig.stOutput[i].stPwm.bVariableDutyCycle = false;
+        stConfig.stOutput[i].stPwm.nDutyCycleInput = 0;
+        stConfig.stOutput[i].stPwm.nFixedDutyCycle = 100;
+        stConfig.stOutput[i].stPwm.nFreq = 100;
+        stConfig.stOutput[i].stPwm.nSoftStartRampTime = 1000;
+        stConfig.stOutput[i].stPwm.nDutyCycleInputDenom = 100;
+        
+        stConfig.stOutput[i].stPair.eMode = PairOutputMode::None;
+        stConfig.stOutput[i].stPair.nPairOutNum = 0;
+        stConfig.stOutput[i].stPair.bUsePwm = false;
     }
 
     stConfig.stWiper.bEnabled = false;

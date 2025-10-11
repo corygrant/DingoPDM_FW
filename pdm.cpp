@@ -242,7 +242,16 @@ void CyclicUpdate()
     }
 
     for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
+    {
         pf[i].Update(starter.nVal[i]);
+
+        //Copy leader values if follower
+        if( stConfig.stOutput[i].stPair.eMode == PairOutputMode::Follower )
+            pf[i].SetFollowerVals(pf[stConfig.stOutput[i].stPair.nPairOutNum].GetCurrent(),
+                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetState(),
+                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetOcCount(),
+                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetDutyCycle());
+    }
 
     for (uint8_t i = 0; i < PDM_NUM_INPUTS; i++)
         in[i].Update();

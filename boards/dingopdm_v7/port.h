@@ -65,3 +65,4 @@ uint16_t GetAdcRaw(AnalogChannel channel);
 float GetBattVolt();
 float GetTemperature();
 float GetVDDA();
+ioline_t GetFollowerLine(int index);

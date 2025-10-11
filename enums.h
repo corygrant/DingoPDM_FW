@@ -10,7 +10,8 @@ enum class MsgCmd : uint8_t
     //InputsName = 6, //Future use
     Outputs = 10,
     OutputsPwm = 11,
-    //OutputsName = 12, //Future use
+    OutputsPair = 12,
+    //OutputsName = 13, //Future use
     VirtualInputs = 15,
     //VirtualInputsName = 16, //Future use
     Wiper = 20,
@@ -145,6 +146,13 @@ enum class ProfetResetMode : uint8_t
     None,
     Count,
     Endless
+};
+
+enum class PairOutputMode : uint8_t
+{
+    None = 0,
+    Leader = 1,
+    Follower = 2
 };
 
 enum class WiperMode : uint8_t

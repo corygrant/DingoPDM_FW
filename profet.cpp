@@ -2,6 +2,10 @@
 
 void Profet::Update(bool bOutEnabled)
 {
+    //Nothing to do if follower output
+    if (pConfig->stPair.eMode == PairOutputMode::Follower)
+        return;
+
     eLastState = eState;
 
     if (!pConfig->bEnabled)
