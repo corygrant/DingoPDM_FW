@@ -4,7 +4,7 @@ ioline_t followerLines[PDM_NUM_OUTPUTS];
 
 void Profet::Update(bool bOutEnabled)
 {
-    //Nothing to do if follower output
+    // Nothing to do if follower output
     if (pConfig->stPair.eMode == PairOutputMode::Follower)
         return;
 
@@ -13,7 +13,7 @@ void Profet::Update(bool bOutEnabled)
     if (!pConfig->bEnabled)
     {
         pwm.Off();
-        palClearLine(m_in);
+        SetOutput(false);
         nOcCount = 0;
         eState = ProfetState::Off;
         nOutput = 0;
@@ -25,6 +25,111 @@ void Profet::Update(bool bOutEnabled)
     else
         eReqState = ProfetState::Off;
 
+    UpdateCurrent();
+
+    // Check for fault (device overcurrent/overtemp/short)
+    // Raw ADC current reading will be very high
+    if (nIS > 30000)
+    {
+        eState = ProfetState::Fault;
+    }
+
+    bInRushActive = (pConfig->nInrushTime + nInRushOnTime) > SYS_TIME;
+
+    switch (eState)
+    {
+    case ProfetState::Off:
+        pwm.Off();
+
+        SetOutput(false);
+
+        nOcCount = 0;
+
+        // Check for turn on
+        if (eReqState == ProfetState::On)
+        {
+            nInRushOnTime = SYS_TIME;
+            eState = ProfetState::On;
+        }
+        break;
+
+    case ProfetState::On:
+        if (pwm.IsEnabled())
+            pwm.On();
+        else
+            SetOutput(true);
+
+        // Check for turn off
+        if (eReqState == ProfetState::Off)
+        {
+            eState = ProfetState::Off;
+        }
+
+        // Overcurrent
+        if (nCurrent > pConfig->nCurrentLimit && !bInRushActive)
+        {
+            nOcTriggerTime = SYS_TIME;
+            nOcCount++;
+            eState = ProfetState::Overcurrent;
+        }
+
+        // Inrush overcurrent
+        if (nCurrent > pConfig->nInrushLimit && bInRushActive)
+        {
+            nOcTriggerTime = SYS_TIME;
+            nOcCount++;
+            eState = ProfetState::Overcurrent;
+        }
+
+        break;
+
+    case ProfetState::Overcurrent:
+        pwm.Off();
+
+        SetOutput(false);
+
+        // No reset, straight to fault
+        if (pConfig->eResetMode == ProfetResetMode::None)
+        {
+            eState = ProfetState::Fault;
+        }
+
+        // Overcurrent count exceeded
+        if (nOcCount >= pConfig->nResetLimit && pConfig->eResetMode == ProfetResetMode::Count)
+        {
+            eState = ProfetState::Fault;
+        }
+
+        // Overcurrent reset time exceeded
+        // ResetEndless or ResetCount
+        if ((pConfig->nResetTime + nOcTriggerTime) < SYS_TIME)
+        {
+            nInRushOnTime = SYS_TIME;
+            eState = ProfetState::On;
+        }
+
+        // Check for turn off
+        if (eReqState == ProfetState::Off)
+        {
+            eState = ProfetState::Off;
+        }
+        break;
+
+    case ProfetState::Fault:
+        pwm.Off();
+
+        SetOutput(false);
+        // Fault requires power cycle, no way out
+        break;
+    }
+
+    pwm.Update();
+
+    nOutput = eState == ProfetState::On ? 1 : 0;
+}
+
+uint16_t Profet::UpdateCurrent()
+{
     // Set DSEL pin to select the appropriate IS channel
     // Only valid on 2 channel devices
     // Wait for DSEL changeover and ADC conversion to complete
@@ -43,7 +148,7 @@ void Profet::Update(bool bOutEnabled)
     uint32_t nCNT = 0;
     uint32_t nCCR = 0;
 
-    if (pwm.IsEnabled() && eState == ProfetState::On)
+    if (pwm.IsEnabled() && (eState == ProfetState::On || eLeaderState == ProfetState::On))
     {
         // Assign to local vars to prevent CNT rolling over and slipping past check
         // Example:
@@ -52,8 +157,17 @@ void Profet::Update(bool bOutEnabled)
         // Before getting to the CNT < CCR check the CNT has rolled over to 0
         // This will cause an incorrect reading
         // Copying to local var freezes the CNT value
-        nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
-        nCNT = m_pwmDriver->tim->CNT;
+        if (pConfig->stPair.eMode == PairOutputMode::Follower)
+        {
+            // If follower use the leader PWM to time the ADC read
+            nCCR = m_pwmFollowerDriver->tim->CCR[static_cast<uint8_t>(m_pwmFollowerChannel)];
+            nCNT = m_pwmFollowerDriver->tim->CNT;
+        }
+        else
+        {
+            nCCR = m_pwmDriver->tim->CCR[static_cast<uint8_t>(m_pwmChannel)];
+            nCNT = m_pwmDriver->tim->CNT;
+        }
 
         if ((nCCR > nPwmReadDelay) &&
             (nCNT > nPwmReadDelay) &&
@@ -98,121 +212,34 @@ void Profet::Update(bool bOutEnabled)
         break;
     }
 
-    // Check for fault (device overcurrent/overtemp/short)
-    // Raw ADC current reading will be very high
-    if (nIS > 30000)
-    {
-        eState = ProfetState::Fault;
-    }
+    if( pConfig->stPair.eMode == PairOutputMode::Leader )
+        nCurrent += nFollowerCurrent;
 
-    bInRushActive = (pConfig->nInrushTime + nInRushOnTime) > SYS_TIME;
-
-    switch (eState)
-    {
-    case ProfetState::Off:
-        pwm.Off();
-
-        palClearLine(m_in);
-
-        nOcCount = 0;
-
-        // Check for turn on
-        if (eReqState == ProfetState::On)
-        {
-            nInRushOnTime = SYS_TIME;
-            eState = ProfetState::On;
-        }
-        break;
-
-    case ProfetState::On:
-        if (pwm.IsEnabled())
-            pwm.On();
-        else
-            palSetLine(m_in);
-
-        // Check for turn off
-        if (eReqState == ProfetState::Off)
-        {
-            eState = ProfetState::Off;
-        }
-
-        // Overcurrent
-        if (nCurrent > pConfig->nCurrentLimit && !bInRushActive)
-        {
-            nOcTriggerTime = SYS_TIME;
-            nOcCount++;
-            eState = ProfetState::Overcurrent;
-        }
-
-        // Inrush overcurrent
-        if (nCurrent > pConfig->nInrushLimit && bInRushActive)
-        {
-            nOcTriggerTime = SYS_TIME;
-            nOcCount++;
-            eState = ProfetState::Overcurrent;
-        }
-
-        break;
-
-    case ProfetState::Overcurrent:
-        pwm.Off();
-
-        palClearLine(m_in);
-
-        // No reset, straight to fault
-        if (pConfig->eResetMode == ProfetResetMode::None)
-        {
-            eState = ProfetState::Fault;
-        }
-
-        // Overcurrent count exceeded
-        if (nOcCount >= pConfig->nResetLimit && pConfig->eResetMode == ProfetResetMode::Count)
-        {
-            eState = ProfetState::Fault;
-        }
-
-        // Overcurrent reset time exceeded
-        // ResetEndless or ResetCount
-        if ((pConfig->nResetTime + nOcTriggerTime) < SYS_TIME)
-        {
-            nInRushOnTime = SYS_TIME;
-            eState = ProfetState::On;
-        }
-
-        // Check for turn off
-        if (eReqState == ProfetState::Off)
-        {
-            eState = ProfetState::Off;
-        }
-        break;
-
-    case ProfetState::Fault:
-        pwm.Off();
-
-        palClearLine(m_in);
-        // Fault requires power cycle, no way out
-        break;
-    }
-
-    pwm.Update();
-
-    nOutput = eState == ProfetState::On ? 1 : 0;
+    return nCurrent;
 }
 
 void Profet::SetFollowerLine(uint8_t nPairOutNum)
 {
-    if ((pConfig->stPair.eMode == PairOutputMode::Leader) && pConfig->stPair.bUsePwm)
-            followerLines[m_num] = GetFollowerLine(nPairOutNum, m_in);
-        else
-            followerLines[m_num] = m_in;
+    if ((pConfig->stPair.eMode == PairOutputMode::Leader))
+    {
+        followerLines[m_num] = GetFollowerLine(nPairOutNum, m_in);
+    }
+    else
+        followerLines[m_num] = m_in;
 }
 
-void Profet::SetFollowerVals(uint16_t current, ProfetState state, uint16_t count, uint8_t dc)
+void Profet::SetOutput(bool bOn)
 {
-    nCurrent = current;
-    eState = state;
-    nOcCount = count;
-    pwm.SetDutyCycle(dc);
+    if (bOn)
+    {
+        palSetLine(m_in);
+        palSetLine(followerLines[m_num]);
+    }
+    else
+    {
+        palClearLine(m_in);
+        palClearLine(followerLines[m_num]);
+    }
 }
 
 MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)

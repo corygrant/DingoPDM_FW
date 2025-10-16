@@ -146,6 +146,14 @@ void InitPdm()
 
     InitInfoMsgs();
 
+    stConfig.stOutput[0].stPair.eMode = PairOutputMode::Leader;
+    stConfig.stOutput[0].stPair.nPairOutNum = 1;
+    stConfig.stOutput[0].stPair.bUsePwm = false;
+
+    stConfig.stOutput[1].stPair.eMode = PairOutputMode::Follower;
+    stConfig.stOutput[1].stPair.nPairOutNum = 0;
+    stConfig.stOutput[1].stPair.bUsePwm = false;
+
     palClearLine(LINE_CAN_STANDBY); // CAN enabled
 
     slowThreadRef = slowThread.start(NORMALPRIO);
@@ -245,12 +253,20 @@ void CyclicUpdate()
     {
         pf[i].Update(starter.nVal[i]);
 
+        //Copy follower current if leader
+        if( stConfig.stOutput[i].stPair.eMode == PairOutputMode::Leader )
+            pf[i].SetFollowerCurrent(pf[stConfig.stOutput[i].stPair.nPairOutNum].UpdateCurrent());
+
         //Copy leader values if follower
         if( stConfig.stOutput[i].stPair.eMode == PairOutputMode::Follower )
-            pf[i].SetFollowerVals(pf[stConfig.stOutput[i].stPair.nPairOutNum].GetCurrent(),
-                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetState(),
+        {
+            pf[i].SetFollowerVals(pf[stConfig.stOutput[i].stPair.nPairOutNum].GetState(),
                                   pf[stConfig.stOutput[i].stPair.nPairOutNum].GetOcCount(),
-                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetDutyCycle());
+                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetDutyCycle(),
+                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmDriver(),
+                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmChannel());
+            pf[i].SetFollowerPwm(stConfig.stOutput[stConfig.stOutput[i].stPair.nPairOutNum].stPwm.bEnabled);
+        }
     }
 
     for (uint8_t i = 0; i < PDM_NUM_INPUTS; i++)

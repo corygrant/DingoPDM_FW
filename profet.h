@@ -70,9 +70,15 @@ public:
 
     void Update(bool bOutEnabled);
 
-    uint16_t GetCurrent() { return nCurrent; }
+    uint16_t GetCurrent() { 
+        if (pConfig->stPair.eMode == PairOutputMode::Follower)
+            return 0;
+        return nCurrent; 
+    }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
+    PWMDriver* GetPwmDriver() { return m_pwmDriver; }
+    PwmChannel GetPwmChannel() { return m_pwmChannel; }
     uint8_t GetDutyCycle()
     {
         if (eState == ProfetState::On)
@@ -81,7 +87,25 @@ public:
         return 0;
     };
 
-    void SetFollowerVals(uint16_t current, ProfetState state, uint16_t count, uint8_t dc);
+    void SetFollowerVals(ProfetState state, uint16_t count, uint8_t dc, PWMDriver *pwmDriver, PwmChannel pwmCh)
+    {
+        //eState = state;
+        //nOcCount = count;
+        //pwm.SetDutyCycle(dc);
+        eLeaderState = state;
+        m_pwmFollowerDriver = pwmDriver;
+        m_pwmFollowerChannel = pwmCh;
+    }
+
+    void SetFollowerCurrent(uint16_t current) {
+        nFollowerCurrent = current;
+    }
+
+    void SetFollowerPwm(bool bPwm){
+        pConfig->stPwm.bEnabled = bPwm;
+    }
+
+    uint16_t UpdateCurrent();
 
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
 
@@ -98,6 +122,10 @@ private:
     const PWMConfig *m_pwmCfg;
     const PwmChannel m_pwmChannel;
 
+    ProfetState eLeaderState;
+    PWMDriver *m_pwmFollowerDriver;
+    PwmChannel m_pwmFollowerChannel;
+
     Config_Output *pConfig;
 
     uint16_t *pInput;
@@ -110,6 +138,7 @@ private:
     uint16_t nIS;         // Raw analog current value
     uint16_t nLastIS = 0; // Last analog current value
     float fKILIS;         // Current scaling factor
+    uint16_t nFollowerCurrent; // Current of paired output
 
     bool bInRushActive;
     uint32_t nInRushOnTime;
@@ -121,4 +150,5 @@ private:
     uint16_t nPwmReadDelay = 0;
 
     void SetFollowerLine(uint8_t nPairOutNum);
+    void SetOutput(bool bOn);
 };
