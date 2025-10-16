@@ -65,18 +65,15 @@ public:
 
         pwm.SetConfig(&config->stPwm, pVarMap);
 
-        SetFollowerLine(config->stPair.nPairOutNum);
+        SetPairLine(config->stPair.nPairOutNum);
     }
 
     void Update(bool bOutEnabled);
 
-    uint16_t GetCurrent() { 
-        if (pConfig->stPair.eMode == PairOutputMode::Follower)
-            return 0;
-        return nCurrent; 
-    }
+    uint16_t GetCurrent() { return nCurrent; }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
+    bool GetPwmActive() { return pwm.IsEnabled(); }
     PWMDriver* GetPwmDriver() { return m_pwmDriver; }
     PwmChannel GetPwmChannel() { return m_pwmChannel; }
     uint8_t GetDutyCycle()
@@ -87,22 +84,16 @@ public:
         return 0;
     };
 
-    void SetFollowerVals(ProfetState state, uint16_t count, uint8_t dc, PWMDriver *pwmDriver, PwmChannel pwmCh)
+    void SetFollowerVals(bool bPwmActive, uint16_t nDC, PWMDriver *pwmDriver, PwmChannel pwmCh)
     {
-        //eState = state;
-        //nOcCount = count;
-        //pwm.SetDutyCycle(dc);
-        eLeaderState = state;
-        m_pwmFollowerDriver = pwmDriver;
-        m_pwmFollowerChannel = pwmCh;
+        pConfig->stPwm.bEnabled = bPwmActive;
+        pwm.SetDutyCycle(nDC);
+        m_pwmPairDriver = pwmDriver;
+        m_pwmPairChannel = pwmCh;
     }
 
-    void SetFollowerCurrent(uint16_t current) {
-        nFollowerCurrent = current;
-    }
-
-    void SetFollowerPwm(bool bPwm){
-        pConfig->stPwm.bEnabled = bPwm;
+    void SetPairState(ProfetState state) {
+        ePairState = state;
     }
 
     uint16_t UpdateCurrent();
@@ -122,9 +113,9 @@ private:
     const PWMConfig *m_pwmCfg;
     const PwmChannel m_pwmChannel;
 
-    ProfetState eLeaderState;
-    PWMDriver *m_pwmFollowerDriver;
-    PwmChannel m_pwmFollowerChannel;
+    ProfetState ePairState;
+    PWMDriver *m_pwmPairDriver;
+    PwmChannel m_pwmPairChannel;
 
     Config_Output *pConfig;
 
@@ -132,13 +123,11 @@ private:
 
     ProfetState eState;
     ProfetState eReqState;
-    ProfetState eLastState;
 
     uint16_t nCurrent;    // Scaled current value (amps)
     uint16_t nIS;         // Raw analog current value
     uint16_t nLastIS = 0; // Last analog current value
     float fKILIS;         // Current scaling factor
-    uint16_t nFollowerCurrent; // Current of paired output
 
     bool bInRushActive;
     uint32_t nInRushOnTime;
@@ -149,6 +138,7 @@ private:
     Pwm pwm;
     uint16_t nPwmReadDelay = 0;
 
-    void SetFollowerLine(uint8_t nPairOutNum);
+    void SetPairLine(uint8_t nPairOutNum);
     void SetOutput(bool bOn);
+    void CheckPairState();
 };

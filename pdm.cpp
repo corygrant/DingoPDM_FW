@@ -253,19 +253,15 @@ void CyclicUpdate()
     {
         pf[i].Update(starter.nVal[i]);
 
-        //Copy follower current if leader
-        if( stConfig.stOutput[i].stPair.eMode == PairOutputMode::Leader )
-            pf[i].SetFollowerCurrent(pf[stConfig.stOutput[i].stPair.nPairOutNum].UpdateCurrent());
+        pf[i].SetPairState(pf[stConfig.stOutput[i].stPair.nPairOutNum].GetState());
 
         //Copy leader values if follower
         if( stConfig.stOutput[i].stPair.eMode == PairOutputMode::Follower )
         {
-            pf[i].SetFollowerVals(pf[stConfig.stOutput[i].stPair.nPairOutNum].GetState(),
-                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetOcCount(),
-                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetDutyCycle(),
-                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmDriver(),
-                                  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmChannel());
-            pf[i].SetFollowerPwm(stConfig.stOutput[stConfig.stOutput[i].stPair.nPairOutNum].stPwm.bEnabled);
+            pf[i].SetFollowerVals(  pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmActive(),
+                                    pf[stConfig.stOutput[i].stPair.nPairOutNum].GetDutyCycle(),
+                                    pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmDriver(),
+                                    pf[stConfig.stOutput[i].stPair.nPairOutNum].GetPwmChannel());
         }
     }
 
