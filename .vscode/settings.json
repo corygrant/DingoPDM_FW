@@ -1,10 +1,11 @@
 {
-	//Windows
-	"cortex-debug.armToolchainPath": "C:\\arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi\\bin\\",
-	"cortex-debug.openocdPath": "C:\\xpack-openocd-0.11.0-1\\bin\\openocd.exe",
-	//Linux
-	//"cortex-debug.armToolchainPath": "/opt/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin",
-	//"cortex-debug.openocdPath": "/opt/xpack-openocd-0.11.0-1/bin/openocd",
+    "[windows]": {
+        "cortex-debug.armToolchainPath": "C:\\arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi\\bin\\",
+        "cortex-debug.openocdPath": "C:\\xpack-openocd-0.11.0-1\\bin\\openocd.exe"
+    },
+    "[linux]": {
+        "cortex-debug.armToolchainPath": "/opt/arm-gnu-toolchain-14.2.rel1-x86_64-arm-none-eabi/bin"
+    },
     "files.exclude": { //Exclude files from the explorer
 		"**/.dep": true,
 		"**/build/lst": true,
@@ -63,5 +64,4 @@
 		"stdexcept": "cpp",
 		"typeinfo": "cpp"
 	},
-	"C_Cpp.default.compilerPath": "C:/arm-gnu-toolchain-13.3.rel1-mingw-w64-i686-arm-none-eabi/bin/arm-none-eabi-gcc.exe",
 }
