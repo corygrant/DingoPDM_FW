@@ -15,8 +15,11 @@
         {
             "label": "build",
             "type": "shell",
-            "command": "make -j 16",
-            "args": [],
+            "command": "make",
+            "args": [
+                "-j",
+                "16",
+                "BOARD=${input:boardType}"],
             "options": {
                 "cwd": "${workspaceFolder}"
             },
@@ -26,7 +29,19 @@
             },
             "dependsOn": "clean",
             "problemMatcher": ["$gcc"],
-            "detail": "Debug dingoPDM (firmware)"
+            "detail": "Build firmware"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "boardType",
+            "type": "pickString",
+            "description": "Select board type",
+            "options": [
+                "dingopdm_v7",
+                "dingopdmmax_v1"
+            ],
+            "default": "dingopdm_v7"
         }
     ]
 }

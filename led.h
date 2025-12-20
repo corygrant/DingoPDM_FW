@@ -8,17 +8,9 @@
 class Led
 {
 public:
-    Led(LedType type)
+    Led(ioline_t type)
     {
-        switch(type)
-        {
-            case LedType::Status:
-                m_line = LINE_LED_STATUS;
-                break;
-            case LedType::Error:
-                m_line = LINE_LED_ERROR;
-                break;
-        }
+        m_line = type;
     };
 
     void Solid(bool bState);

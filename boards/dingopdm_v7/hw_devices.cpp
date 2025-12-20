@@ -16,8 +16,8 @@ Digital in[PDM_NUM_INPUTS] = {
     Digital(LINE_DI1),
     Digital(LINE_DI2)};    
 
-Led statusLed = Led(LedType::Status);
-Led errorLed = Led(LedType::Error);
+Led statusLed = Led(LINE_LED_STATUS);
+Led errorLed = Led(LINE_LED_ERROR);
 
 MCP9808 tempSensor(I2CD1, MCP9808_I2CADDR_DEFAULT);
 
