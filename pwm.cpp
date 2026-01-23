@@ -11,18 +11,23 @@ void Pwm::Update()
     }
 
     if (!pConfig->bSoftStart) {
-        bSoftStartComplete = true;
         nDutyCycle = GetTargetDutyCycle();
     }
-
-    // Initialize soft start
-    if (bChannelEnabled != bLastChannelEnabled) {
-        InitSoftStart();
-    }
-
-    // Update soft start
-    if (!bSoftStartComplete) {
-        UpdateSoftStart();
+    else
+    {
+        // Initialize soft start
+        if (bChannelEnabled != bLastChannelEnabled) {
+            InitSoftStart();
+        }
+        
+        // Update soft start
+        if (!bSoftStartComplete) {
+            UpdateSoftStart();
+        }
+        // After soft start completes, continue updating duty cycle if variable
+        else if (pConfig->bVariableDutyCycle) {
+            nDutyCycle = GetTargetDutyCycle();
+        }
     }
 
     UpdateFrequency();

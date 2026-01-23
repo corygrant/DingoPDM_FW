@@ -2,9 +2,15 @@
 
 bool MB85RC::CheckId()
 {
+    //Skip checking IDs
+    //Some MB85RC devices don't have device ID checks
+    //MB85RC256V = does have device ID
+    //MB85RC128A = does not have device ID
+    return true;
+
     uint16_t nManufId;
     uint16_t nProdId;
-
+    
     GetId(&nManufId, &nProdId);
 
     if (nManufId != MB85RC_MANUF_ID)
