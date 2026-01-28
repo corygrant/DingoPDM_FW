@@ -138,40 +138,40 @@ CSRC = $(ALLCSRC)
 CPPSRC = $(ALLCPPSRC) \
 				 $(BOARDDIR)/port.cpp \
 				 $(MCUDIR)/mcu_utils.cpp \
-				 msg.cpp \
-				 can_input.cpp \
-				 can.cpp \
-				 condition.cpp \
-				 config.cpp \
-				 config_handler.cpp \
-				 counter.cpp \
-				 crc.cpp \
-				 digital.cpp \
-				 error.cpp \
-				 flasher.cpp \
-				 infomsg.cpp \
-				 input.cpp \
-				 led.cpp \
-				 mailbox.cpp \
-				 pdm.cpp \
-				 pwm.cpp \
-				 profet.cpp \
-				 hw_devices.cpp \
-				 request_msg.cpp \
-				 sleep.cpp \
-				 starter.cpp \
-				 status.cpp \
-				 usb.cpp \
-				 virtual_input.cpp \
-				 wiper/wiper_digin.cpp \
-				 wiper/wiper_intin.cpp \
-				 wiper/wiper_mixin.cpp \
-				 wiper/wiper.cpp \
+				 $(BOARDDIR)/msg.cpp \
+				 $(BOARDDIR)/hw_devices.cpp \
+				 comms/can.cpp \
+				 comms/infomsg.cpp \
+				 comms/mailbox.cpp \
+				 comms/request_msg.cpp \
+				 comms/usb.cpp \
+				 core/config.cpp \
+				 core/config_handler.cpp \
+				 core/error.cpp \
+				 core/led.cpp \
+				 core/pdm.cpp \
+				 core/sleep.cpp \
+				 core/status.cpp \
+				 functions/can_input.cpp \
+				 functions/condition.cpp \
+				 functions/counter.cpp \
+				 functions/digital.cpp \
+				 functions/flasher.cpp \
+				 functions/input.cpp \
+				 functions/profet.cpp \
+				 functions/pwm.cpp \
+				 functions/starter.cpp \
+				 functions/virtual_input.cpp \
+				 functions/wiper/wiper_digin.cpp \
+				 functions/wiper/wiper_intin.cpp \
+				 functions/wiper/wiper_mixin.cpp \
+				 functions/wiper/wiper.cpp \
+				 functions/keypad/keypad_button.cpp \
+				 functions/keypad/keypad_dial.cpp \
+				 functions/keypad/keypad.cpp \
 				 hardware/mcp9808.cpp \
 				 hardware/mb85rc.cpp \
-				 keypad/keypad_button.cpp \
-				 keypad/keypad_dial.cpp \
-				 keypad/keypad.cpp \
+				 utils/crc.cpp \
 				 main.cpp
 
 # List ASM source files here.
@@ -204,7 +204,15 @@ UDEFS =
 UADEFS = 
 
 # List all user directories here
-UINCDIR = ./boards/$(MCU)
+UINCDIR = ./boards/$(MCU) \
+				  ./comms \
+				  ./core \
+				  ./functions \
+				  ./functions/wiper \
+				  ./functions/keypad \
+				  ./hardware \
+				  ./utils \
+				  ./devices
 
 # List the user directory to look for the libraries here
 ULIBDIR =

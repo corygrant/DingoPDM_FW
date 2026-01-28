@@ -13,8 +13,6 @@
 #include "condition.h"
 #include "keypad/keypad.h"
 
-// All extern declarations are now in pdm.h - no need to redeclare them here
-
 PdmState GetPdmState()
 {
     return eState;

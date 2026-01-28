@@ -25,7 +25,6 @@
 #include "infomsg.h"
 #include "status.h"
 
-// Component instances (global variables)
 CanInput canIn[PDM_NUM_CAN_INPUTS];
 VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];
 Wiper wiper;
@@ -35,13 +34,11 @@ Counter counter[PDM_NUM_COUNTERS];
 Condition condition[PDM_NUM_CONDITIONS];
 Keypad keypad[PDM_NUM_KEYPADS];
 
-// System state
 PdmState eState = PdmState::Run;
 FatalErrorType eError = FatalErrorType::NoError;
 PdmConfig stConfig;
 uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
 
-// Monitoring variables
 float fBattVolt;
 float fTempSensor;
 bool bDeviceOverTemp;
@@ -49,12 +46,10 @@ bool bDeviceCriticalTemp;
 bool bSleepRequest;
 bool bBootloaderRequest;
 
-// Function declarations (private to this module)
 void InitVarMap();
 void CyclicUpdate();
 void States();
 
-// Thread definitions
 struct PdmThread : chibios_rt::BaseStaticThread<2048>
 {
     void main()
@@ -259,7 +254,6 @@ void CyclicUpdate()
 
 void InitVarMap()
 {
-    // Variable mapping stays in pdm.cpp due to tight coupling with all components
     // Numbers in comments below are only valid for dingoPDM/dingoPDM-Max
     // Other combinations of inputs/outputs will have different numbers
 

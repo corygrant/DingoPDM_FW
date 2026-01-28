@@ -35,7 +35,6 @@ extern bool bSleepRequest;
 void CheckBootloaderRequest();
 void InitPdm();
 
-// Function declarations - implementations moved to other modules
 PdmState GetPdmState();
 float GetBoardTemp();
 float GetTotalCurrent();
