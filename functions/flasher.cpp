@@ -5,24 +5,24 @@ void Flasher::Update(uint32_t nTimeNow)
 {
     if (!pConfig->bEnabled)
     {
-        nVal = 0;
+        fVal = 0;
         return;
     }
 
     if (!*pInput)
     {
-        nVal = 0;
+        fVal = 0;
         return;
     }
     
-    if ((nVal == 0) && ((nTimeNow - nTimeOff) > pConfig->nFlashOffTime))
+    if ((fVal == 0) && ((nTimeNow - nTimeOff) > pConfig->nFlashOffTime))
     {
-        nVal = 1;
+        fVal = 1;
         nTimeOn = nTimeNow;
     }
-    if ((nVal == 1) && ((nTimeNow - nTimeOn) > pConfig->nFlashOnTime))
+    if ((fVal == 1) && ((nTimeNow - nTimeOn) > pConfig->nFlashOnTime))
     {
-        nVal = 0;
+        fVal = 0;
         nTimeOff = nTimeNow;
     }
 }

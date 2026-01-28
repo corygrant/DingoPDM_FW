@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "input.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class KeypadButton
 {
@@ -37,8 +37,8 @@ private:
     Config_KeypadButton *pConfig;
     Input input;
 
-    uint16_t *pLedVars[4];
-    uint16_t *pFaultLedVar;
+    float *pLedVars[4];
+    float *pFaultLedVar;
 
     bool bVal;
 };

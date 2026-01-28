@@ -34,8 +34,8 @@
 
 #define SYS_TIME TIME_I2MS(chVTGetSystemTimeX())
 
-static const uint16_t ALWAYS_FALSE = 0;
-static const uint16_t ALWAYS_TRUE = 1;
+static const float ALWAYS_FALSE = 0.0f;
+static const float ALWAYS_TRUE = 1.0f;
 
 enum class AnalogChannel
 {

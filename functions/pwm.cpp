@@ -38,7 +38,7 @@ void Pwm::Update()
 
 uint8_t Pwm::GetTargetDutyCycle() {
     if (pConfig->bVariableDutyCycle && pConfig->nDutyCycleInputDenom > 0) {
-        return (*pInput) / pConfig->nDutyCycleInputDenom;
+        return (uint8_t)((*pInput) / pConfig->nDutyCycleInputDenom);
     }
     return pConfig->nFixedDutyCycle;
 }

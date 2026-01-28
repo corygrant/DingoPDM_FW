@@ -6,34 +6,34 @@ void Counter::Update()
 {
     if (!pConfig->bEnabled)
     {
-        nVal = 0;
+        fVal = 0;
         return;
     }
 
     if (Edge::Check(pConfig->eResetEdge, bLastReset, *pResetInput))
     {
-        nVal = 0;
+        fVal = 0;
         return;
     }
 
     if (Edge::Check(pConfig->eIncEdge, bLastInc, *pIncInput))
     {
-        nVal++;
-        if (nVal > pConfig->nMaxCount)
+        fVal++;
+        if (fVal > pConfig->nMaxCount)
         {
-            nVal = pConfig->bWrapAround ? 0 : pConfig->nMaxCount;
+            fVal = pConfig->bWrapAround ? 0 : pConfig->nMaxCount;
         }
     }
 
     if (Edge::Check(pConfig->eDecEdge, bLastDec, *pDecInput))
     {
-        if(nVal == 0)
+        if(fVal == 0)
         {
-            nVal = pConfig->bWrapAround ? pConfig->nMaxCount : pConfig->nMinCount;
+            fVal = pConfig->bWrapAround ? pConfig->nMaxCount : pConfig->nMinCount;
         }
         else
         {
-            nVal--;
+            fVal--;
         }
     }
 

@@ -66,10 +66,10 @@ bool GetInputVal(uint8_t nInput)
     if (nInput >= PDM_NUM_INPUTS)
         return false;
 
-    return in[nInput].nVal;
+    return in[nInput].fVal;
 }
 
-uint16_t GetOutputCurrent(uint8_t nOutput)
+float GetOutputCurrent(uint8_t nOutput)
 {
     if (nOutput >= PDM_NUM_OUTPUTS)
         return 0;
@@ -134,15 +134,15 @@ bool GetCanInOutput(uint8_t nInput)
     if (nInput >= PDM_NUM_CAN_INPUTS)
         return false;
 
-    return canIn[nInput].nOutput;
+    return canIn[nInput].fOutput;
 }
 
-uint16_t GetCanInVal(uint8_t nInput)
+float GetCanInVal(uint8_t nInput)
 {
     if (nInput >= PDM_NUM_CAN_INPUTS)
         return false;
 
-    return canIn[nInput].nVal;
+    return canIn[nInput].fVal;
 }
 
 uint32_t GetCanInOutputs()
@@ -150,7 +150,7 @@ uint32_t GetCanInOutputs()
     uint32_t result = 0;
     
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++) {
-        result |= ((canIn[i].nVal & 0x01) << i);
+        result |= (((uint32_t)canIn[i].fVal & 0x01) << i);
     }
     
     return result;
@@ -171,7 +171,7 @@ bool GetVirtInVal(uint8_t nInput)
     if (nInput >= PDM_NUM_VIRT_INPUTS)
         return false;
 
-    return virtIn[nInput].nVal;
+    return virtIn[nInput].fVal;
 }
 
 uint32_t GetVirtIns()
@@ -179,7 +179,7 @@ uint32_t GetVirtIns()
     uint32_t result = 0;
     
     for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++) {
-        result |= ((virtIn[i].nVal & 0x01) << i);
+        result |= (((uint32_t)virtIn[i].fVal & 0x01) << i);
     }
     
     return result;
@@ -225,7 +225,7 @@ bool GetFlasherVal(uint8_t nFlasher)
     if (nFlasher >= PDM_NUM_FLASHERS)
         return false;
 
-    return flasher[nFlasher].nVal;
+    return flasher[nFlasher].fVal;
 }
 
 bool GetAnyCounterEnable()
@@ -238,12 +238,12 @@ bool GetAnyCounterEnable()
     return false;
 }
 
-uint16_t GetCounterVal(uint8_t nCounter)
+float GetCounterVal(uint8_t nCounter)
 {
     if (nCounter >= PDM_NUM_COUNTERS)
         return 0;
 
-    return counter[nCounter].nVal;
+    return counter[nCounter].fVal;
 }
 
 bool GetAnyConditionEnable()
@@ -261,7 +261,7 @@ uint32_t GetConditions()
     uint32_t result = 0;
     
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++) {
-        result |= ((condition[i].nVal & 0x01) << i);
+        result |= (((uint32_t)condition[i].fVal & 0x01) << i);
     }
     
     return result;
@@ -293,13 +293,13 @@ uint32_t GetKeypadButtons(uint8_t nKeypad)
     uint32_t result = 0;
     
     for (uint8_t i = 0; i < KEYPAD_MAX_BUTTONS; i++) {
-        result |= ((keypad[nKeypad].nVal[i] & 0x01) << i);
+        result |= (((uint32_t)keypad[nKeypad].fVal[i] & 0x01) << i);
     }
     
     return result;
 }
 
-uint16_t GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial)
+float GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial)
 {
     if (nKeypad >= PDM_NUM_KEYPADS)
         return 0;
@@ -307,5 +307,5 @@ uint16_t GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial)
     if (nDial >= KEYPAD_MAX_DIALS)
         return 0;
 
-    return keypad[nKeypad].nVal[nDial];
+    return keypad[nKeypad].nDialVal[nDial];
 }

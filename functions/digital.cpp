@@ -6,7 +6,7 @@ void Digital::Update()
 {
     if(!pConfig->bEnabled)
     {
-        nVal = 0;
+        fVal = 0;
         return;
     }
 
@@ -26,7 +26,7 @@ void Digital::Update()
     if ((bCheck && ((SYS_TIME - nLastTrigTime) > pConfig->nDebounceTime)) || (!bInit))
     {
         bCheck = false;
-        nVal = input.Check(pConfig->eMode, pConfig->bInvert, bIn);
+        fVal = input.Check(pConfig->eMode, pConfig->bInvert, bIn);
     }
 
     bInit = true;

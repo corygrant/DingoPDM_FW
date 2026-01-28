@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "config.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class Condition
 {
@@ -21,10 +21,10 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
     static void SetDefaultConfig(Config_Condition *config);
 
-    uint16_t nVal;
+    float fVal;
 
 private:
     Config_Condition* pConfig;
     
-    uint16_t *pInput;
+    float *pInput;
 };

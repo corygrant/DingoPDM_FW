@@ -128,7 +128,7 @@ void Keypad::CheckTimeout()
     {
         for (uint8_t i = 0; i < KEYPAD_MAX_BUTTONS; i++)
         {
-            nVal[i] = 0;
+            fVal[i] = 0;
         }
     }
 }
@@ -143,26 +143,26 @@ bool Keypad::CheckMsg(CANRxFrame frame)
 
     nLastRxTime = SYS_TIME;
 
-    nVal[0] = button[0].Update(frame.data8[0] & 0x01);
-    nVal[1] = button[1].Update((frame.data8[0] & 0x02) >> 1);
-    nVal[2] = button[2].Update((frame.data8[0] & 0x04) >> 2);
-    nVal[3] = button[3].Update((frame.data8[0] & 0x08) >> 3);
-    nVal[4] = button[4].Update((frame.data8[0] & 0x10) >> 4);
-    nVal[5] = button[5].Update((frame.data8[0] & 0x20) >> 5);
-    nVal[6] = button[6].Update((frame.data8[0] & 0x40) >> 6);
-    nVal[7] = button[7].Update((frame.data8[0] & 0x80) >> 7);
-    nVal[8] = button[8].Update((frame.data8[1] & 0x01));
-    nVal[9] = button[9].Update((frame.data8[1] & 0x02) >> 1);
-    nVal[10] = button[10].Update((frame.data8[1] & 0x04) >> 2);
-    nVal[11] = button[11].Update((frame.data8[1] & 0x08) >> 3);
-    nVal[12] = button[12].Update((frame.data8[1] & 0x10) >> 4);
-    nVal[13] = button[13].Update((frame.data8[1] & 0x20) >> 5);
-    nVal[14] = button[14].Update((frame.data8[1] & 0x40) >> 6);
-    nVal[15] = 0;
-    nVal[16] = 0;
-    nVal[17] = 0;
-    nVal[18] = 0;
-    nVal[19] = 0;
+    fVal[0] = button[0].Update(frame.data8[0] & 0x01);
+    fVal[1] = button[1].Update((frame.data8[0] & 0x02) >> 1);
+    fVal[2] = button[2].Update((frame.data8[0] & 0x04) >> 2);
+    fVal[3] = button[3].Update((frame.data8[0] & 0x08) >> 3);
+    fVal[4] = button[4].Update((frame.data8[0] & 0x10) >> 4);
+    fVal[5] = button[5].Update((frame.data8[0] & 0x20) >> 5);
+    fVal[6] = button[6].Update((frame.data8[0] & 0x40) >> 6);
+    fVal[7] = button[7].Update((frame.data8[0] & 0x80) >> 7);
+    fVal[8] = button[8].Update((frame.data8[1] & 0x01));
+    fVal[9] = button[9].Update((frame.data8[1] & 0x02) >> 1);
+    fVal[10] = button[10].Update((frame.data8[1] & 0x04) >> 2);
+    fVal[11] = button[11].Update((frame.data8[1] & 0x08) >> 3);
+    fVal[12] = button[12].Update((frame.data8[1] & 0x10) >> 4);
+    fVal[13] = button[13].Update((frame.data8[1] & 0x20) >> 5);
+    fVal[14] = button[14].Update((frame.data8[1] & 0x40) >> 6);
+    fVal[15] = 0;
+    fVal[16] = 0;
+    fVal[17] = 0;
+    fVal[18] = 0;
+    fVal[19] = 0;
 
 
     //nNodeId + 0x280

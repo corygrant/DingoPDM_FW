@@ -9,7 +9,7 @@
 #include "wiper_intin.h"
 #include "wiper_mixin.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class Wiper
 {
@@ -57,12 +57,12 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
     static void SetDefaultConfig(Config_Wiper *config);
 
-    uint16_t nSlowOut;
-    uint16_t nFastOut;
-    uint16_t nParkOut;
-    uint16_t nInterOut;
-    uint16_t nWashOut;
-    uint16_t nSwipeOut;
+    float nSlowOut;
+    float nFastOut;
+    float nParkOut;
+    float nInterOut;
+    float nWashOut;
+    float nSwipeOut;
 
 private:
     void Parking();
@@ -99,24 +99,24 @@ private:
 
     WiperState eState;
 
-    uint16_t *pParkSw;
-    uint16_t *pSwipeInput;
-    uint16_t *pWashInput;
+    float *pParkSw;
+    float *pSwipeInput;
+    float *pWashInput;
 
     uint16_t nInterDelay;
     uint8_t nWashWipeCount;
 
     // DigIn Mode
-    uint16_t *pSlowInput;
-    uint16_t *pFastInput;
-    uint16_t *pInterInput;
+    float *pSlowInput;
+    float *pFastInput;
+    float *pInterInput;
 
     // IntIn Mode
-    uint16_t *pSpeedInput;
+    float *pSpeedInput;
     WiperSpeed eSelectedSpeed;
 
     // MixIn Mode
-    uint16_t *pOnSw;
+    float *pOnSw;
 
     // Internal
     MotorSpeed eLastMotorSpeed;

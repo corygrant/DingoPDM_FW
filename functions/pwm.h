@@ -6,7 +6,7 @@
 
 #define PWM_UPDATE_TIME 2.0 //ms
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class Pwm
 {
@@ -57,7 +57,7 @@ private:
     const PWMConfig *m_pwmCfg;
     PwmChannel m_pwmCh;
 
-    uint16_t *pInput;
+    float *pInput;
 
     Config_PwmOutput *pConfig;
 

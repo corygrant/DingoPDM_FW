@@ -7,7 +7,7 @@
 #include "keypad_button.h"
 #include "keypad_dial.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class Keypad
 {
@@ -40,15 +40,15 @@ public:
     CANTxFrame GetTxMsg(uint8_t nIndex);
     CANTxFrame GetStartMsg();
 
-    uint16_t nVal[KEYPAD_MAX_BUTTONS];
-    uint16_t nDialVal[KEYPAD_MAX_DIALS];
+    float fVal[KEYPAD_MAX_BUTTONS];
+    float nDialVal[KEYPAD_MAX_DIALS];
 
 protected:
     Config_Keypad* pConfig;
 
     uint32_t nLastRxTime;
 
-    uint16_t *pDimmingInput;
+    float *pDimmingInput;
 
     KeypadButton button[KEYPAD_MAX_BUTTONS];
     

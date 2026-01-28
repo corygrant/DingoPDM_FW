@@ -6,7 +6,7 @@
 #include "enums.h"
 #include "pwm.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 //=============================================================================
 // PWM read delay = timer count from PWM going high till ready to read ADC
@@ -74,7 +74,7 @@ public:
 
     void Update(bool bOutEnabled);
 
-    uint16_t GetCurrent() { return nCurrent; }
+    float GetCurrent() { return nCurrent; }
     ProfetState GetState() { return eState; }
     uint16_t GetOcCount() { return nOcCount; }
     uint8_t GetDutyCycle()
@@ -88,9 +88,9 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx);
     static void SetDefaultConfig(Config_Output *config);
 
-    uint16_t nOutput;
-    uint16_t nOvercurrent;
-    uint16_t nFault;
+    float fOutput;
+    float nOvercurrent;
+    float nFault;
 
 private:
     const uint16_t m_num;
@@ -105,7 +105,7 @@ private:
 
     Config_Output *pConfig;
 
-    uint16_t *pInput;
+    float *pInput;
 
     ProfetState eState;
     ProfetState eReqState;

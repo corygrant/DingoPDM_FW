@@ -23,41 +23,41 @@ bool CanInput::CheckMsg(CANRxFrame rx)
     }
 
     //Copy data to shared value
-    nVal = nData;
+    fVal = nData;
 
     // Use Input class to enable momentary/latching
     switch (pConfig->eOperator)
     {
     case Operator::Equal:
-        nOutput = input.Check(pConfig->eMode, false, nData == pConfig->nOnVal);
+        fOutput = input.Check(pConfig->eMode, false, nData == pConfig->nOnVal);
         break;
 
     case Operator::NotEqual:
-        nOutput = input.Check(pConfig->eMode, false, nData != pConfig->nOnVal);
+        fOutput = input.Check(pConfig->eMode, false, nData != pConfig->nOnVal);
         break;
 
     case Operator::GreaterThan:
-        nOutput = input.Check(pConfig->eMode, false, nData > pConfig->nOnVal);
+        fOutput = input.Check(pConfig->eMode, false, nData > pConfig->nOnVal);
         break;
 
     case Operator::LessThan:
-        nOutput = input.Check(pConfig->eMode, false, nData < pConfig->nOnVal);
+        fOutput = input.Check(pConfig->eMode, false, nData < pConfig->nOnVal);
         break;
 
     case Operator::GreaterThanOrEqual:
-        nOutput = input.Check(pConfig->eMode, false, nData >= pConfig->nOnVal);
+        fOutput = input.Check(pConfig->eMode, false, nData >= pConfig->nOnVal);
         break;
 
     case Operator::LessThanOrEqual:
-        nOutput = input.Check(pConfig->eMode, false, nData <= pConfig->nOnVal);
+        fOutput = input.Check(pConfig->eMode, false, nData <= pConfig->nOnVal);
         break;
 
     case Operator::BitwiseAnd:
-        nOutput = input.Check(pConfig->eMode, false, (nData & pConfig->nOnVal) > 0);
+        fOutput = input.Check(pConfig->eMode, false, (nData & pConfig->nOnVal) > 0);
         break;
 
     case Operator::BitwiseNand:
-        nOutput = input.Check(pConfig->eMode, false, !((nData & pConfig->nOnVal) > 0));
+        fOutput = input.Check(pConfig->eMode, false, !((nData & pConfig->nOnVal) > 0));
         break;
     }
 
@@ -71,8 +71,8 @@ void CanInput::CheckTimeout()
 
     if (SYS_TIME - nLastRxTime > pConfig->nTimeout)
     {
-        nVal = 0;
-        nOutput = 0;
+        fVal = 0;
+        fOutput = 0;
     }
 }
 

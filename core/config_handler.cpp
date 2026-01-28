@@ -86,7 +86,7 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
 }
 
 extern PdmConfig stConfig;
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 extern Digital in[PDM_NUM_INPUTS];
 extern CanInput canIn[PDM_NUM_CAN_INPUTS];
 extern VirtualInput virtIn[PDM_NUM_VIRT_INPUTS];

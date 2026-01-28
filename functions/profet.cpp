@@ -11,7 +11,7 @@ void Profet::Update(bool bOutEnabled)
         palClearLine(m_in);
         nOcCount = 0;
         eState = ProfetState::Off;
-        nOutput = 0;
+        fOutput = 0;
         return;
     }
 
@@ -193,7 +193,7 @@ void Profet::Update(bool bOutEnabled)
     pwm.Update();
 
     // Set var map values
-    nOutput = eState == ProfetState::On ? 1 : 0;
+    fOutput = eState == ProfetState::On ? 1 : 0;
     nOvercurrent = eState == ProfetState::Overcurrent ? 1 : 0;
     nFault = eState == ProfetState::Fault ? 1 : 0;
 

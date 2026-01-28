@@ -4,7 +4,7 @@
 #include "config.h"
 #include "dingopdm_config.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class Counter
 {
@@ -25,14 +25,14 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
     static void SetDefaultConfig(Config_Counter *config);
 
-    uint16_t nVal;
+    float fVal;
 
 private:
     Config_Counter* pConfig;
     
-    uint16_t *pIncInput;
-    uint16_t *pDecInput;
-    uint16_t *pResetInput;
+    float *pIncInput;
+    float *pDecInput;
+    float *pResetInput;
 
     bool bLastInc;
     bool bLastDec;

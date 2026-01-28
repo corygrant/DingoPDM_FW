@@ -4,7 +4,7 @@
 #include "config.h"
 #include "input.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class VirtualInput
 {
@@ -25,16 +25,16 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
     static void SetDefaultConfig(Config_VirtualInput *config);
 
-    uint16_t nVal;
+    float fVal;
 
 private:
     Config_VirtualInput *pConfig;
 
     Input input;
 
-    uint16_t *pVar0;
-    uint16_t *pVar1;
-    uint16_t *pVar2;
+    float *pVar0;
+    float *pVar1;
+    float *pVar2;
 
     bool bResult0;
     bool bResult1;

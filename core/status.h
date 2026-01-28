@@ -12,7 +12,7 @@ bool GetAnyFault();
 
 bool GetInputVal(uint8_t nInput);
 
-uint16_t GetOutputCurrent(uint8_t nOutput);
+float GetOutputCurrent(uint8_t nOutput);
 ProfetState GetOutputState(uint8_t nOutput);
 uint8_t GetOutputOcCount(uint8_t nOutput);
 uint8_t GetOutputDC(uint8_t nOutput);
@@ -28,7 +28,7 @@ bool GetAnyKeypadEnable();
 
 bool GetCanInEnable(uint8_t nInput);
 bool GetCanInOutput(uint8_t nInput);
-uint16_t GetCanInVal(uint8_t nInput);
+float GetCanInVal(uint8_t nInput);
 uint32_t GetCanInOutputs();
 
 bool GetVirtInVal(uint8_t nInput);
@@ -41,10 +41,10 @@ WiperSpeed GetWiperSpeed();
 
 bool GetFlasherVal(uint8_t nFlasher);
 
-uint16_t GetCounterVal(uint8_t nCounter);
+float GetCounterVal(uint8_t nCounter);
 
 uint32_t GetConditions();
 
 bool GetKeypadEnable(uint8_t nKeypad);
 uint32_t GetKeypadButtons(uint8_t nKeypad);
-uint16_t GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial);
+float GetKeypadDialVal(uint8_t nKeypad, uint8_t nDial);

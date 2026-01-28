@@ -37,7 +37,7 @@ Keypad keypad[PDM_NUM_KEYPADS];
 PdmState eState = PdmState::Run;
 FatalErrorType eError = FatalErrorType::NoError;
 PdmConfig stConfig;
-uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+float *pVarMap[PDM_VAR_MAP_SIZE];
 
 float fBattVolt;
 float fTempSensor;
@@ -224,7 +224,7 @@ void CyclicUpdate()
     }
 
     for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
-        pf[i].Update(starter.nVal[i]);
+        pf[i].Update(starter.fVal[i]);
 
     for (uint8_t i = 0; i < PDM_NUM_INPUTS; i++)
         in[i].Update();
@@ -258,34 +258,34 @@ void InitVarMap()
     // Other combinations of inputs/outputs will have different numbers
 
     // 0 - None - set to 0
-    pVarMap[0] = const_cast<uint16_t*>(&ALWAYS_FALSE);
+    pVarMap[0] = const_cast<float*>(&ALWAYS_FALSE);
 
     // 1-2 - Digital inputs
-    pVarMap[1] = &in[0].nVal;
-    pVarMap[2] = &in[1].nVal;
+    pVarMap[1] = &in[0].fVal;
+    pVarMap[2] = &in[1].fVal;
 
     // 3-34 - CAN Inputs
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
     {
-        pVarMap[i + 3] = &canIn[i].nOutput;
+        pVarMap[i + 3] = &canIn[i].fOutput;
     }
 
     // 35-66 - CAN Input val
     for (uint8_t i = 0; i < PDM_NUM_CAN_INPUTS; i++)
     {
-        pVarMap[i + 35] = &canIn[i].nVal;
+        pVarMap[i + 35] = &canIn[i].fVal;
     }
 
     // 67-84 - Virtual Inputs
     for (uint8_t i = 0; i < PDM_NUM_VIRT_INPUTS; i++)
     {
-        pVarMap[i + 67] = &virtIn[i].nVal;
+        pVarMap[i + 67] = &virtIn[i].fVal;
     }
 
     // 83-106 - Outputs
     for (uint8_t i = 0; i < PDM_NUM_OUTPUTS; i++)
     {
-        pVarMap[i * 3 + 83] = &pf[i].nOutput;
+        pVarMap[i * 3 + 83] = &pf[i].fOutput;
         pVarMap[i * 3 + 83 + 1] = &pf[i].nOvercurrent;
         pVarMap[i * 3 + 83 + 2] = &pf[i].nFault;
     }
@@ -301,19 +301,19 @@ void InitVarMap()
     // 113-116 - Flashers
     for (uint8_t i = 0; i < PDM_NUM_FLASHERS; i++)
     {
-        pVarMap[i + 113] = &flasher[i].nVal;
+        pVarMap[i + 113] = &flasher[i].fVal;
     }
 
     // 117-120 - Counters
     for (uint8_t i = 0; i < PDM_NUM_COUNTERS; i++)
     {
-        pVarMap[i + 117] = &counter[i].nVal;
+        pVarMap[i + 117] = &counter[i].fVal;
     }
 
     // 121-152 - Conditions
     for (uint8_t i = 0; i < PDM_NUM_CONDITIONS; i++)
     {
-        pVarMap[i + 121] = &condition[i].nVal;
+        pVarMap[i + 121] = &condition[i].fVal;
     }
 
     // 153 - 192 - Keypad Buttons
@@ -321,7 +321,7 @@ void InitVarMap()
     {
         for (uint8_t j = 0; j < KEYPAD_MAX_BUTTONS; j++)
         {
-            pVarMap[i * KEYPAD_MAX_BUTTONS + j + 153] = &keypad[i].nVal[j];
+            pVarMap[i * KEYPAD_MAX_BUTTONS + j + 153] = &keypad[i].fVal[j];
         }
     }
 
@@ -335,7 +335,7 @@ void InitVarMap()
     }
 
     // 201 - Always true
-    pVarMap[201] = const_cast<uint16_t*>(&ALWAYS_TRUE);
+    pVarMap[201] = const_cast<float*>(&ALWAYS_TRUE);
 
     //Note: Var map max size 255
     // 1 byte per var used in CAN messages

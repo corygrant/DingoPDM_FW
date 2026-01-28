@@ -3,7 +3,7 @@
 #include <cstdint>
 #include "config.h"
 
-extern uint16_t *pVarMap[PDM_VAR_MAP_SIZE];
+extern float *pVarMap[PDM_VAR_MAP_SIZE];
 
 class Starter
 {
@@ -22,12 +22,12 @@ public:
     static MsgCmdResult ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx);
     static void SetDefaultConfig(Config_Starter *config);
 
-    uint16_t nVal[PDM_NUM_OUTPUTS];
+    float fVal[PDM_NUM_OUTPUTS];
 
 private:
     Config_Starter* pConfig;
     
-    uint16_t *pInput;
+    float *pInput;
 
     
 };

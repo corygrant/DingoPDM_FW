@@ -5,7 +5,7 @@ void VirtualInput::Update()
 {
     if (!pConfig->bEnabled)
     {
-        nVal = 0;
+        fVal = 0;
         return;
     }
     
@@ -36,7 +36,7 @@ void VirtualInput::Update()
     // Only 2 conditions
     if (pConfig->nVar2 == 0)
     {
-        nVal = input.Check(pConfig->eMode, false, bResultSec0);
+        fVal = input.Check(pConfig->eMode, false, bResultSec0);
         return;
     }
 
@@ -58,7 +58,7 @@ void VirtualInput::Update()
         break;
     }
 
-    nVal = input.Check(pConfig->eMode, false, bResultSec1);
+    fVal = input.Check(pConfig->eMode, false, bResultSec1);
 }
 
 MsgCmdResult VirtualInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
