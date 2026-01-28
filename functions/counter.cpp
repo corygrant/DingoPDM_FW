@@ -1,4 +1,5 @@
 #include "counter.h"
+#include "dbc.h"
 #include "edge.h"
 
 void Counter::Update()
@@ -55,33 +56,35 @@ MsgCmdResult Counter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
         {
             if (rx->DLC == 8)
             {
-                conf->stCounter[nIndex].bEnabled = (rx->data8[2] & 0x01);
-                conf->stCounter[nIndex].bWrapAround = ((rx->data8[2] & 0x02) >> 1);
-                conf->stCounter[nIndex].nIncInput = rx->data8[3];
-                conf->stCounter[nIndex].nDecInput = rx->data8[4];
-                conf->stCounter[nIndex].nResetInput = rx->data8[5];
-                conf->stCounter[nIndex].nMinCount = (rx->data8[6] & 0x0F);
-                conf->stCounter[nIndex].nMaxCount = ((rx->data8[6] & 0xF0) >> 4);
-                conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>(rx->data8[7] & 0x03);
-                conf->stCounter[nIndex].eDecEdge = static_cast<InputEdge>((rx->data8[7] & 0x0C) >> 2);
-                conf->stCounter[nIndex].eResetEdge = static_cast<InputEdge>((rx->data8[7] & 0x30) >> 4);
+                conf->stCounter[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
+                conf->stCounter[nIndex].bWrapAround = Dbc::DecodeInt(rx->data8, 17, 1);
+                conf->stCounter[nIndex].nIncInput = Dbc::DecodeInt(rx->data8, 24, 8);
+                conf->stCounter[nIndex].nDecInput = Dbc::DecodeInt(rx->data8, 32, 8);
+                conf->stCounter[nIndex].nResetInput = Dbc::DecodeInt(rx->data8, 40, 8);
+                conf->stCounter[nIndex].nMinCount = Dbc::DecodeInt(rx->data8, 48, 4);
+                conf->stCounter[nIndex].nMaxCount = Dbc::DecodeInt(rx->data8, 52, 4);
+                conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 56, 2));
+                conf->stCounter[nIndex].eDecEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 58, 2));
+                conf->stCounter[nIndex].eResetEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 60, 2));
             }
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
 
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::Counters) + 128;
-            tx->data8[1] = nIndex;
-            tx->data8[2] = (conf->stCounter[nIndex].bEnabled & 0x01) +
-                           ((conf->stCounter[nIndex].bWrapAround & 0x01) << 1);
-            tx->data8[3] = conf->stCounter[nIndex].nIncInput;
-            tx->data8[4] = conf->stCounter[nIndex].nDecInput;
-            tx->data8[5] = conf->stCounter[nIndex].nResetInput;
-            tx->data8[6] = ((conf->stCounter[nIndex].nMaxCount & 0x0F) << 4) +
-                           (conf->stCounter[nIndex].nMinCount & 0x0F);
-            tx->data8[7] = (static_cast<uint8_t>(conf->stCounter[nIndex].eIncEdge) & 0x03) +
-                           ((static_cast<uint8_t>(conf->stCounter[nIndex].eDecEdge) & 0x03) << 2) +
-                           ((static_cast<uint8_t>(conf->stCounter[nIndex].eResetEdge) & 0x03) << 4);
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::Counters) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].bEnabled, 16, 1);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].bWrapAround, 17, 1);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nIncInput, 24, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nDecInput, 32, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nResetInput, 40, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nMinCount, 48, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nMaxCount, 52, 4);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eIncEdge), 56, 2);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eDecEdge), 58, 2);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eResetEdge), 60, 2);
 
             if(rx->DLC == 8)
                 return MsgCmdResult::Write;

@@ -18,6 +18,22 @@ void Dbc::EncodeInt(uint8_t* pData, int32_t nRawValue,
         EncodeLE(pData, nRawValue, nStartBit, nBitLength);
 }
 
+int32_t Dbc::DecodeInt(const uint8_t* pData, uint8_t nStartBit,
+                        uint8_t nBitLength, float fScale, float fOffset,
+                        ByteOrder eByteOrder, bool bSigned)
+{
+    int32_t rawValue = DecodeInt(pData, nStartBit, nBitLength, eByteOrder, bSigned);
+    return (int32_t)(ApplyScaling(rawValue, fScale, fOffset));
+}
+
+void Dbc::EncodeInt(uint8_t* pData, int32_t nValue,
+                     uint8_t nStartBit, uint8_t nBitLength, float fScale, float fOffset,
+                     ByteOrder eByteOrder)
+{
+    int32_t rawValue = ReverseScaling((float)nValue, fScale, fOffset);
+    EncodeInt(pData, rawValue, nStartBit, nBitLength, eByteOrder);
+}
+
 int32_t Dbc::DecodeLE(const uint8_t* pData, uint8_t nStartBit,
                                        uint8_t nBitLength, bool bSigned)
 {
@@ -64,7 +80,6 @@ int32_t Dbc::DecodeBE(const uint8_t* pData, uint8_t nStartBit,
 
     uint64_t value = 0;
     int bitsRemaining = nBitLength;
-    int currentBit = 0;
 
     // Extract bits from MSB to LSB
     while (bitsRemaining > 0)
@@ -184,15 +199,15 @@ int32_t Dbc::ReverseScaling(float fPhysicalValue, float fScale, float fOffset)
 }
 
 float Dbc::DecodeFloat( const uint8_t* pData, uint8_t nStartBit, uint8_t nBitLength,
-                        ByteOrder eByteOrder, bool bSigned, float fScale, float fOffset)
+                        float fScale, float fOffset, ByteOrder eByteOrder, bool bSigned)
 {
-    int32_t rawValue = DecodeInt(pData, nStartBit, nBitLength, eByteOrder, bSigned);
+    int32_t rawValue = DecodeInt(pData, nStartBit, nBitLength, fScale, fOffset, eByteOrder, bSigned);
     return ApplyScaling(rawValue, fScale, fOffset);
 }
 
 void Dbc::EncodeFloat(  uint8_t* pData, float fPhysicalValue, uint8_t nStartBit,
-                        uint8_t nBitLength, ByteOrder eByteOrder, float fScale, float fOffset)
+                        uint8_t nBitLength, float fScale, float fOffset, ByteOrder eByteOrder)
 {
     int32_t rawValue = ReverseScaling(fPhysicalValue, fScale, fOffset);
-    EncodeInt(pData, rawValue, nStartBit, nBitLength, eByteOrder);
+    EncodeInt(pData, rawValue, nStartBit, nBitLength, fScale, fOffset, eByteOrder);
 }

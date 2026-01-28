@@ -1,4 +1,5 @@
 #include "wiper.h"
+#include "dbc.h"
 
 void Wiper::Update()
 {
@@ -237,32 +238,33 @@ MsgCmdResult WiperMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
     {
         if (rx->DLC == 8)
         {
-            conf->stWiper.bEnabled = (rx->data8[1] & 0x01);
-            conf->stWiper.eMode = static_cast<WiperMode>((rx->data8[1] & 0x06) >> 1);
-            conf->stWiper.bParkStopLevel = (rx->data8[1] & 0x08) >> 3;
-            conf->stWiper.nWashWipeCycles = (rx->data8[1] & 0xF0) >> 4;
-            conf->stWiper.nSlowInput = rx->data8[2];
-            conf->stWiper.nFastInput = rx->data8[3];
-            conf->stWiper.nInterInput = rx->data8[4];
-            conf->stWiper.nOnInput = rx->data8[5];
-            conf->stWiper.nParkInput = rx->data8[6];
-            conf->stWiper.nWashInput = rx->data8[7];
+            conf->stWiper.bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
+            conf->stWiper.eMode = static_cast<WiperMode>(Dbc::DecodeInt(rx->data8, 9, 2));
+            conf->stWiper.bParkStopLevel = Dbc::DecodeInt(rx->data8, 11, 1);
+            conf->stWiper.nWashWipeCycles = Dbc::DecodeInt(rx->data8, 12, 4);
+            conf->stWiper.nSlowInput = Dbc::DecodeInt(rx->data8, 16, 8);
+            conf->stWiper.nFastInput = Dbc::DecodeInt(rx->data8, 24, 8);
+            conf->stWiper.nInterInput = Dbc::DecodeInt(rx->data8, 32, 8);
+            conf->stWiper.nOnInput = Dbc::DecodeInt(rx->data8, 40, 8);
+            conf->stWiper.nParkInput = Dbc::DecodeInt(rx->data8, 48, 8);
+            conf->stWiper.nWashInput = Dbc::DecodeInt(rx->data8, 56, 8);
         }
 
         tx->DLC = 8;
         tx->IDE = CAN_IDE_STD;
 
+        for (int i = 0; i < 8; i++) tx->data8[i] = 0;
         tx->data8[0] = static_cast<uint8_t>(MsgCmd::Wiper) + 128;
-        tx->data8[1] = ((conf->stWiper.nWashWipeCycles & 0x0F) << 4) +
-                       ((conf->stWiper.bParkStopLevel & 0x01) << 3) +
-                       ((static_cast<uint8_t>(conf->stWiper.eMode) & 0x03) << 1) +
-                       (conf->stWiper.bEnabled & 0x01);
-        tx->data8[2] = conf->stWiper.nSlowInput;
-        tx->data8[3] = conf->stWiper.nFastInput;
-        tx->data8[4] = conf->stWiper.nInterInput;
-        tx->data8[5] = conf->stWiper.nOnInput;
-        tx->data8[6] = conf->stWiper.nParkInput;
-        tx->data8[7] = conf->stWiper.nWashInput;
+        Dbc::EncodeInt(tx->data8, conf->stWiper.bEnabled, 8, 1);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eMode), 9, 2);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.bParkStopLevel, 11, 1);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nWashWipeCycles, 12, 4);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nSlowInput, 16, 8);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nFastInput, 24, 8);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nInterInput, 32, 8);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nOnInput, 40, 8);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nParkInput, 48, 8);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nWashInput, 56, 8);
 
         if (rx->DLC == 8)
             return MsgCmdResult::Write;
@@ -282,33 +284,33 @@ MsgCmdResult WiperSpeedMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
     {
         if (rx->DLC == 7)
         {
-            conf->stWiper.nSwipeInput = rx->data8[1];
-            conf->stWiper.nSpeedInput = rx->data8[2];
-            conf->stWiper.eSpeedMap[0] = static_cast<WiperSpeed>((rx->data8[3] & 0x0F));
-            conf->stWiper.eSpeedMap[1] = static_cast<WiperSpeed>((rx->data8[3] & 0xF0) >> 4);
-            conf->stWiper.eSpeedMap[2] = static_cast<WiperSpeed>((rx->data8[4] & 0x0F));
-            conf->stWiper.eSpeedMap[3] = static_cast<WiperSpeed>((rx->data8[4] & 0xF0) >> 4);
-            conf->stWiper.eSpeedMap[4] = static_cast<WiperSpeed>((rx->data8[5] & 0x0F));
-            conf->stWiper.eSpeedMap[5] = static_cast<WiperSpeed>((rx->data8[5] & 0xF0) >> 4);
-            conf->stWiper.eSpeedMap[6] = static_cast<WiperSpeed>((rx->data8[6] & 0x0F));
-            conf->stWiper.eSpeedMap[7] = static_cast<WiperSpeed>((rx->data8[6] & 0xF0) >> 4);
+            conf->stWiper.nSwipeInput = Dbc::DecodeInt(rx->data8, 8, 8);
+            conf->stWiper.nSpeedInput = Dbc::DecodeInt(rx->data8, 16, 8);
+            conf->stWiper.eSpeedMap[0] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 24, 4));
+            conf->stWiper.eSpeedMap[1] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 28, 4));
+            conf->stWiper.eSpeedMap[2] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 32, 4));
+            conf->stWiper.eSpeedMap[3] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 36, 4));
+            conf->stWiper.eSpeedMap[4] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 40, 4));
+            conf->stWiper.eSpeedMap[5] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 44, 4));
+            conf->stWiper.eSpeedMap[6] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 48, 4));
+            conf->stWiper.eSpeedMap[7] = static_cast<WiperSpeed>(Dbc::DecodeInt(rx->data8, 52, 4));
         }
 
         tx->DLC = 7;
         tx->IDE = CAN_IDE_STD;
 
+        for (int i = 0; i < 8; i++) tx->data8[i] = 0;
         tx->data8[0] = static_cast<uint8_t>(MsgCmd::WiperSpeed) + 128;
-        tx->data8[1] = conf->stWiper.nSwipeInput;
-        tx->data8[2] = conf->stWiper.nSpeedInput;
-        tx->data8[3] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[1]) & 0x0F) << 4) +
-                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[0]) & 0x0F);
-        tx->data8[4] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[3]) & 0x0F) << 4) +
-                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[2]) & 0x0F);
-        tx->data8[5] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[5]) & 0x0F) << 4) +
-                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[4]) & 0x0F);
-        tx->data8[6] = ((static_cast<uint8_t>(conf->stWiper.eSpeedMap[7]) & 0x0F) << 4) +
-                       (static_cast<uint8_t>(conf->stWiper.eSpeedMap[6]) & 0x0F);
-        tx->data8[7] = 0;
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nSwipeInput, 8, 8);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nSpeedInput, 16, 8);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[0]), 24, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[1]), 28, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[2]), 32, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[3]), 36, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[4]), 40, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[5]), 44, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[6]), 48, 4);
+        Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stWiper.eSpeedMap[7]), 52, 4);
 
         if (rx->DLC == 7)
             return MsgCmdResult::Write;
@@ -328,25 +330,25 @@ MsgCmdResult WiperDelaysMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame *tx)
     {
         if (rx->DLC == 7)
         {
-            conf->stWiper.nIntermitTime[0] = rx->data8[1] * 100;
-            conf->stWiper.nIntermitTime[1] = rx->data8[2] * 100;
-            conf->stWiper.nIntermitTime[2] = rx->data8[3] * 100;
-            conf->stWiper.nIntermitTime[3] = rx->data8[4] * 100;
-            conf->stWiper.nIntermitTime[4] = rx->data8[5] * 100;
-            conf->stWiper.nIntermitTime[5] = rx->data8[6] * 100;
+            conf->stWiper.nIntermitTime[0] = Dbc::DecodeInt(rx->data8, 8, 8, 100.0f);
+            conf->stWiper.nIntermitTime[1] = Dbc::DecodeInt(rx->data8, 16, 8, 100.0f);
+            conf->stWiper.nIntermitTime[2] = Dbc::DecodeInt(rx->data8, 24, 8, 100.0f);
+            conf->stWiper.nIntermitTime[3] = Dbc::DecodeInt(rx->data8, 32, 8, 100.0f);
+            conf->stWiper.nIntermitTime[4] = Dbc::DecodeInt(rx->data8, 40, 8, 100.0f);
+            conf->stWiper.nIntermitTime[5] = Dbc::DecodeInt(rx->data8, 48, 8, 100.0f);
         }
 
         tx->DLC = 7;
         tx->IDE = CAN_IDE_STD;
 
+        for (int i = 0; i < 8; i++) tx->data8[i] = 0;
         tx->data8[0] = static_cast<uint8_t>(MsgCmd::WiperDelays) + 128;
-        tx->data8[1] = conf->stWiper.nIntermitTime[0] / 100;
-        tx->data8[2] = conf->stWiper.nIntermitTime[1] / 100;
-        tx->data8[3] = conf->stWiper.nIntermitTime[2] / 100;
-        tx->data8[4] = conf->stWiper.nIntermitTime[3] / 100;
-        tx->data8[5] = conf->stWiper.nIntermitTime[4] / 100;
-        tx->data8[6] = conf->stWiper.nIntermitTime[5] / 100;
-        tx->data8[7] = 0;
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nIntermitTime[0], 8, 8, 100.0f);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nIntermitTime[1], 16, 8, 100.0f);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nIntermitTime[2], 24, 8, 100.0f);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nIntermitTime[3], 32, 8, 100.0f);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nIntermitTime[4], 40, 8, 100.0f);
+        Dbc::EncodeInt(tx->data8, conf->stWiper.nIntermitTime[5], 48, 8, 100.0f);
 
         if (rx->DLC == 7)
             return MsgCmdResult::Write;

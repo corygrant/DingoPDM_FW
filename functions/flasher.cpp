@@ -1,4 +1,5 @@
 #include "flasher.h"
+#include "dbc.h"
 
 void Flasher::Update(uint32_t nTimeNow)
 {
@@ -34,32 +35,31 @@ MsgCmdResult Flasher::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
     if ((rx->DLC == 6) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = (rx->data8[1] & 0xF0) >> 4;
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 12, 4);
         if (nIndex < PDM_NUM_FLASHERS)
         {
             if (rx->DLC == 6)
             {
-                conf->stFlasher[nIndex].bEnabled = (rx->data8[1] & 0x01);
-                conf->stFlasher[nIndex].bSingleCycle = (rx->data8[1] & 0x02) >> 1;
-                conf->stFlasher[nIndex].nInput = rx->data8[2];
+                conf->stFlasher[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
+                conf->stFlasher[nIndex].bSingleCycle = Dbc::DecodeInt(rx->data8, 9, 1);
+                conf->stFlasher[nIndex].nInput = Dbc::DecodeInt(rx->data8, 16, 8);
 
-                conf->stFlasher[nIndex].nFlashOnTime = rx->data8[4] * 100;
-                conf->stFlasher[nIndex].nFlashOffTime = rx->data8[5] * 100;
+                conf->stFlasher[nIndex].nFlashOnTime = Dbc::DecodeInt(rx->data8, 32, 8, 100.0f);
+                conf->stFlasher[nIndex].nFlashOffTime = Dbc::DecodeInt(rx->data8, 40, 8, 100.0f);
             }
 
             tx->DLC = 6;
             tx->IDE = CAN_IDE_STD;
 
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::Flashers) + 128;
-            tx->data8[1] = ((nIndex & 0x0F) << 4) +
-                          ((conf->stFlasher[nIndex].bSingleCycle & 0x01) << 1) +
-                          (conf->stFlasher[nIndex].bEnabled & 0x01);
-            tx->data8[2] = conf->stFlasher[nIndex].nInput;
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
 
-            tx->data8[4] = conf->stFlasher[nIndex].nFlashOnTime / 100;
-            tx->data8[5] = conf->stFlasher[nIndex].nFlashOffTime / 100;
-            tx->data8[6] = 0;
-            tx->data8[7] = 0;
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::Flashers) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].bEnabled, 8, 1);
+            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].bSingleCycle, 9, 1);
+            Dbc::EncodeInt(tx->data8, nIndex, 12, 4);
+            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nInput, 16, 8);
+            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nFlashOnTime, 32, 8, 100.0f);
+            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nFlashOffTime, 40, 8, 100.0f);
 
             if (rx->DLC == 6)
                 return MsgCmdResult::Write;

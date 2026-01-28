@@ -1,4 +1,5 @@
 #include "keypad.h"
+#include "dbc.h"
 #include "dingopdm_config.h"
 
 #define KEYPAD_NUM_TX_MSGS 4
@@ -389,25 +390,26 @@ MsgCmdResult KeypadMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         {
             if (rx->DLC == 6)
             {
-                conf->stKeypad[nIndex].bEnabled = (rx->data8[2] & 0x01);
-                
-                conf->stKeypad[nIndex].nNodeId = (rx->data8[3] & 0x7F);
-                conf->stKeypad[nIndex].bTimeoutEnabled = (rx->data8[3] & 0x80) >> 7;
-        
-                conf->stKeypad[nIndex].nTimeout = (rx->data8[4] * 100);
+                conf->stKeypad[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
 
-                conf->stKeypad[nIndex].eModel = static_cast<KeypadModel>(rx->data8[5]);
+                conf->stKeypad[nIndex].nNodeId = Dbc::DecodeInt(rx->data8, 24, 7);
+                conf->stKeypad[nIndex].bTimeoutEnabled = Dbc::DecodeInt(rx->data8, 31, 1);
+
+                conf->stKeypad[nIndex].nTimeout = Dbc::DecodeInt(rx->data8, 32, 8) * 100;
+
+                conf->stKeypad[nIndex].eModel = static_cast<KeypadModel>(Dbc::DecodeInt(rx->data8, 40, 8));
             }
 
             tx->DLC = 6;
             tx->IDE = CAN_IDE_STD;
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::Keypad) + 128;
             tx->data8[1] = nIndex;
-            tx->data8[2] =  (conf->stKeypad[nIndex].bEnabled & 0x01);
-            tx->data8[3] =  (conf->stKeypad[nIndex].nNodeId & 0x7F) + 
-                            ((conf->stKeypad[nIndex].bTimeoutEnabled & 0x01) << 7);
-            tx->data8[4] = (uint8_t)(conf->stKeypad[nIndex].nTimeout / 100);
-            tx->data8[5] = static_cast<uint8_t>(conf->stKeypad[nIndex].eModel);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].bEnabled, 16, 1);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nNodeId, 24, 7);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].bTimeoutEnabled, 31, 1);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nTimeout / 100, 32, 8);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stKeypad[nIndex].eModel), 40, 8);
 
             if(rx->DLC == 6)
                 return MsgCmdResult::Write;
@@ -435,24 +437,25 @@ MsgCmdResult KeypadLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         {
             if (rx->DLC == 8)
             {
-                conf->stKeypad[nIndex].nBacklightBrightness = rx->data8[2];
-                conf->stKeypad[nIndex].nBacklightColor = rx->data8[3];
-                conf->stKeypad[nIndex].nDimBacklightBrightness = rx->data8[4];
-                conf->stKeypad[nIndex].nDimmingVar = rx->data8[5];
-                conf->stKeypad[nIndex].nButtonBrightness = rx->data8[6];
-                conf->stKeypad[nIndex].nDimButtonBrightness = rx->data8[7];
+                conf->stKeypad[nIndex].nBacklightBrightness = Dbc::DecodeInt(rx->data8, 16, 8);
+                conf->stKeypad[nIndex].nBacklightColor = Dbc::DecodeInt(rx->data8, 24, 8);
+                conf->stKeypad[nIndex].nDimBacklightBrightness = Dbc::DecodeInt(rx->data8, 32, 8);
+                conf->stKeypad[nIndex].nDimmingVar = Dbc::DecodeInt(rx->data8, 40, 8);
+                conf->stKeypad[nIndex].nButtonBrightness = Dbc::DecodeInt(rx->data8, 48, 8);
+                conf->stKeypad[nIndex].nDimButtonBrightness = Dbc::DecodeInt(rx->data8, 56, 8);
             }
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadLed) + 128;
             tx->data8[1] = nIndex;
-            tx->data8[2] = conf->stKeypad[nIndex].nBacklightBrightness;
-            tx->data8[3] = conf->stKeypad[nIndex].nBacklightColor;
-            tx->data8[4] = conf->stKeypad[nIndex].nDimBacklightBrightness;
-            tx->data8[5] = conf->stKeypad[nIndex].nDimmingVar;
-            tx->data8[6] = conf->stKeypad[nIndex].nButtonBrightness;
-            tx->data8[7] = conf->stKeypad[nIndex].nDimButtonBrightness;
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nBacklightBrightness, 16, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nBacklightColor, 24, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nDimBacklightBrightness, 32, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nDimmingVar, 40, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nButtonBrightness, 48, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].nDimButtonBrightness, 56, 8);
 
             if(rx->DLC == 8)
                 return MsgCmdResult::Write;

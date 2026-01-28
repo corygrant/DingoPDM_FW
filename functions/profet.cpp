@@ -1,4 +1,5 @@
 #include "profet.h"
+#include "dbc.h"
 
 void Profet::Update(bool bOutEnabled)
 {
@@ -207,33 +208,36 @@ MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFr
     if ((rx->DLC == 8) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = (rx->data8[1] & 0xF0) >> 4;
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 12, 4);
         if (nIndex < PDM_NUM_OUTPUTS)
         {
             if (rx->DLC == 8)
             {
-                conf->stOutput[nIndex].bEnabled = (rx->data8[1] & 0x01);
-                conf->stOutput[nIndex].nInput = rx->data8[2];
-                conf->stOutput[nIndex].nCurrentLimit = rx->data8[3] * 10;
-                conf->stOutput[nIndex].eResetMode = static_cast<ProfetResetMode>(rx->data8[4] & 0x0F);
-                conf->stOutput[nIndex].nResetLimit = (rx->data8[4] & 0xF0) >> 4;
-                conf->stOutput[nIndex].nResetTime = rx->data8[5] * 100;
-                conf->stOutput[nIndex].nInrushLimit = rx->data8[6] * 10;
-                conf->stOutput[nIndex].nInrushTime = rx->data8[7] * 100;
+                conf->stOutput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
+                conf->stOutput[nIndex].nInput = Dbc::DecodeInt(rx->data8, 16, 8);
+                conf->stOutput[nIndex].nCurrentLimit = Dbc::DecodeInt(rx->data8, 24, 8, 10.0f);
+                conf->stOutput[nIndex].eResetMode = static_cast<ProfetResetMode>(Dbc::DecodeInt(rx->data8, 32, 4));
+                conf->stOutput[nIndex].nResetLimit = Dbc::DecodeInt(rx->data8, 36, 4);
+                conf->stOutput[nIndex].nResetTime = Dbc::DecodeInt(rx->data8, 40, 8, 100.0f);
+                conf->stOutput[nIndex].nInrushLimit = Dbc::DecodeInt(rx->data8, 48, 8, 10.0f);
+                conf->stOutput[nIndex].nInrushTime = Dbc::DecodeInt(rx->data8, 56, 8, 100.0f);
             }
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
 
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::Outputs) + 128;
-            tx->data8[1] = ((nIndex & 0x0F) << 4) + (conf->stOutput[nIndex].bEnabled & 0x01);
-            tx->data8[2] = conf->stOutput[nIndex].nInput;
-            tx->data8[3] = (uint8_t)(conf->stOutput[nIndex].nCurrentLimit / 10);
-            tx->data8[4] = ((conf->stOutput[nIndex].nResetLimit & 0x0F) << 4) +
-                           (static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode) & 0x0F);
-            tx->data8[5] = (uint8_t)(conf->stOutput[nIndex].nResetTime / 100);
-            tx->data8[6] = (uint8_t)(conf->stOutput[nIndex].nInrushLimit / 10);
-            tx->data8[7] = (uint8_t)(conf->stOutput[nIndex].nInrushTime / 100);
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::Outputs) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].bEnabled, 8, 1);
+            Dbc::EncodeInt(tx->data8, nIndex, 12, 4);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInput, 16, 8);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nCurrentLimit, 24, 8, 10.0f);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode), 32, 4);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nResetLimit, 36, 4);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nResetTime, 40, 8, 100.0f);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInrushLimit, 48, 8, 10.0f);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInrushTime, 56, 8, 100.0f);
 
             if (rx->DLC == 8)
                 return MsgCmdResult::Write;

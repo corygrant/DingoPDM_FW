@@ -1,4 +1,5 @@
 #include "can_input.h"
+#include "dbc.h"
 
 bool CanInput::CheckMsg(CANRxFrame rx)
 {
@@ -83,39 +84,42 @@ MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     if ((rx->DLC == 7) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = rx->data8[1];
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
 
         if (nIndex < PDM_NUM_CAN_INPUTS)
         {
             if (rx->DLC == 7)
             {
-                conf->stCanInput[nIndex].bEnabled = (rx->data8[2] & 0x01);
-                conf->stCanInput[nIndex].eMode = static_cast<InputMode>((rx->data8[2] & 0x06) >> 1);
-                conf->stCanInput[nIndex].bTimeoutEnabled = (rx->data8[2] & 0x08) >> 3;
-                conf->stCanInput[nIndex].eOperator = static_cast<Operator>((rx->data8[2] & 0xF0) >> 4);
+                conf->stCanInput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
+                conf->stCanInput[nIndex].eMode = static_cast<InputMode>(Dbc::DecodeInt(rx->data8, 17, 2));
+                conf->stCanInput[nIndex].bTimeoutEnabled = Dbc::DecodeInt(rx->data8, 19, 1);
+                conf->stCanInput[nIndex].eOperator = static_cast<Operator>(Dbc::DecodeInt(rx->data8, 20, 4));
 
-                conf->stCanInput[nIndex].nStartingByte = (rx->data8[3] & 0x0F);
-                conf->stCanInput[nIndex].nDLC = (rx->data8[3] & 0xF0) >> 4;
+                conf->stCanInput[nIndex].nStartingByte = Dbc::DecodeInt(rx->data8, 24, 4);
+                conf->stCanInput[nIndex].nDLC = Dbc::DecodeInt(rx->data8, 28, 4);
 
-                conf->stCanInput[nIndex].nOnVal = (rx->data8[4] << 8) + rx->data8[5];
+                conf->stCanInput[nIndex].nOnVal = Dbc::DecodeInt(rx->data8, 32, 16);
 
-                conf->stCanInput[nIndex].nTimeout = (rx->data8[6] * 100);
+                conf->stCanInput[nIndex].nTimeout = Dbc::DecodeInt(rx->data8, 48, 8, 100.0f);
             }
 
             tx->DLC = 7;
             tx->IDE = CAN_IDE_STD;
 
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::CanInputs) + 128;
-            tx->data8[1] = nIndex;
-            tx->data8[2] = ((static_cast<uint8_t>(conf->stCanInput[nIndex].eOperator) & 0x0F) << 4) +
-                        ((static_cast<uint8_t>(conf->stCanInput[nIndex].eMode) & 0x03) << 1) +
-                        ((conf->stCanInput[nIndex].bTimeoutEnabled & 0x01) << 3) +
-                        (conf->stCanInput[nIndex].bEnabled & 0x01);
-            tx->data8[3] = ((conf->stCanInput[nIndex].nDLC & 0xF) << 4) +
-                            (conf->stCanInput[nIndex].nStartingByte & 0xF);
-            tx->data8[4] = (uint8_t)(conf->stCanInput[nIndex].nOnVal >> 8);
-            tx->data8[5] = (uint8_t)(conf->stCanInput[nIndex].nOnVal & 0xFF);
-            tx->data8[6] = (uint8_t)(conf->stCanInput[nIndex].nTimeout / 100);
+            // Clear tx data
+            for (int i = 0; i < 8; i++)
+                tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputs) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bEnabled, 16, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eMode), 17, 2);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bTimeoutEnabled, 19, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eOperator), 20, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nStartingByte, 24, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nDLC, 28, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nOnVal, 32, 16);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nTimeout, 48, 8, 100.0f);
 
             if(rx->DLC == 7)
                 return MsgCmdResult::Write;
@@ -137,30 +141,29 @@ MsgCmdResult CanInputIdMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     if ((rx->DLC == 8) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = rx->data8[1];
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
 
         if (nIndex < PDM_NUM_CAN_INPUTS)
         {
             if (rx->DLC == 8)
             {
-                conf->stCanInput[nIndex].nIDE = (rx->data8[2] & 0x08) >> 3;
-                conf->stCanInput[nIndex].nSID = ((rx->data8[2] & 0x07) << 8) + rx->data8[3];
-                conf->stCanInput[nIndex].nEID = ((rx->data8[4] & 0x1F) << 24) + (rx->data8[5] << 16) +
-                                                   (rx->data8[6] << 8) + rx->data8[7];
+                conf->stCanInput[nIndex].nIDE = Dbc::DecodeInt(rx->data8, 19, 1);
+                conf->stCanInput[nIndex].nSID = Dbc::DecodeInt(rx->data8, 16, 11);
+                conf->stCanInput[nIndex].nEID = Dbc::DecodeInt(rx->data8, 32, 29);
             }
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
 
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::CanInputsId) + 128;
-            tx->data8[1] = nIndex;
-            tx->data8[2] = ((conf->stCanInput[nIndex].nSID >> 8) & 0x07) +
-                          ((conf->stCanInput[nIndex].nIDE & 0x01) << 3);
-            tx->data8[3] = (uint8_t)(conf->stCanInput[nIndex].nSID & 0xFF);
-            tx->data8[4] = (uint8_t)((conf->stCanInput[nIndex].nEID >> 24) & 0x1F);
-            tx->data8[5] = (uint8_t)((conf->stCanInput[nIndex].nEID >> 16) & 0xFF);
-            tx->data8[6] = (uint8_t)((conf->stCanInput[nIndex].nEID >> 8) & 0xFF);
-            tx->data8[7] = (uint8_t)(conf->stCanInput[nIndex].nEID & 0xFF);
+            // Clear tx data
+            for (int i = 0; i < 8; i++)
+                tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputsId) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nSID, 16, 11);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nIDE, 19, 1);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nEID, 32, 29);
 
             if (rx->DLC == 8)
                 return MsgCmdResult::Write;

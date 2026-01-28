@@ -1,4 +1,5 @@
 #include "keypad_button.h"
+#include "dbc.h"
 
 bool KeypadButton::Update(bool bNewVal)
 {
@@ -65,36 +66,38 @@ MsgCmdResult ButtonMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     if ((rx->DLC == 8) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = (rx->data8[1] & 0x07);
-        uint8_t nButtonIndex = rx->data8[1] >> 3;
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 3);
+        uint8_t nButtonIndex = Dbc::DecodeInt(rx->data8, 11, 5);
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
             if (rx->DLC == 8)
             {
-                conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled = (rx->data8[2] & 0x01);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].eMode = static_cast<InputMode>((rx->data8[2] & 0x0C) >> 2);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].eMode = static_cast<InputMode>(Dbc::DecodeInt(rx->data8, 18, 2));
 
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0] = rx->data8[3];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1] = rx->data8[4];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2] = rx->data8[5];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3] = rx->data8[6];
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar = rx->data8[7];
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0] = Dbc::DecodeInt(rx->data8, 24, 8);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1] = Dbc::DecodeInt(rx->data8, 32, 8);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2] = Dbc::DecodeInt(rx->data8, 40, 8);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3] = Dbc::DecodeInt(rx->data8, 48, 8);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar = Dbc::DecodeInt(rx->data8, 56, 8);
             }
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButton) + 128;
-            tx->data8[1] = (nIndex & 0x07) + (nButtonIndex << 3);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 3);
+            Dbc::EncodeInt(tx->data8, nButtonIndex, 11, 5);
 
-            tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled & 0x01) +
-                           ((static_cast<uint8_t>(conf->stKeypad[nIndex].stButton[nButtonIndex].eMode) & 0x03) << 2);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].bEnabled, 16, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stKeypad[nIndex].stButton[nButtonIndex].eMode), 18, 2);
 
-            tx->data8[3] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0];
-            tx->data8[4] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1];
-            tx->data8[5] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2];
-            tx->data8[6] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3];
-            tx->data8[7] = conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar;
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[0], 24, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[1], 32, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[2], 40, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValVars[3], 48, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultVar, 56, 8);
 
             if(rx->DLC == 8)
                 return MsgCmdResult::Write;
@@ -116,24 +119,24 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     if ((rx->DLC == 8) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = (rx->data8[1] & 0x07);
-        uint8_t nButtonIndex = rx->data8[1] >> 3;
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 3);
+        uint8_t nButtonIndex = Dbc::DecodeInt(rx->data8, 11, 5);
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
             if (rx->DLC == 8)
             {
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0] = (rx->data8[2] & 0x0F);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1] = (rx->data8[2] & 0xF0) >> 4;
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] = (rx->data8[3] & 0x0F);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] = (rx->data8[3] & 0xF0) >> 4;
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor = (rx->data8[4] & 0x0F);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nNumOfValColors = (rx->data8[4] & 0xF0) >> 4;
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] = (rx->data8[5] & 0x0F);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] = (rx->data8[5] & 0xF0) >> 4;
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] = (rx->data8[6] & 0x0F);
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] = (rx->data8[6] & 0xF0) >> 4;
-                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor = (rx->data8[7] & 0x0F);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0] = Dbc::DecodeInt(rx->data8, 16, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1] = Dbc::DecodeInt(rx->data8, 20, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] = Dbc::DecodeInt(rx->data8, 24, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] = Dbc::DecodeInt(rx->data8, 28, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor = Dbc::DecodeInt(rx->data8, 32, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nNumOfValColors = Dbc::DecodeInt(rx->data8, 36, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] = Dbc::DecodeInt(rx->data8, 40, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] = Dbc::DecodeInt(rx->data8, 44, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] = Dbc::DecodeInt(rx->data8, 48, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] = Dbc::DecodeInt(rx->data8, 52, 4);
+                conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor = Dbc::DecodeInt(rx->data8, 56, 4);
 
                 conf->stKeypad[nIndex].stButton[nButtonIndex].bValBlinking[0] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] > 0;
                 conf->stKeypad[nIndex].stButton[nButtonIndex].bValBlinking[1] = conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] > 0;
@@ -144,25 +147,27 @@ MsgCmdResult ButtonLedMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 
             tx->DLC = 8;
             tx->IDE = CAN_IDE_STD;
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadButtonLed) + 128;
-            tx->data8[1] = (nIndex & 0x07) + (nButtonIndex << 3);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 3);
+            Dbc::EncodeInt(tx->data8, nButtonIndex, 11, 5);
 
-            tx->data8[2] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0] & 0x0F) +
-                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1] & 0x0F) << 4);
-                           
-            tx->data8[3] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2] & 0x0F) +
-                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3] & 0x0F) << 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[0], 16, 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[1], 20, 4);
 
-            tx->data8[4] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor & 0x0F) +
-                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nNumOfValColors & 0x0F) << 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[2], 24, 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValColors[3], 28, 4);
 
-            tx->data8[5] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0] & 0x0F) +
-                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1] & 0x0F) << 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultColor, 32, 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nNumOfValColors, 36, 4);
 
-            tx->data8[6] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2] & 0x0F) +
-                           ((conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3] & 0x0F) << 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[0], 40, 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[1], 44, 4);
 
-            tx->data8[7] = (conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor & 0x0F);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[2], 48, 4);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nValBlinkingColors[3], 52, 4);
+
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stButton[nButtonIndex].nFaultBlinkingColor, 56, 4);
             
             if(rx->DLC == 8)
                 return MsgCmdResult::Write;

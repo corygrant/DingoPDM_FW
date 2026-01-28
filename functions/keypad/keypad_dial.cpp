@@ -1,4 +1,5 @@
 #include "keypad_dial.h"
+#include "dbc.h"
 
 void KeypadDial::Update(uint64_t data)
 {
@@ -24,26 +25,28 @@ MsgCmdResult KeypadDial::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CAN
     if ((rx->DLC == 5) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = (rx->data8[1] & 0x07);
-        uint8_t nDialIndex = (rx->data8[1] & 0xF8) >> 3;
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 3);
+        uint8_t nDialIndex = Dbc::DecodeInt(rx->data8, 11, 5);
 
         if (nIndex < PDM_NUM_KEYPADS)
         {
             if (rx->DLC == 5)
             {
-                conf->stKeypad[nIndex].stDial[nDialIndex].nDialMinLed = rx->data8[2];
-                conf->stKeypad[nIndex].stDial[nDialIndex].nDialMaxLed = rx->data8[3];
-                conf->stKeypad[nIndex].stDial[nDialIndex].nDialLedOffset = rx->data8[4];
+                conf->stKeypad[nIndex].stDial[nDialIndex].nDialMinLed = Dbc::DecodeInt(rx->data8, 16, 8);
+                conf->stKeypad[nIndex].stDial[nDialIndex].nDialMaxLed = Dbc::DecodeInt(rx->data8, 24, 8);
+                conf->stKeypad[nIndex].stDial[nDialIndex].nDialLedOffset = Dbc::DecodeInt(rx->data8, 32, 8);
             }
 
             tx->DLC = 5;
             tx->IDE = CAN_IDE_STD;
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
             tx->data8[0] = static_cast<uint8_t>(MsgCmd::KeypadDial) + 128;
-            tx->data8[1] = (nIndex & 0x07) + ((nDialIndex & 0x1F) << 3);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 3);
+            Dbc::EncodeInt(tx->data8, nDialIndex, 11, 5);
 
-            tx->data8[2] = conf->stKeypad[nIndex].stDial[nDialIndex].nDialMinLed;
-            tx->data8[3] = conf->stKeypad[nIndex].stDial[nDialIndex].nDialMaxLed;
-            tx->data8[4] = conf->stKeypad[nIndex].stDial[nDialIndex].nDialLedOffset;
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stDial[nDialIndex].nDialMinLed, 16, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stDial[nDialIndex].nDialMaxLed, 24, 8);
+            Dbc::EncodeInt(tx->data8, conf->stKeypad[nIndex].stDial[nDialIndex].nDialLedOffset, 32, 8);
 
             if(rx->DLC == 5)
                 return MsgCmdResult::Write;

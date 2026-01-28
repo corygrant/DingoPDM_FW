@@ -1,4 +1,5 @@
 #include "condition.h"
+#include "dbc.h"
 
 void Condition::Update()
 {
@@ -56,28 +57,31 @@ MsgCmdResult Condition::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANT
     if ((rx->DLC == 6) ||
         (rx->DLC == 2))
     {
-        uint8_t nIndex = rx->data8[1];
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
 
         if (nIndex < PDM_NUM_CONDITIONS)
         {
             if (rx->DLC == 6)
             {
-                conf->stCondition[nIndex].bEnabled = (rx->data8[2] & 0x01);
-                conf->stCondition[nIndex].eOperator = static_cast<Operator>(rx->data8[2] >> 4);
-                conf->stCondition[nIndex].nInput = rx->data8[3];
-                conf->stCondition[nIndex].nArg = (rx->data8[4] << 8) + rx->data8[5];
+                conf->stCondition[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
+                conf->stCondition[nIndex].eOperator = static_cast<Operator>(Dbc::DecodeInt(rx->data8, 20, 4));
+                conf->stCondition[nIndex].nInput = Dbc::DecodeInt(rx->data8, 24, 8);
+                conf->stCondition[nIndex].nArg = Dbc::DecodeInt(rx->data8, 32, 16);
             }
 
             tx->DLC = 6;
             tx->IDE = CAN_IDE_STD;
 
-            tx->data8[0] = static_cast<uint8_t>(MsgCmd::Conditions) + 128;
-            tx->data8[1] = nIndex;
-            tx->data8[2] = (conf->stCondition[nIndex].bEnabled & 0x01) +
-                           ((static_cast<uint8_t>(conf->stCondition[nIndex].eOperator) & 0x0F) << 4);
-            tx->data8[3] = conf->stCondition[nIndex].nInput;
-            tx->data8[4] = (conf->stCondition[nIndex].nArg & 0xFF00) >> 8;
-            tx->data8[5] = conf->stCondition[nIndex].nArg & 0x00FF;
+            // Clear tx data
+            for (int i = 0; i < 8; i++)
+                tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::Conditions) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].bEnabled, 16, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCondition[nIndex].eOperator), 20, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].nInput, 24, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].nArg, 32, 16);
 
             if(rx->DLC == 6)
                 return MsgCmdResult::Write;
