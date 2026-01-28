@@ -21,7 +21,7 @@ enum class MsgCmd : uint8_t
     StarterDisable = 30,
     CanInputs = 35,
     CanInputsId = 36,
-    //CanInputsName = 37, //Future use
+    CanInputsScale = 37, // DBC scale, offset, and onVal parameters
     Counters = 40,
     //CountersName = 41, //Future use
     Conditions = 45,

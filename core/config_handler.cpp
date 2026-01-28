@@ -42,6 +42,7 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
             break;
         case MsgCmd::CanInputs:
         case MsgCmd::CanInputsId:
+        case MsgCmd::CanInputsScale:
             res = CanInput::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::VirtualInputs:

@@ -4,8 +4,9 @@
 #include "port.h"
 #include "enums.h"
 #include "hardware/mb85rc.h"
+#include "dbc.h"
 
-#define CONFIG_VERSION 0x0002 //Increment when config structure changes
+#define CONFIG_VERSION 0x0003 //Increment when config structure changes
 
 struct Config_DeviceConfig{
   uint16_t nConfigVersion;
@@ -97,10 +98,14 @@ struct Config_CanInput{
   uint8_t nIDE; //0=STD, 1=EXT
   uint32_t nSID:11;
   uint32_t nEID:29;
-  uint16_t nDLC;
-  uint16_t nStartingByte;
+  uint8_t nStartBit;    // DBC start bit
+  uint8_t nBitLength;   // DBC bit length
+  float fScale;         // DBC scale factor
+  float fOffset;        // DBC offset
+  ByteOrder eByteOrder; // DBC byte order (Little/Big Endian)
+  bool bSigned;         // DBC signed flag
   Operator eOperator;
-  uint16_t nOnVal;
+  float fOnVal;         // Changed from nOnVal to support scaled values
   InputMode eMode;
 };
 

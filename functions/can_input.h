@@ -23,7 +23,6 @@ public:
 
 private:
     Config_CanInput* pConfig;
-    uint16_t nData;
 
     Input input;
 
