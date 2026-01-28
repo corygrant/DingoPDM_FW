@@ -172,6 +172,7 @@ CPPSRC = $(ALLCPPSRC) \
 				 hardware/mcp9808.cpp \
 				 hardware/mb85rc.cpp \
 				 utils/crc.cpp \
+				 utils/dbc.cpp \
 				 main.cpp
 
 # List ASM source files here.

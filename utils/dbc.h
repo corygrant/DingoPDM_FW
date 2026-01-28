@@ -1,0 +1,28 @@
+#pragma once
+
+#include <cstdint>
+
+enum class ByteOrder : uint8_t
+{
+    LittleEndian = 0,  // Intel byte order
+    BigEndian = 1      // Motorola byte order
+};
+
+class Dbc
+{
+public:
+    static int32_t DecodeInt(const uint8_t* pData, uint8_t nStartBit, uint8_t nBitLength, ByteOrder eByteOrder, bool bSigned);
+    static void EncodeInt(uint8_t* pData, int32_t nRawValue,uint8_t nStartBit, uint8_t nBitLength, ByteOrder eByteOrder);
+
+    static float DecodeFloat(const uint8_t* pData, uint8_t nStartBit, uint8_t nBitLength, ByteOrder eByteOrder, bool bSigned, float fScale, float fOffset);
+    static void EncodeFloat(uint8_t* pData, float fPhysicalValue, uint8_t nStartBit, uint8_t nBitLength, ByteOrder eByteOrder, float fScale, float fOffset);
+
+private:
+    static int32_t DecodeLE(const uint8_t* pData, uint8_t nStartBit, uint8_t nBitLength, bool bSigned);
+    static int32_t DecodeBE(const uint8_t* pData, uint8_t nStartBit, uint8_t nBitLength, bool bSigned);
+    static void EncodeLE(uint8_t* pData, int32_t nRawValue, uint8_t nStartBit, uint8_t nBitLength);
+    static void EncodeBE(uint8_t* pData, int32_t nRawValue, uint8_t nStartBit, uint8_t nBitLength);
+
+    static float ApplyScaling(int32_t nRawValue, float fScale, float fOffset);
+    static int32_t ReverseScaling(float fPhysicalValue, float fScale, float fOffset);
+};
