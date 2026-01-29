@@ -61,63 +61,101 @@ void VirtualInput::Update()
     fVal = input.Check(pConfig->eMode, false, bResultSec1);
 }
 
-MsgCmdResult VirtualInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult VirtualInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // DLC 7 = Set virtual input settings
+    // DLC 3 = Set virtual input settings (without vars)
     // DLC 2 = Get virtual input settings
 
-    if ((rx->DLC == 7) ||
-        (rx->DLC == 2))
+    if ((rx->DLC == 3) || (rx->DLC == 2))
     {
-        uint8_t nIndex;
-        if (rx->DLC == 7)
-            nIndex = Dbc::DecodeInt(rx->data8, 16, 8);
-        else
-            nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
 
         if (nIndex < PDM_NUM_VIRT_INPUTS)
         {
-            if (rx->DLC == 7)
+            if (rx->DLC == 3)
             {
-                conf->stVirtualInput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
-                conf->stVirtualInput[nIndex].bNot0 = Dbc::DecodeInt(rx->data8, 9, 1);
-                conf->stVirtualInput[nIndex].bNot1 = Dbc::DecodeInt(rx->data8, 10, 1);
-                conf->stVirtualInput[nIndex].bNot2 = Dbc::DecodeInt(rx->data8, 11, 1);
-                conf->stVirtualInput[nIndex].nVar0 = Dbc::DecodeInt(rx->data8, 24, 8);
-                conf->stVirtualInput[nIndex].nVar1 = Dbc::DecodeInt(rx->data8, 32, 8);
-                conf->stVirtualInput[nIndex].nVar2 = Dbc::DecodeInt(rx->data8, 40, 8);
-                conf->stVirtualInput[nIndex].eCond0 = static_cast<BoolOperator>(Dbc::DecodeInt(rx->data8, 48, 2));
-                conf->stVirtualInput[nIndex].eCond1 = static_cast<BoolOperator>(Dbc::DecodeInt(rx->data8, 50, 2));
-                conf->stVirtualInput[nIndex].eMode = static_cast<InputMode>(Dbc::DecodeInt(rx->data8, 54, 2));
+                conf->stVirtualInput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
+                conf->stVirtualInput[nIndex].bNot0 = Dbc::DecodeInt(rx->data8, 17, 1);
+                conf->stVirtualInput[nIndex].bNot1 = Dbc::DecodeInt(rx->data8, 18, 1);
+                conf->stVirtualInput[nIndex].bNot2 = Dbc::DecodeInt(rx->data8, 19, 1);
+                conf->stVirtualInput[nIndex].eCond0 = static_cast<BoolOperator>(Dbc::DecodeInt(rx->data8, 20, 2));
+                conf->stVirtualInput[nIndex].eCond1 = static_cast<BoolOperator>(Dbc::DecodeInt(rx->data8, 22, 2));
             }
 
-            tx->DLC = 7;
+            tx->DLC = 3;
             tx->IDE = CAN_IDE_STD;
 
-            // Clear tx data
             for (int i = 0; i < 8; i++)
                 tx->data8[i] = 0;
 
             Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::VirtualInputs) + 128, 0, 8);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bEnabled, 8, 1);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bNot0, 9, 1);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bNot1, 10, 1);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bNot2, 11, 1);
-            Dbc::EncodeInt(tx->data8, nIndex, 16, 8);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].nVar0, 24, 8);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].nVar1, 32, 8);
-            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].nVar2, 40, 8);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stVirtualInput[nIndex].eCond0), 48, 2);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stVirtualInput[nIndex].eCond1), 50, 2);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stVirtualInput[nIndex].eMode), 54, 2);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bEnabled, 16, 1);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bNot0, 17, 1);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bNot1, 18, 1);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].bNot2, 19, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stVirtualInput[nIndex].eCond0), 20, 2);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stVirtualInput[nIndex].eCond1), 22, 2);
 
-            if (rx->DLC == 7)
+            if (rx->DLC == 3)
                 return MsgCmdResult::Write;
             else
                 return MsgCmdResult::Request;
         }
         return MsgCmdResult::Invalid;
     }
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult VirtualInputVarsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set virtual input vars
+    // DLC 2 = Get virtual input vars
+
+    if ((rx->DLC == 8) || (rx->DLC == 2))
+    {
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
+
+        if (nIndex < PDM_NUM_VIRT_INPUTS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stVirtualInput[nIndex].nVar0 = Dbc::DecodeInt(rx->data8, 16, 16);
+                conf->stVirtualInput[nIndex].nVar1 = Dbc::DecodeInt(rx->data8, 32, 16);
+                conf->stVirtualInput[nIndex].nVar2 = Dbc::DecodeInt(rx->data8, 48, 16);
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+
+            for (int i = 0; i < 8; i++)
+                tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::VirtualInputsVars) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].nVar0, 16, 16);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].nVar1, 32, 16);
+            Dbc::EncodeInt(tx->data8, conf->stVirtualInput[nIndex].nVar2, 48, 16);
+
+            if (rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+        return MsgCmdResult::Invalid;
+    }
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult VirtualInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    MsgCmd cmd = static_cast<MsgCmd>(rx->data8[0]);
+
+    if (cmd == MsgCmd::VirtualInputs)
+        return VirtualInputMsg(conf, rx, tx);
+    else if (cmd == MsgCmd::VirtualInputsVars)
+        return VirtualInputVarsMsg(conf, rx, tx);
+
     return MsgCmdResult::Invalid;
 }
 

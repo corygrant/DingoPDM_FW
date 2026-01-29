@@ -214,13 +214,12 @@ MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFr
             if (rx->DLC == 8)
             {
                 conf->stOutput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
-                conf->stOutput[nIndex].nInput = Dbc::DecodeInt(rx->data8, 16, 8);
-                conf->stOutput[nIndex].nCurrentLimit = Dbc::DecodeInt(rx->data8, 24, 8, 10.0f);
-                conf->stOutput[nIndex].eResetMode = static_cast<ProfetResetMode>(Dbc::DecodeInt(rx->data8, 32, 4));
-                conf->stOutput[nIndex].nResetLimit = Dbc::DecodeInt(rx->data8, 36, 4);
-                conf->stOutput[nIndex].nResetTime = Dbc::DecodeInt(rx->data8, 40, 8, 100.0f);
-                conf->stOutput[nIndex].nInrushLimit = Dbc::DecodeInt(rx->data8, 48, 8, 10.0f);
-                conf->stOutput[nIndex].nInrushTime = Dbc::DecodeInt(rx->data8, 56, 8, 100.0f);
+                conf->stOutput[nIndex].nInput = Dbc::DecodeInt(rx->data8, 16, 16);
+                conf->stOutput[nIndex].nCurrentLimit = Dbc::DecodeInt(rx->data8, 32, 8, 10.0f);
+                conf->stOutput[nIndex].eResetMode = static_cast<ProfetResetMode>(Dbc::DecodeInt(rx->data8, 40, 4));
+                conf->stOutput[nIndex].nResetLimit = Dbc::DecodeInt(rx->data8, 44, 4);
+                conf->stOutput[nIndex].nResetTime = Dbc::DecodeInt(rx->data8, 48, 8, 100.0f);
+                conf->stOutput[nIndex].nInrushLimit = Dbc::DecodeInt(rx->data8, 56, 8, 10.0f);
             }
 
             tx->DLC = 8;
@@ -231,13 +230,12 @@ MsgCmdResult Profet::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFr
             Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::Outputs) + 128, 0, 8);
             Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].bEnabled, 8, 1);
             Dbc::EncodeInt(tx->data8, nIndex, 12, 4);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInput, 16, 8);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nCurrentLimit, 24, 8, 10.0f);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode), 32, 4);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nResetLimit, 36, 4);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nResetTime, 40, 8, 100.0f);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInrushLimit, 48, 8, 10.0f);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInrushTime, 56, 8, 100.0f);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInput, 16, 16);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nCurrentLimit, 32, 8, 10.0f);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stOutput[nIndex].eResetMode), 40, 4);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nResetLimit, 44, 4);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nResetTime, 48, 8, 100.0f);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].nInrushLimit, 56, 8, 10.0f);
 
             if (rx->DLC == 8)
                 return MsgCmdResult::Write;

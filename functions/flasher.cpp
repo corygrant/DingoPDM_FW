@@ -42,8 +42,7 @@ MsgCmdResult Flasher::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
             {
                 conf->stFlasher[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
                 conf->stFlasher[nIndex].bSingleCycle = Dbc::DecodeInt(rx->data8, 9, 1);
-                conf->stFlasher[nIndex].nInput = Dbc::DecodeInt(rx->data8, 16, 8);
-
+                conf->stFlasher[nIndex].nInput = Dbc::DecodeInt(rx->data8, 16, 16);
                 conf->stFlasher[nIndex].nFlashOnTime = Dbc::DecodeInt(rx->data8, 32, 8, 100.0f);
                 conf->stFlasher[nIndex].nFlashOffTime = Dbc::DecodeInt(rx->data8, 40, 8, 100.0f);
             }
@@ -57,7 +56,7 @@ MsgCmdResult Flasher::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
             Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].bEnabled, 8, 1);
             Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].bSingleCycle, 9, 1);
             Dbc::EncodeInt(tx->data8, nIndex, 12, 4);
-            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nInput, 16, 8);
+            Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nInput, 16, 16);
             Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nFlashOnTime, 32, 8, 100.0f);
             Dbc::EncodeInt(tx->data8, conf->stFlasher[nIndex].nFlashOffTime, 40, 8, 100.0f);
 

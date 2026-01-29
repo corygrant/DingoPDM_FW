@@ -26,13 +26,13 @@ struct Config_Input{
 struct Config_VirtualInput{
   bool bEnabled;
   bool bNot0;
-  uint8_t nVar0;
+  uint16_t nVar0;
   BoolOperator eCond0;
   bool bNot1;
-  uint8_t nVar1;
+  uint16_t nVar1;
   BoolOperator eCond1;
   bool bNot2;
-  uint8_t nVar2;
+  uint16_t nVar2;
   InputMode eMode;
 };
 
@@ -40,7 +40,7 @@ struct Config_PwmOutput{
   bool bEnabled;
   bool bSoftStart;
   bool bVariableDutyCycle;
-  uint8_t nDutyCycleInput;
+  uint16_t nDutyCycleInput;
   uint8_t nFixedDutyCycle; //0-100
   uint16_t nFreq; //0-400Hz
   uint16_t nSoftStartRampTime; //0-2000ms
@@ -49,7 +49,7 @@ struct Config_PwmOutput{
 
 struct Config_Output{
   bool bEnabled;
-  uint8_t nInput;
+  uint16_t nInput;
   uint16_t nCurrentLimit;
   uint16_t nInrushLimit;
   uint16_t nInrushTime;
@@ -63,15 +63,15 @@ struct Config_Output{
 struct Config_Wiper{
   bool bEnabled;
   WiperMode eMode;
-  uint8_t nSlowInput;   //WiperMode_DigIn
-  uint8_t nFastInput;   //WiperMode_DigIn
-  uint8_t nInterInput;  //WiperMode_DigIn
-  uint8_t nOnInput;     //WiperMode_MixIn
-  uint8_t nSpeedInput;  //WiperMode_IntIn and WiperMode_MixIn
-  uint8_t nParkInput;
+  uint16_t nSlowInput;   //WiperMode_DigIn
+  uint16_t nFastInput;   //WiperMode_DigIn
+  uint16_t nInterInput;  //WiperMode_DigIn
+  uint16_t nOnInput;     //WiperMode_MixIn
+  uint16_t nSpeedInput;  //WiperMode_IntIn and WiperMode_MixIn
+  uint16_t nParkInput;
   bool bParkStopLevel;
-  uint8_t nSwipeInput;
-  uint8_t nWashInput;
+  uint16_t nSwipeInput;
+  uint16_t nWashInput;
   uint8_t nWashWipeCycles;
   WiperSpeed eSpeedMap[PDM_NUM_WIPER_SPEED_MAP];
   uint16_t nIntermitTime[PDM_NUM_WIPER_INTER_DELAYS];
@@ -79,7 +79,7 @@ struct Config_Wiper{
 
 struct Config_Flasher{
   bool bEnabled;
-  uint8_t nInput;
+  uint16_t nInput;
   uint16_t nFlashOnTime;
   uint16_t nFlashOffTime;
   bool bSingleCycle;
@@ -87,7 +87,7 @@ struct Config_Flasher{
 
 struct Config_Starter{
   bool bEnabled;
-  uint8_t nInput;
+  uint16_t nInput;
   bool bDisableOut[PDM_NUM_OUTPUTS];
 };
 
@@ -115,9 +115,9 @@ struct Config_CanOutput{
 
 struct Config_Counter{
   bool bEnabled;
-  uint8_t nIncInput;
-  uint8_t nDecInput;
-  uint8_t nResetInput;
+  uint16_t nIncInput;
+  uint16_t nDecInput;
+  uint16_t nResetInput;
   uint8_t nMinCount;
   uint8_t nMaxCount;
   InputEdge eIncEdge;
@@ -128,7 +128,7 @@ struct Config_Counter{
 
 struct Config_Condition{
   bool bEnabled;
-  uint8_t nInput;
+  uint16_t nInput;
   Operator eOperator;
   float fArg;
 };

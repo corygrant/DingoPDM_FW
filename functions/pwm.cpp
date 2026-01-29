@@ -117,11 +117,10 @@ MsgCmdResult Pwm::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame
                 conf->stOutput[nIndex].stPwm.bEnabled = Dbc::DecodeInt(rx->data8, 8, 1);
                 conf->stOutput[nIndex].stPwm.bSoftStart = Dbc::DecodeInt(rx->data8, 9, 1);
                 conf->stOutput[nIndex].stPwm.bVariableDutyCycle = Dbc::DecodeInt(rx->data8, 10, 1);
-                conf->stOutput[nIndex].stPwm.nDutyCycleInput = Dbc::DecodeInt(rx->data8, 16, 8);
-                conf->stOutput[nIndex].stPwm.nFreq = Dbc::DecodeInt(rx->data8, 24, 9);
-                conf->stOutput[nIndex].stPwm.nFixedDutyCycle = Dbc::DecodeInt(rx->data8, 33, 7);
-                conf->stOutput[nIndex].stPwm.nSoftStartRampTime = Dbc::DecodeInt(rx->data8, 40, 16);
-                conf->stOutput[nIndex].stPwm.nDutyCycleInputDenom = Dbc::DecodeInt(rx->data8, 56, 8);
+                conf->stOutput[nIndex].stPwm.nDutyCycleInput = Dbc::DecodeInt(rx->data8, 16, 16);
+                conf->stOutput[nIndex].stPwm.nFreq = Dbc::DecodeInt(rx->data8, 32, 9);
+                conf->stOutput[nIndex].stPwm.nFixedDutyCycle = Dbc::DecodeInt(rx->data8, 41, 7);
+                conf->stOutput[nIndex].stPwm.nSoftStartRampTime = Dbc::DecodeInt(rx->data8, 48, 16);
             }
 
             tx->DLC = 8;
@@ -134,11 +133,10 @@ MsgCmdResult Pwm::ProcessSettingsMsg(PdmConfig *conf, CANRxFrame *rx, CANTxFrame
             Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.bSoftStart, 9, 1);
             Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.bVariableDutyCycle, 10, 1);
             Dbc::EncodeInt(tx->data8, nIndex, 12, 4);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nDutyCycleInput, 16, 8);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nFreq, 24, 9);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nFixedDutyCycle, 33, 7);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nSoftStartRampTime, 40, 16);
-            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nDutyCycleInputDenom, 56, 8);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nDutyCycleInput, 16, 16);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nFreq, 32, 9);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nFixedDutyCycle, 41, 7);
+            Dbc::EncodeInt(tx->data8, conf->stOutput[nIndex].stPwm.nSoftStartRampTime, 48, 16);
 
             if (rx->DLC == 8)
                 return MsgCmdResult::Write;

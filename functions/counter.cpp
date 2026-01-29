@@ -42,33 +42,29 @@ void Counter::Update()
     bLastReset = *pResetInput;
 }
 
-MsgCmdResult Counter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult CounterMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // DLC 8 = Set counter settings
+    // DLC 4 = Set counter settings (without inputs)
     // DLC 2 = Get counter settings
 
-    if ((rx->DLC == 8) ||
-        (rx->DLC == 2))
+    if ((rx->DLC == 4) || (rx->DLC == 2))
     {
         uint8_t nIndex = rx->data8[1];
 
         if (nIndex < PDM_NUM_COUNTERS)
         {
-            if (rx->DLC == 8)
+            if (rx->DLC == 4)
             {
                 conf->stCounter[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
                 conf->stCounter[nIndex].bWrapAround = Dbc::DecodeInt(rx->data8, 17, 1);
-                conf->stCounter[nIndex].nIncInput = Dbc::DecodeInt(rx->data8, 24, 8);
-                conf->stCounter[nIndex].nDecInput = Dbc::DecodeInt(rx->data8, 32, 8);
-                conf->stCounter[nIndex].nResetInput = Dbc::DecodeInt(rx->data8, 40, 8);
-                conf->stCounter[nIndex].nMinCount = Dbc::DecodeInt(rx->data8, 48, 4);
-                conf->stCounter[nIndex].nMaxCount = Dbc::DecodeInt(rx->data8, 52, 4);
-                conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 56, 2));
-                conf->stCounter[nIndex].eDecEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 58, 2));
-                conf->stCounter[nIndex].eResetEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 60, 2));
+                conf->stCounter[nIndex].nMinCount = Dbc::DecodeInt(rx->data8, 18, 4);
+                conf->stCounter[nIndex].nMaxCount = Dbc::DecodeInt(rx->data8, 22, 4);
+                conf->stCounter[nIndex].eIncEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 26, 2));
+                conf->stCounter[nIndex].eDecEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 28, 2));
+                conf->stCounter[nIndex].eResetEdge = static_cast<InputEdge>(Dbc::DecodeInt(rx->data8, 30, 2));
             }
 
-            tx->DLC = 8;
+            tx->DLC = 4;
             tx->IDE = CAN_IDE_STD;
 
             for (int i = 0; i < 8; i++) tx->data8[i] = 0;
@@ -77,16 +73,13 @@ MsgCmdResult Counter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
             Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
             Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].bEnabled, 16, 1);
             Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].bWrapAround, 17, 1);
-            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nIncInput, 24, 8);
-            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nDecInput, 32, 8);
-            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nResetInput, 40, 8);
-            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nMinCount, 48, 4);
-            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nMaxCount, 52, 4);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eIncEdge), 56, 2);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eDecEdge), 58, 2);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eResetEdge), 60, 2);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nMinCount, 18, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nMaxCount, 22, 4);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eIncEdge), 26, 2);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eDecEdge), 28, 2);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCounter[nIndex].eResetEdge), 30, 2);
 
-            if(rx->DLC == 8)
+            if (rx->DLC == 4)
                 return MsgCmdResult::Write;
             else
                 return MsgCmdResult::Request;
@@ -94,6 +87,59 @@ MsgCmdResult Counter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxF
 
         return MsgCmdResult::Invalid;
     }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult CounterInputsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 8 = Set counter inputs
+    // DLC 2 = Get counter inputs
+
+    if ((rx->DLC == 8) || (rx->DLC == 2))
+    {
+        uint8_t nIndex = rx->data8[1];
+
+        if (nIndex < PDM_NUM_COUNTERS)
+        {
+            if (rx->DLC == 8)
+            {
+                conf->stCounter[nIndex].nIncInput = Dbc::DecodeInt(rx->data8, 16, 16);
+                conf->stCounter[nIndex].nDecInput = Dbc::DecodeInt(rx->data8, 32, 16);
+                conf->stCounter[nIndex].nResetInput = Dbc::DecodeInt(rx->data8, 48, 16);
+            }
+
+            tx->DLC = 8;
+            tx->IDE = CAN_IDE_STD;
+
+            for (int i = 0; i < 8; i++) tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CountersInputs) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nIncInput, 16, 16);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nDecInput, 32, 16);
+            Dbc::EncodeInt(tx->data8, conf->stCounter[nIndex].nResetInput, 48, 16);
+
+            if (rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult Counter::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    MsgCmd cmd = static_cast<MsgCmd>(rx->data8[0]);
+
+    if (cmd == MsgCmd::Counters)
+        return CounterMsg(conf, rx, tx);
+    else if (cmd == MsgCmd::CountersInputs)
+        return CounterInputsMsg(conf, rx, tx);
 
     return MsgCmdResult::Invalid;
 }

@@ -47,6 +47,7 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
             res = CanInput::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::VirtualInputs:
+        case MsgCmd::VirtualInputsVars:
             res = VirtualInput::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::Wiper:
@@ -61,9 +62,11 @@ MsgCmd ConfigHandler(CANRxFrame *frame)
             res = Starter::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::Counters:
+        case MsgCmd::CountersInputs:
             res = Counter::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::Conditions:
+        case MsgCmd::ConditionsArg:
             res = Condition::ProcessSettingsMsg(&stConfig, frame, &tx);
             break;
         case MsgCmd::Keypad:
