@@ -20,9 +20,13 @@ public:
     static int32_t DecodeInt(const uint8_t *pData, uint8_t nStartBit, uint8_t nBitLength, float fScale, float fOffset = 0.0f, ByteOrder eByteOrder = ByteOrder::LittleEndian, bool bSigned = false);
     static void EncodeInt(uint8_t *pData, int32_t nValue, uint8_t nStartBit, uint8_t nBitLength, float fScale, float fOffset = 0.0f, ByteOrder eByteOrder = ByteOrder::LittleEndian);
 
+    // IEEE 754 32-bit float decode/encode (raw float bits, must be byte-aligned)
+    static float DecodeFloat(const uint8_t *pData, uint8_t nStartBit);
+    static void EncodeFloat(uint8_t *pData, float fValue, uint8_t nStartBit);
+
     // Float decode/encode with float scaling (value = raw * scale + offset)
     static float DecodeFloat(const uint8_t *pData, uint8_t nStartBit, uint8_t nBitLength, float fScale = 1.0f, float fOffset = 0.0f, ByteOrder eByteOrder = ByteOrder::LittleEndian, bool bSigned = false);
-    static void EncodeFloat(uint8_t *pData, float fPhysicalValue, uint8_t nStartBit, uint8_t nBitLength, float fScale = 1.0f, float fOffset = 0.0f, ByteOrder eByteOrder = ByteOrder::LittleEndian);
+    static void EncodeFloat(uint8_t *pData, float fValue, uint8_t nStartBit, uint8_t nBitLength, float fScale = 1.0f, float fOffset = 0.0f, ByteOrder eByteOrder = ByteOrder::LittleEndian);
 
 private:
     static int32_t DecodeLE(const uint8_t *pData, uint8_t nStartBit, uint8_t nBitLength, bool bSigned);

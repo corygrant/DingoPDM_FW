@@ -196,6 +196,7 @@ int32_t Dbc::ReverseScaling(float fPhysicalValue, float fScale, float fOffset)
     return (int32_t)((fPhysicalValue - fOffset) / fScale);
 }
 
+// Float decode/encode with float scaling (value = raw * scale + offset)
 float Dbc::DecodeFloat(const uint8_t *pData, uint8_t nStartBit, uint8_t nBitLength,
                        float fScale, float fOffset, ByteOrder eByteOrder, bool bSigned)
 {
@@ -203,9 +204,35 @@ float Dbc::DecodeFloat(const uint8_t *pData, uint8_t nStartBit, uint8_t nBitLeng
     return ApplyScaling(rawValue, fScale, fOffset);
 }
 
+// Float decode/encode with float scaling (value = raw * scale + offset)
 void Dbc::EncodeFloat(uint8_t *pData, float fPhysicalValue, uint8_t nStartBit,
                       uint8_t nBitLength, float fScale, float fOffset, ByteOrder eByteOrder)
 {
     int32_t rawValue = ReverseScaling(fPhysicalValue, fScale, fOffset);
     EncodeInt(pData, rawValue, nStartBit, nBitLength, eByteOrder);
+}
+
+// IEEE 754 32-bit float decode/encode (raw float bits, must be byte-aligned)
+float Dbc::DecodeFloat(const uint8_t *pData, uint8_t nStartBit)
+{
+    uint8_t nStartByte = nStartBit / 8;
+    uint32_t raw = pData[nStartByte] |
+                   ((uint32_t)pData[nStartByte + 1] << 8) |
+                   ((uint32_t)pData[nStartByte + 2] << 16) |
+                   ((uint32_t)pData[nStartByte + 3] << 24);
+    float result;
+    __builtin_memcpy(&result, &raw, sizeof(float));
+    return result;
+}
+
+// IEEE 754 32-bit float decode/encode (raw float bits, must be byte-aligned)
+void Dbc::EncodeFloat(uint8_t *pData, float fValue, uint8_t nStartBit)
+{
+    uint8_t nStartByte = nStartBit / 8;
+    uint32_t raw;
+    __builtin_memcpy(&raw, &fValue, sizeof(uint32_t));
+    pData[nStartByte] = raw & 0xFF;
+    pData[nStartByte + 1] = (raw >> 8) & 0xFF;
+    pData[nStartByte + 2] = (raw >> 16) & 0xFF;
+    pData[nStartByte + 3] = (raw >> 24) & 0xFF;
 }

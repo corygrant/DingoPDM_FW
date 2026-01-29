@@ -73,11 +73,13 @@ void CanInput::CheckTimeout()
 
 MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // DLC 8 = Set CAN input settings
-    // DLC 2 = Get CAN input settings
+    // DLC 8 = Set CAN input settings + fFactor
+    // DLC 2 = Get CAN input settings + fFactor
+    // Bytes 2-5: fFactor (32-bit float)
+    // Byte 6: bEnabled(1), eMode(2), bTimeoutEnabled(1), eOperator(4)
+    // Byte 7: nStartBit(8)
 
-    if ((rx->DLC == 8) ||
-        (rx->DLC == 2))
+    if ((rx->DLC == 8) || (rx->DLC == 2))
     {
         uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
 
@@ -85,17 +87,12 @@ MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         {
             if (rx->DLC == 8)
             {
-                conf->stCanInput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
-                conf->stCanInput[nIndex].eMode = static_cast<InputMode>(Dbc::DecodeInt(rx->data8, 17, 2));
-                conf->stCanInput[nIndex].bTimeoutEnabled = Dbc::DecodeInt(rx->data8, 19, 1);
-                conf->stCanInput[nIndex].eOperator = static_cast<Operator>(Dbc::DecodeInt(rx->data8, 20, 4));
-
-                conf->stCanInput[nIndex].nStartBit = Dbc::DecodeInt(rx->data8, 24, 8);
-                conf->stCanInput[nIndex].nBitLength = Dbc::DecodeInt(rx->data8, 32, 6);
-                conf->stCanInput[nIndex].eByteOrder = static_cast<ByteOrder>(Dbc::DecodeInt(rx->data8, 38, 1));
-                conf->stCanInput[nIndex].bSigned = Dbc::DecodeInt(rx->data8, 39, 1);
-
-                conf->stCanInput[nIndex].nTimeout = Dbc::DecodeInt(rx->data8, 48, 8, 100.0f);
+                conf->stCanInput[nIndex].fFactor = Dbc::DecodeFloat(rx->data8, 16);
+                conf->stCanInput[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 48, 1);
+                conf->stCanInput[nIndex].eMode = static_cast<InputMode>(Dbc::DecodeInt(rx->data8, 49, 2));
+                conf->stCanInput[nIndex].bTimeoutEnabled = Dbc::DecodeInt(rx->data8, 51, 1);
+                conf->stCanInput[nIndex].eOperator = static_cast<Operator>(Dbc::DecodeInt(rx->data8, 52, 4));
+                conf->stCanInput[nIndex].nStartBit = Dbc::DecodeInt(rx->data8, 56, 8);
             }
 
             tx->DLC = 8;
@@ -107,17 +104,14 @@ MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 
             Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputs) + 128, 0, 8);
             Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
-            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bEnabled, 16, 1);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eMode), 17, 2);
-            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bTimeoutEnabled, 19, 1);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eOperator), 20, 4);
-            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nStartBit, 24, 8);
-            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nBitLength, 32, 6);
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eByteOrder), 38, 1);
-            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bSigned, 39, 1);
-            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nTimeout, 48, 8, 100.0f);
+            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fFactor, 16);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bEnabled, 48, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eMode), 49, 2);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bTimeoutEnabled, 51, 1);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eOperator), 52, 4);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nStartBit, 56, 8);
 
-            if(rx->DLC == 8)
+            if (rx->DLC == 8)
                 return MsgCmdResult::Write;
             else
                 return MsgCmdResult::Request;
@@ -171,14 +165,15 @@ MsgCmdResult CanInputIdMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
     return MsgCmdResult::Invalid;
 }
 
-MsgCmdResult CanInputScaleMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+MsgCmdResult CanInputOffsetMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // This message can be sent in two sizes:
-    // DLC 8 = Set/Get scale and offset
-    // DLC 6 = Set/Get fOnVal
-    // DLC 2 = Get (will return DLC 8 with scale/offset)
+    // DLC 8 = Set CAN input offset + DBC settings
+    // DLC 2 = Get CAN input offset + DBC settings
+    // Bytes 2-5: fOffset (32-bit float)
+    // Byte 6: nBitLength(6), eByteOrder(1), bSigned(1)
+    // Byte 7: nTimeout(8)
 
-    if ((rx->DLC == 8) || (rx->DLC == 6) || (rx->DLC == 2))
+    if ((rx->DLC == 8) || (rx->DLC == 2))
     {
         uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
 
@@ -186,17 +181,11 @@ MsgCmdResult CanInputScaleMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
         {
             if (rx->DLC == 8)
             {
-                // Decode scale (16-bit fixed point with 0.001 resolution)
-                conf->stCanInput[nIndex].fFactor = Dbc::DecodeFloat(rx->data8, 16, 16, 0.001f);
-                // Decode offset (16-bit fixed point with 0.01 resolution)
-                conf->stCanInput[nIndex].fOffset = Dbc::DecodeFloat(rx->data8, 32, 16, 0.01f);
-                // Decode fOnVal (16-bit fixed point with 0.01 resolution)
-                conf->stCanInput[nIndex].fOperand = Dbc::DecodeFloat(rx->data8, 48, 16, 0.01f);
-            }
-            else if (rx->DLC == 6)
-            {
-                // Just updating fOnVal
-                conf->stCanInput[nIndex].fOperand = Dbc::DecodeFloat(rx->data8, 16, 32);
+                conf->stCanInput[nIndex].fOffset = Dbc::DecodeFloat(rx->data8, 16);
+                conf->stCanInput[nIndex].nBitLength = Dbc::DecodeInt(rx->data8, 48, 6);
+                conf->stCanInput[nIndex].eByteOrder = static_cast<ByteOrder>(Dbc::DecodeInt(rx->data8, 54, 1));
+                conf->stCanInput[nIndex].bSigned = Dbc::DecodeInt(rx->data8, 55, 1);
+                conf->stCanInput[nIndex].nTimeout = Dbc::DecodeInt(rx->data8, 56, 8, 100.0f);
             }
 
             tx->DLC = 8;
@@ -206,13 +195,55 @@ MsgCmdResult CanInputScaleMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             for (int i = 0; i < 8; i++)
                 tx->data8[i] = 0;
 
-            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputsScale) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputsOffset) + 128, 0, 8);
             Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
-            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fFactor, 16, 16, 0.001f);
-            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOffset, 32, 16, 0.01f);
-            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOperand, 48, 16, 0.01f);
+            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOffset, 16);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nBitLength, 48, 6);
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCanInput[nIndex].eByteOrder), 54, 1);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].bSigned, 55, 1);
+            Dbc::EncodeInt(tx->data8, conf->stCanInput[nIndex].nTimeout, 56, 8, 100.0f);
 
-            if (rx->DLC >= 6)
+            if (rx->DLC == 8)
+                return MsgCmdResult::Write;
+            else
+                return MsgCmdResult::Request;
+        }
+
+        return MsgCmdResult::Invalid;
+    }
+
+    return MsgCmdResult::Invalid;
+}
+
+MsgCmdResult CanInputOperandMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
+{
+    // DLC 6 = Set CAN input operand
+    // DLC 2 = Get CAN input operand
+    // Bytes 2-5: fOperand (32-bit float)
+
+    if ((rx->DLC == 6) || (rx->DLC == 2))
+    {
+        uint8_t nIndex = Dbc::DecodeInt(rx->data8, 8, 8);
+
+        if (nIndex < PDM_NUM_CAN_INPUTS)
+        {
+            if (rx->DLC == 6)
+            {
+                conf->stCanInput[nIndex].fOperand = Dbc::DecodeFloat(rx->data8, 16);
+            }
+
+            tx->DLC = 6;
+            tx->IDE = CAN_IDE_STD;
+
+            // Clear tx data
+            for (int i = 0; i < 8; i++)
+                tx->data8[i] = 0;
+
+            Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputsOperand) + 128, 0, 8);
+            Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
+            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOperand, 16);
+
+            if (rx->DLC == 6)
                 return MsgCmdResult::Write;
             else
                 return MsgCmdResult::Request;
@@ -228,12 +259,14 @@ MsgCmdResult CanInput::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANTx
 {
     MsgCmd cmd = static_cast<MsgCmd>(rx->data8[0]);
 
-    if(cmd == MsgCmd::CanInputs)
+    if (cmd == MsgCmd::CanInputs)
         return CanInputMsg(conf, rx, tx);
-    else if(cmd == MsgCmd::CanInputsId)
+    else if (cmd == MsgCmd::CanInputsId)
         return CanInputIdMsg(conf, rx, tx);
-    else if(cmd == MsgCmd::CanInputsScale)
-        return CanInputScaleMsg(conf, rx, tx);
+    else if (cmd == MsgCmd::CanInputsOffset)
+        return CanInputOffsetMsg(conf, rx, tx);
+    else if (cmd == MsgCmd::CanInputsOperand)
+        return CanInputOperandMsg(conf, rx, tx);
 
     return MsgCmdResult::Invalid;
 }

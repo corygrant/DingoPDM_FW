@@ -66,7 +66,7 @@ MsgCmdResult Condition::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANT
                 conf->stCondition[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
                 conf->stCondition[nIndex].eOperator = static_cast<Operator>(Dbc::DecodeInt(rx->data8, 20, 4));
                 conf->stCondition[nIndex].nInput = Dbc::DecodeInt(rx->data8, 24, 8);
-                conf->stCondition[nIndex].fArg = Dbc::DecodeFloat(rx->data8, 32, 16, 0.01f);
+                conf->stCondition[nIndex].fArg = Dbc::DecodeFloat(rx->data8, 32);
             }
 
             tx->DLC = 6;
@@ -81,7 +81,7 @@ MsgCmdResult Condition::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANT
             Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].bEnabled, 16, 1);
             Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCondition[nIndex].eOperator), 20, 4);
             Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].nInput, 24, 8);
-            Dbc::EncodeFloat(tx->data8, conf->stCondition[nIndex].fArg, 32, 16, 0.01f);
+            Dbc::EncodeFloat(tx->data8, conf->stCondition[nIndex].fArg, 32);
 
             if(rx->DLC == 6)
                 return MsgCmdResult::Write;
