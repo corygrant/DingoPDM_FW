@@ -21,7 +21,7 @@
 
 #define PDM_VAR_MAP_SIZE 202
 
-#define PDM_NUM_TX_MSGS 19
+#define PDM_NUM_TX_MSGS 27
 
 #define ADC1_NUM_CHANNELS 7
 #define ADC1_BUF_DEPTH 1

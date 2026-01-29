@@ -31,6 +31,14 @@ CANTxMsg TxMsg15();
 CANTxMsg TxMsg16();
 CANTxMsg TxMsg17();
 CANTxMsg TxMsg18();
+CANTxMsg TxMsg19();
+CANTxMsg TxMsg20();
+CANTxMsg TxMsg21();
+CANTxMsg TxMsg22();
+CANTxMsg TxMsg23();
+CANTxMsg TxMsg24();
+CANTxMsg TxMsg25();
+CANTxMsg TxMsg26();
 
 [[maybe_unused]] static CANTxMsg (*TxMsgs[PDM_NUM_TX_MSGS])() = {
     TxMsg0,
@@ -51,5 +59,13 @@ CANTxMsg TxMsg18();
     TxMsg15,
     TxMsg16,
     TxMsg17,
-    TxMsg18};
+    TxMsg18,
+    TxMsg19,
+    TxMsg20,
+    TxMsg21,
+    TxMsg22,
+    TxMsg23,
+    TxMsg24,
+    TxMsg25,
+    TxMsg26};
 

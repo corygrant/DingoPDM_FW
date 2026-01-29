@@ -1,7 +1,7 @@
 #include "dbc.h"
 
-int32_t Dbc::DecodeInt(const uint8_t* pData, uint8_t nStartBit,
-                           uint8_t nBitLength, ByteOrder eByteOrder, bool bSigned)
+int32_t Dbc::DecodeInt(const uint8_t *pData, uint8_t nStartBit,
+                       uint8_t nBitLength, ByteOrder eByteOrder, bool bSigned)
 {
     if (eByteOrder == ByteOrder::BigEndian)
         return DecodeBE(pData, nStartBit, nBitLength, bSigned);
@@ -9,8 +9,8 @@ int32_t Dbc::DecodeInt(const uint8_t* pData, uint8_t nStartBit,
         return DecodeLE(pData, nStartBit, nBitLength, bSigned);
 }
 
-void Dbc::EncodeInt(uint8_t* pData, int32_t nRawValue,
-                       uint8_t nStartBit, uint8_t nBitLength, ByteOrder eByteOrder)
+void Dbc::EncodeInt(uint8_t *pData, int32_t nRawValue,
+                    uint8_t nStartBit, uint8_t nBitLength, ByteOrder eByteOrder)
 {
     if (eByteOrder == ByteOrder::BigEndian)
         EncodeBE(pData, nRawValue, nStartBit, nBitLength);
@@ -18,24 +18,24 @@ void Dbc::EncodeInt(uint8_t* pData, int32_t nRawValue,
         EncodeLE(pData, nRawValue, nStartBit, nBitLength);
 }
 
-int32_t Dbc::DecodeInt(const uint8_t* pData, uint8_t nStartBit,
-                        uint8_t nBitLength, float fScale, float fOffset,
-                        ByteOrder eByteOrder, bool bSigned)
+int32_t Dbc::DecodeInt(const uint8_t *pData, uint8_t nStartBit,
+                       uint8_t nBitLength, float fScale, float fOffset,
+                       ByteOrder eByteOrder, bool bSigned)
 {
     int32_t rawValue = DecodeInt(pData, nStartBit, nBitLength, eByteOrder, bSigned);
     return (int32_t)(ApplyScaling(rawValue, fScale, fOffset));
 }
 
-void Dbc::EncodeInt(uint8_t* pData, int32_t nValue,
-                     uint8_t nStartBit, uint8_t nBitLength, float fScale, float fOffset,
-                     ByteOrder eByteOrder)
+void Dbc::EncodeInt(uint8_t *pData, int32_t nValue,
+                    uint8_t nStartBit, uint8_t nBitLength, float fScale, float fOffset,
+                    ByteOrder eByteOrder)
 {
     int32_t rawValue = ReverseScaling((float)nValue, fScale, fOffset);
     EncodeInt(pData, rawValue, nStartBit, nBitLength, eByteOrder);
 }
 
-int32_t Dbc::DecodeLE(const uint8_t* pData, uint8_t nStartBit,
-                                       uint8_t nBitLength, bool bSigned)
+int32_t Dbc::DecodeLE(const uint8_t *pData, uint8_t nStartBit,
+                      uint8_t nBitLength, bool bSigned)
 {
     if (nBitLength == 0 || nBitLength > 32)
         return 0;
@@ -65,8 +65,8 @@ int32_t Dbc::DecodeLE(const uint8_t* pData, uint8_t nStartBit,
     return (int32_t)value;
 }
 
-int32_t Dbc::DecodeBE(const uint8_t* pData, uint8_t nStartBit,
-                                    uint8_t nBitLength, bool bSigned)
+int32_t Dbc::DecodeBE(const uint8_t *pData, uint8_t nStartBit,
+                      uint8_t nBitLength, bool bSigned)
 {
     if (nBitLength == 0 || nBitLength > 32)
         return 0;
@@ -85,8 +85,7 @@ int32_t Dbc::DecodeBE(const uint8_t* pData, uint8_t nStartBit,
     while (bitsRemaining > 0)
     {
         // Calculate how many bits we can read from current byte
-        int bitsToRead = (startBitInByte + 1 < bitsRemaining) ?
-                         (startBitInByte + 1) : bitsRemaining;
+        int bitsToRead = (startBitInByte + 1 < bitsRemaining) ? (startBitInByte + 1) : bitsRemaining;
 
         // Extract bits from current byte
         uint8_t mask = ((1 << bitsToRead) - 1);
@@ -113,8 +112,8 @@ int32_t Dbc::DecodeBE(const uint8_t* pData, uint8_t nStartBit,
     return (int32_t)value;
 }
 
-void Dbc::EncodeLE(uint8_t* pData, int32_t nRawValue,
-                                    uint8_t nStartBit, uint8_t nBitLength)
+void Dbc::EncodeLE(uint8_t *pData, int32_t nRawValue,
+                   uint8_t nStartBit, uint8_t nBitLength)
 {
     if (nBitLength == 0 || nBitLength > 32)
         return;
@@ -144,8 +143,8 @@ void Dbc::EncodeLE(uint8_t* pData, int32_t nRawValue,
     }
 }
 
-void Dbc::EncodeBE(uint8_t* pData, int32_t nRawValue,
-                                 uint8_t nStartBit, uint8_t nBitLength)
+void Dbc::EncodeBE(uint8_t *pData, int32_t nRawValue,
+                   uint8_t nStartBit, uint8_t nBitLength)
 {
     if (nBitLength == 0 || nBitLength > 32)
         return;
@@ -164,8 +163,7 @@ void Dbc::EncodeBE(uint8_t* pData, int32_t nRawValue,
     while (bitsRemaining > 0)
     {
         // Calculate how many bits we can write to current byte
-        int bitsToWrite = (startBitInByte + 1 < bitsRemaining) ?
-                          (startBitInByte + 1) : bitsRemaining;
+        int bitsToWrite = (startBitInByte + 1 < bitsRemaining) ? (startBitInByte + 1) : bitsRemaining;
 
         // Extract bits to write
         uint8_t bitMask = ((1 << bitsToWrite) - 1);
@@ -198,16 +196,16 @@ int32_t Dbc::ReverseScaling(float fPhysicalValue, float fScale, float fOffset)
     return (int32_t)((fPhysicalValue - fOffset) / fScale);
 }
 
-float Dbc::DecodeFloat( const uint8_t* pData, uint8_t nStartBit, uint8_t nBitLength,
-                        float fScale, float fOffset, ByteOrder eByteOrder, bool bSigned)
+float Dbc::DecodeFloat(const uint8_t *pData, uint8_t nStartBit, uint8_t nBitLength,
+                       float fScale, float fOffset, ByteOrder eByteOrder, bool bSigned)
 {
-    int32_t rawValue = DecodeInt(pData, nStartBit, nBitLength, fScale, fOffset, eByteOrder, bSigned);
+    int32_t rawValue = DecodeInt(pData, nStartBit, nBitLength, eByteOrder, bSigned);
     return ApplyScaling(rawValue, fScale, fOffset);
 }
 
-void Dbc::EncodeFloat(  uint8_t* pData, float fPhysicalValue, uint8_t nStartBit,
-                        uint8_t nBitLength, float fScale, float fOffset, ByteOrder eByteOrder)
+void Dbc::EncodeFloat(uint8_t *pData, float fPhysicalValue, uint8_t nStartBit,
+                      uint8_t nBitLength, float fScale, float fOffset, ByteOrder eByteOrder)
 {
     int32_t rawValue = ReverseScaling(fPhysicalValue, fScale, fOffset);
-    EncodeInt(pData, rawValue, nStartBit, nBitLength, fScale, fOffset, eByteOrder);
+    EncodeInt(pData, rawValue, nStartBit, nBitLength, eByteOrder);
 }

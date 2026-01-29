@@ -98,14 +98,14 @@ struct Config_CanInput{
   uint8_t nIDE; //0=STD, 1=EXT
   uint32_t nSID:11;
   uint32_t nEID:29;
-  uint8_t nStartBit;    // DBC start bit
-  uint8_t nBitLength;   // DBC bit length
-  float fScale;         // DBC scale factor
-  float fOffset;        // DBC offset
-  ByteOrder eByteOrder; // DBC byte order (Little/Big Endian)
-  bool bSigned;         // DBC signed flag
+  uint8_t nStartBit;   
+  uint8_t nBitLength;  
+  float fFactor;       
+  float fOffset;       
+  ByteOrder eByteOrder;
+  bool bSigned;        
   Operator eOperator;
-  float fOnVal;         // Changed from nOnVal to support scaled values
+  float fOperand;       
   InputMode eMode;
 };
 

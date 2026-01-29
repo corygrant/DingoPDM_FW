@@ -16,44 +16,43 @@ bool CanInput::CheckMsg(CANRxFrame rx)
 
     nLastRxTime = SYS_TIME;
 
-    // Use DBC DecodeFloat to extract and scale the signal value
     fVal = Dbc::DecodeFloat(rx.data8, pConfig->nStartBit, pConfig->nBitLength,
-                            pConfig->fScale, pConfig->fOffset,
+                            pConfig->fFactor, pConfig->fOffset,
                             pConfig->eByteOrder, pConfig->bSigned);
 
-    // Use Input class to enable momentary/latching
+    // Use Input to enable momentary/latching
     switch (pConfig->eOperator)
     {
     case Operator::Equal:
-        fOutput = input.Check(pConfig->eMode, false, fVal == pConfig->fOnVal);
+        fOutput = input.Check(pConfig->eMode, false, fVal == pConfig->fOperand);
         break;
 
     case Operator::NotEqual:
-        fOutput = input.Check(pConfig->eMode, false, fVal != pConfig->fOnVal);
+        fOutput = input.Check(pConfig->eMode, false, fVal != pConfig->fOperand);
         break;
 
     case Operator::GreaterThan:
-        fOutput = input.Check(pConfig->eMode, false, fVal > pConfig->fOnVal);
+        fOutput = input.Check(pConfig->eMode, false, fVal > pConfig->fOperand);
         break;
 
     case Operator::LessThan:
-        fOutput = input.Check(pConfig->eMode, false, fVal < pConfig->fOnVal);
+        fOutput = input.Check(pConfig->eMode, false, fVal < pConfig->fOperand);
         break;
 
     case Operator::GreaterThanOrEqual:
-        fOutput = input.Check(pConfig->eMode, false, fVal >= pConfig->fOnVal);
+        fOutput = input.Check(pConfig->eMode, false, fVal >= pConfig->fOperand);
         break;
 
     case Operator::LessThanOrEqual:
-        fOutput = input.Check(pConfig->eMode, false, fVal <= pConfig->fOnVal);
+        fOutput = input.Check(pConfig->eMode, false, fVal <= pConfig->fOperand);
         break;
 
     case Operator::BitwiseAnd:
-        fOutput = input.Check(pConfig->eMode, false, ((uint32_t)fVal & (uint32_t)pConfig->fOnVal) > 0);
+        fOutput = input.Check(pConfig->eMode, false, ((uint32_t)fVal & (uint32_t)pConfig->fOperand) > 0);
         break;
 
     case Operator::BitwiseNand:
-        fOutput = input.Check(pConfig->eMode, false, !(((uint32_t)fVal & (uint32_t)pConfig->fOnVal) > 0));
+        fOutput = input.Check(pConfig->eMode, false, !(((uint32_t)fVal & (uint32_t)pConfig->fOperand) > 0));
         break;
     }
 
@@ -74,7 +73,7 @@ void CanInput::CheckTimeout()
 
 MsgCmdResult CanInputMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 {
-    // DLC 8 = Set CAN input settings (Part 1: general settings)
+    // DLC 8 = Set CAN input settings
     // DLC 2 = Get CAN input settings
 
     if ((rx->DLC == 8) ||
@@ -188,16 +187,16 @@ MsgCmdResult CanInputScaleMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
             if (rx->DLC == 8)
             {
                 // Decode scale (16-bit fixed point with 0.001 resolution)
-                conf->stCanInput[nIndex].fScale = Dbc::DecodeFloat(rx->data8, 16, 16, 0.001f);
+                conf->stCanInput[nIndex].fFactor = Dbc::DecodeFloat(rx->data8, 16, 16, 0.001f);
                 // Decode offset (16-bit fixed point with 0.01 resolution)
                 conf->stCanInput[nIndex].fOffset = Dbc::DecodeFloat(rx->data8, 32, 16, 0.01f);
                 // Decode fOnVal (16-bit fixed point with 0.01 resolution)
-                conf->stCanInput[nIndex].fOnVal = Dbc::DecodeFloat(rx->data8, 48, 16, 0.01f);
+                conf->stCanInput[nIndex].fOperand = Dbc::DecodeFloat(rx->data8, 48, 16, 0.01f);
             }
             else if (rx->DLC == 6)
             {
                 // Just updating fOnVal
-                conf->stCanInput[nIndex].fOnVal = Dbc::DecodeFloat(rx->data8, 16, 32);
+                conf->stCanInput[nIndex].fOperand = Dbc::DecodeFloat(rx->data8, 16, 32);
             }
 
             tx->DLC = 8;
@@ -209,9 +208,9 @@ MsgCmdResult CanInputScaleMsg(PdmConfig* conf, CANRxFrame *rx, CANTxFrame *tx)
 
             Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(MsgCmd::CanInputsScale) + 128, 0, 8);
             Dbc::EncodeInt(tx->data8, nIndex, 8, 8);
-            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fScale, 16, 16, 0.001f);
+            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fFactor, 16, 16, 0.001f);
             Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOffset, 32, 16, 0.01f);
-            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOnVal, 48, 16, 0.01f);
+            Dbc::EncodeFloat(tx->data8, conf->stCanInput[nIndex].fOperand, 48, 16, 0.01f);
 
             if (rx->DLC >= 6)
                 return MsgCmdResult::Write;
@@ -249,11 +248,11 @@ void CanInput::SetDefaultConfig(Config_CanInput *config)
     config->nEID = 0;
     config->nStartBit = 0;
     config->nBitLength = 0;
-    config->fScale = 1.0f;      // Default to no scaling
+    config->fFactor = 1.0f;      // Default to no scaling
     config->fOffset = 0.0f;     // Default to no offset
     config->eByteOrder = ByteOrder::LittleEndian;
     config->bSigned = false;
     config->eOperator = Operator::Equal;
-    config->fOnVal = 0.0f;
+    config->fOperand = 0.0f;
     config->eMode = InputMode::Momentary;
 }
