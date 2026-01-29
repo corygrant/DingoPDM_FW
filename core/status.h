@@ -2,6 +2,7 @@
 
 #include <cstdint>
 #include "enums.h"
+#include "dbc.h"
 
 PdmState GetPdmState();
 float GetBoardTemp();
