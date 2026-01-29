@@ -130,7 +130,7 @@ struct Config_Condition{
   bool bEnabled;
   uint8_t nInput;
   Operator eOperator;
-  uint16_t nArg;
+  float fArg;
 };
 
 struct Config_KeypadButton{

@@ -12,35 +12,35 @@ void Condition::Update()
     switch(pConfig->eOperator)
     {
         case Operator::Equal:
-            fVal = *pInput == pConfig->nArg;
+            fVal = *pInput == pConfig->fArg;
             break;
 
         case Operator::NotEqual:
-            fVal = *pInput != pConfig->nArg;
+            fVal = *pInput != pConfig->fArg;
             break;
 
         case Operator::GreaterThan:
-            fVal = *pInput > pConfig->nArg;
+            fVal = *pInput > pConfig->fArg;
             break;
 
         case Operator::LessThan:
-            fVal = *pInput < pConfig->nArg;
+            fVal = *pInput < pConfig->fArg;
             break;
 
         case Operator::GreaterThanOrEqual:
-            fVal = *pInput >= pConfig->nArg;
+            fVal = *pInput >= pConfig->fArg;
             break;
 
         case Operator::LessThanOrEqual:
-            fVal = *pInput <= pConfig->nArg;
+            fVal = *pInput <= pConfig->fArg;
             break;
 
         case Operator::BitwiseAnd:
-            fVal = (uint16_t)(*pInput) & pConfig->nArg;
+            fVal = (uint16_t)(*pInput) & (uint16_t)(pConfig->fArg);
             break;
 
         case Operator::BitwiseNand:
-            fVal = ~((uint16_t)(*pInput) & pConfig->nArg);
+            fVal = ~((uint16_t)(*pInput) & (uint16_t)(pConfig->fArg));
             break;
 
         default:
@@ -66,7 +66,7 @@ MsgCmdResult Condition::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANT
                 conf->stCondition[nIndex].bEnabled = Dbc::DecodeInt(rx->data8, 16, 1);
                 conf->stCondition[nIndex].eOperator = static_cast<Operator>(Dbc::DecodeInt(rx->data8, 20, 4));
                 conf->stCondition[nIndex].nInput = Dbc::DecodeInt(rx->data8, 24, 8);
-                conf->stCondition[nIndex].nArg = Dbc::DecodeInt(rx->data8, 32, 16);
+                conf->stCondition[nIndex].fArg = Dbc::DecodeFloat(rx->data8, 32, 16, 0.01f);
             }
 
             tx->DLC = 6;
@@ -81,7 +81,7 @@ MsgCmdResult Condition::ProcessSettingsMsg(PdmConfig* conf, CANRxFrame *rx, CANT
             Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].bEnabled, 16, 1);
             Dbc::EncodeInt(tx->data8, static_cast<uint8_t>(conf->stCondition[nIndex].eOperator), 20, 4);
             Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].nInput, 24, 8);
-            Dbc::EncodeInt(tx->data8, conf->stCondition[nIndex].nArg, 32, 16);
+            Dbc::EncodeFloat(tx->data8, conf->stCondition[nIndex].fArg, 32, 16, 0.01f);
 
             if(rx->DLC == 6)
                 return MsgCmdResult::Write;
@@ -100,5 +100,5 @@ void Condition::SetDefaultConfig(Config_Condition *config)
     config->bEnabled = false;
     config->eOperator = Operator::Equal;
     config->nInput = 0;
-    config->nArg = 0;
+    config->fArg = 0.0f;
 }
