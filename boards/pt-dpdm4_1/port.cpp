@@ -180,19 +180,19 @@ void SetOutputNeopixel(uint8_t index)
 
     switch (pf[index].GetState())
     {    case ProfetState::Fault:
-        intNeoPixels.pixels[index].SetColor(NeoPixel_Red);
+        intNeoPixels.pixels[index + 4].SetColor(NeoPixel_Red);
         break;
     case ProfetState::Overcurrent:
-        intNeoPixels.pixels[index].SetColor(NeoPixel_Yellow);
+        intNeoPixels.pixels[index + 4].SetColor(NeoPixel_Yellow);
         break;
     case ProfetState::On:
-        intNeoPixels.pixels[index].SetColor(NeoPixel_Green);
+        intNeoPixels.pixels[index + 4].SetColor(NeoPixel_Green);
         break;
     case ProfetState::Off:
-        intNeoPixels.pixels[index].SetColor(NeoPixel_Off);
+        intNeoPixels.pixels[index + 4].SetColor(NeoPixel_Off);
         break;
     default:
-        intNeoPixels.pixels[index].SetColor(NeoPixel_Off);
+        intNeoPixels.pixels[index + 4].SetColor(NeoPixel_Off);
         break;
     }
 }
@@ -224,16 +224,16 @@ void UpdateNeopixels()
     //Unused Neopixel (index 3)
 
     //O1
-    SetOutputNeopixel(4);
+    SetOutputNeopixel(0);
 
     //O2
-    SetOutputNeopixel(5);
+    SetOutputNeopixel(1);
 
     //O3
-    SetOutputNeopixel(6);
+    SetOutputNeopixel(2);
 
     //O4
-    SetOutputNeopixel(7);
+    SetOutputNeopixel(3);
 
     intNeoPixels.Update();   // push to hardware
 }
