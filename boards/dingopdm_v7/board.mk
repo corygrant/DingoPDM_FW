@@ -16,7 +16,7 @@ include $(CHIBIOS)/os/hal/ports/STM32/STM32F4xx/platform.mk
 include $(CHIBIOS)/os/common/ports/ARMv7-M/compilers/GCC/mk/port.mk
 
 BOOTLOADERASM = $(MCUDIR)/enter_bootloader.S
-ASMXRC += $(BOOTLOADERASM)
+ALLXASMSRC += $(BOOTLOADERASM)
 
 CPPSRC_BOARD += comms/usb.cpp \
 				core/sleep.cpp \
