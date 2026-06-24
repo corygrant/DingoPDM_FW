@@ -92,6 +92,13 @@ jobs:
           cp build/canboard_v2.bin build/canboard_v2_FW_v${VERSION_DASHED}.bin
           cp build/canboard_v2.elf build/canboard_v2_FW_v${VERSION_DASHED}.elf
 
+          # Build fourth variant, in build directory
+          make clean
+          make BOARD=pt-dpdm4_1
+          cp build/pt-dpdm4_1.hex build/pt-dpdm4_1_FW_v${VERSION_DASHED}.hex
+          cp build/pt-dpdm4_1.bin build/pt-dpdm4_1_FW_v${VERSION_DASHED}.bin
+          cp build/pt-dpdm4_1.elf build/pt-dpdm4_1_FW_v${VERSION_DASHED}.elf
+
           # Copy back to build for the release action
           cp firmware_artifacts/* build/
 
@@ -126,6 +133,12 @@ jobs:
             - [HEX](https://github.com/${{ github.repository }}/releases/download/testing-latest/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
             - [BIN](https://github.com/${{ github.repository }}/releases/download/testing-latest/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
             - [ELF](https://github.com/${{ github.repository }}/releases/download/testing-latest/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+            **PT-DPDM4:**
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/testing-latest/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/testing-latest/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/testing-latest/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
           files: |
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
@@ -136,5 +149,8 @@ jobs:
             build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
             build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+            build/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
