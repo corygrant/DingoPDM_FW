@@ -44,6 +44,8 @@ void EncodeParamRsp(CANTxFrame *tx, uint8_t cmd, uint16_t index, uint8_t subinde
     tx->data8[7] = (value >> 24) & 0xFF;
 }
 
+#define TX_MAX_RETRIES 50   // 50 × 200µs = 10ms max stall per frame before aborting
+
 void SendAllParams(bool modifiedOnly) {
     CANTxFrame tx;
     uint8_t nBatchCount = 0;
@@ -60,14 +62,20 @@ void SendAllParams(bool modifiedOnly) {
         nBatchCount++;
 
         uint32_t value = ReadParam(&stParams[i]);
-        EncodeParamRsp(&tx, static_cast<uint8_t>(MsgCmd::ReadAllRsp), 
+        EncodeParamRsp(&tx, static_cast<uint8_t>(MsgCmd::ReadAllRsp),
                         stParams[i].nIndex, stParams[i].nSubIndex, value);
         msg_t ret;
+        uint8_t txRetries = 0;
         do {
             ret = PostTxFrame(&tx);
-            if (ret != MSG_OK)
+            if (ret != MSG_OK) {
                 chThdSleepMicroseconds(200);
-        } while (ret != MSG_OK);
+                txRetries++;
+            }
+        } while (ret != MSG_OK && txRetries < TX_MAX_RETRIES);
+
+        if (ret != MSG_OK)
+            break; // TX stalled — abort; ReadAllComplete sent below with wrong CRC so host retries
 
         nReadCrc = CalculateCRC32Partial(&tx.data8[4], 4, nReadCrc);
 
