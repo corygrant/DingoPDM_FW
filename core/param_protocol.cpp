@@ -44,7 +44,8 @@ void EncodeParamRsp(CANTxFrame *tx, uint8_t cmd, uint16_t index, uint8_t subinde
     tx->data8[7] = (value >> 24) & 0xFF;
 }
 
-#define TX_MAX_RETRIES 50   // 50 × 200µs = 10ms max stall per frame before aborting
+#define TX_MAX_RETRIES 50       // 50 × 200µs = 10ms max stall per frame before aborting
+#define WRITE_WINDOW_SIZE 32    // Host sends this many WriteAllVal frames per window; must fit in RX mailbox
 
 void SendAllParams(bool modifiedOnly) {
     CANTxFrame tx;
@@ -189,9 +190,13 @@ MsgCmd ProcessParamMsg(CANRxFrame *rx, uint16_t *nIndex) {
                 PostTxFrame(&tx);
                 break;
             }
-            //Param found, in range, staged successfully, respond with value for confirmation
             nWriteCrc = CalculateCRC32Partial(&rx->data8[4], 4, nWriteCrc);
             nNumWriteParams++;
+            // Acknowledge each window so the host knows it is safe to send the next batch
+            if ((nNumWriteParams % WRITE_WINDOW_SIZE) == 0) {
+                EncodeParamRsp(&tx, static_cast<uint8_t>(MsgCmd::WriteAllWindowAck), nNumWriteParams, 0, 0);
+                PostTxFrame(&tx);
+            }
             break;
         }
 
