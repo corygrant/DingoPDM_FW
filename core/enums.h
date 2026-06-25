@@ -52,7 +52,6 @@ enum class MsgCmd : uint8_t
     WriteAllVal = 21,
     WriteAllComplete = 22,
     WriteAllModified = 23,
-    WriteAllWindowAck = 24,
     WriteAllParamNotFound = 25,
     WriteAllOutOfRange = 26,
 
