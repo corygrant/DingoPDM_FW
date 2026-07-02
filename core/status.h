@@ -59,3 +59,4 @@ uint16_t GetAnalogInputVal(uint8_t nInput);
 float GetAnalogInputMv(uint8_t nInput);
 uint8_t GetRotarySwitchPos(uint8_t nInput);
 bool GetAnalogSwitchVal(uint8_t nInput);
+bool GetAnyAnalogInputEnable();

@@ -418,4 +418,14 @@ bool GetAnalogSwitchVal(uint8_t nInput)
 
     return static_cast<bool>(analogIn[nInput].fSwitchVal);
 }
+
+bool GetAnyAnalogInputEnable()
+{
+    for (uint8_t i = 0; i < NUM_ANALOG_INPUTS; i++)
+    {
+        if (stConfig.stAnalogInput[i].bEnabled)
+            return true;
+    }
+    return false;
+}
 #endif

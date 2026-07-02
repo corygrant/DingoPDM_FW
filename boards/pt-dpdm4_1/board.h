@@ -278,7 +278,7 @@
  *
  * PA0  - PF3_IS                    (analog in).
  * PA1  - PF4_IS                    (analog in).
- * PA2  - DIG_IN3                   (input pullup).
+ * PA2  - ANALOG_IN1                (input pullup).
  * PA3  - BATT_SENSE                (analog in).
  * PA4  -                           (input pullup).
  * PA5  - PF4_DEN                   (output pushpull pulldown).
@@ -295,7 +295,7 @@
  */
 #define VAL_GPIOA_MODER             (PIN_MODE_ANALOG(GPIOA_PIN0) |          \
                                      PIN_MODE_ANALOG(GPIOA_PIN1) |          \
-                                     PIN_MODE_INPUT(GPIOA_PIN2) |           \
+                                     PIN_MODE_ANALOG(GPIOA_PIN2) |          \
                                      PIN_MODE_ANALOG(GPIOA_PIN3) |          \
                                      PIN_MODE_INPUT(GPIOA_PIN4)  |          \
                                      PIN_MODE_OUTPUT(GPIOA_PIN5) |          \
@@ -343,7 +343,7 @@
                                      PIN_OSPEED_LOW(GPIOA_PIN15))
 #define VAL_GPIOA_PUPDR             (PIN_PUPDR_FLOATING(GPIOA_PIN0) |       \
                                      PIN_PUPDR_FLOATING(GPIOA_PIN1) |       \
-                                     PIN_PUPDR_PULLUP(GPIOA_PIN2) |         \
+                                     PIN_PUPDR_FLOATING(GPIOA_PIN2) |       \
                                      PIN_PUPDR_FLOATING(GPIOA_PIN3) |       \
                                      PIN_PUPDR_PULLUP(GPIOA_PIN4) |         \
                                      PIN_PUPDR_PULLDOWN(GPIOA_PIN5) |       \
@@ -514,7 +514,7 @@
  * PC1  - STATUS_LED                (output pushpull pulldown).
  * PC2  - PF2_IS                    (analog input).
  * PC3  - PF1_IS                    (analog input).
- * PC4  - DIG_IN4                   (input pullup).
+ * PC4  - ANALOG_IN2                (input pullup).
  * PC5  - PF3_DEN                   (output pushpull pulldown).
  * PC6  - PF2_DEN                   (output pushpull pulldown).
  * PC7  - PF2_IN                    (output pushpull pulldown).
@@ -531,7 +531,7 @@
                                      PIN_MODE_OUTPUT(GPIOC_PIN1) |          \
                                      PIN_MODE_ANALOG(GPIOC_PIN2) |          \
                                      PIN_MODE_ANALOG(GPIOC_PIN3) |          \
-                                     PIN_MODE_INPUT(GPIOC_PIN4)  |          \
+                                     PIN_MODE_ANALOG(GPIOC_PIN4)  |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN5) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN6) |          \
                                      PIN_MODE_OUTPUT(GPIOC_PIN7) |          \
@@ -579,7 +579,7 @@
                                      PIN_PUPDR_PULLDOWN(GPIOC_PIN1) |       \
                                      PIN_PUPDR_FLOATING(GPIOC_PIN2) |       \
                                      PIN_PUPDR_FLOATING(GPIOC_PIN3) |       \
-                                     PIN_PUPDR_PULLUP(GPIOC_PIN4)   |       \
+                                     PIN_PUPDR_FLOATING(GPIOC_PIN4) |       \
                                      PIN_PUPDR_PULLDOWN(GPIOC_PIN5) |       \
                                      PIN_PUPDR_PULLDOWN(GPIOC_PIN6) |       \
                                      PIN_PUPDR_PULLDOWN(GPIOC_PIN7) |       \

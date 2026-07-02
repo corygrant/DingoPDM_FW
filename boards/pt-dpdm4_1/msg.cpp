@@ -480,3 +480,24 @@ CANTxMsg TxMsg26()
 
     return stMsg;
 }
+
+CANTxMsg TxMsg27()
+{
+    CANTxMsg stMsg;
+    //=======================================================
+    // Build Msg 27 (Analog inputs 1-2)
+    //=======================================================
+    stMsg.frame.IDE = CAN_IDE_STD;
+    stMsg.frame.SID = stConfig.stDevice.nBaseId + CYCLIC_TX_OFFSET + 27;
+    stMsg.frame.DLC = 8;
+    stMsg.frame.data16[0] = (uint16_t)(GetAnalogInputMv(0));
+    stMsg.frame.data16[1] = (uint16_t)(GetAnalogInputMv(1));
+    stMsg.frame.data8[4] = (GetRotarySwitchPos(1) << 4) + GetRotarySwitchPos(0);
+    stMsg.frame.data8[5] = (GetAnalogSwitchVal(1) << 1) + GetAnalogSwitchVal(0);
+    stMsg.frame.data8[6] = 0;
+    stMsg.frame.data8[7] = 0;
+
+    stMsg.bSend = GetAnyAnalogInputEnable();
+
+    return stMsg;
+}
