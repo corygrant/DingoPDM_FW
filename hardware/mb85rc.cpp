@@ -89,6 +89,8 @@ bool MB85RC::Read(uint16_t nMemAddr, uint8_t *pData, uint16_t nByteLen)
 bool MB85RC::Write(uint16_t nMemAddr, uint8_t *nMemVals, uint16_t nByteLen)
 {   
     msg_t status;
+    if (nByteLen > (uint16_t)(0xFFFF - 2))
+        return false;
     uint16_t totalSize = 2 + nByteLen;
     
     // Allocate memory dynamically
