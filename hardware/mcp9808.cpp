@@ -1,5 +1,6 @@
 #include "mcp9808.h"
 
+#if HAS_EXT_TEMP_SENSOR
 bool MCP9808::Init(float upperLimit, float critLimit)
 {
     if (!CheckId())
@@ -308,3 +309,5 @@ float DegCToF(float degC)
 {
     return degC * 9.0 / 5.0 + 32;
 }
+
+#endif

@@ -10,6 +10,6 @@ def build_msg_15(base_id):
         signals=[]
     )
 
-    output_dc_sigs = create_duplicate_signals("OutputDC", 8, 1, 0, 8, 1, 0, "%")
-    message.signals.extend(output_dc_sigs)
+    can_in_val_sigs = create_duplicate_signals("CANInputValue", 2, 17, 0, 32, 1, 0)
+    message.signals.extend(can_in_val_sigs)
     return message

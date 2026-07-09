@@ -1,0 +1,156 @@
+name: Build Firmware (Testing)
+
+on:
+  push:
+    branches: [ testing ]
+    paths:
+      - "core/device_config.h"
+      - "**/*.c"
+      - "**/*.h"
+      - "Makefile"
+      - ".github/workflows/build_firmware_testing.yml"
+  workflow_dispatch:
+
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          submodules: recursive
+
+      - name: Extract version number
+        id: extract_version
+        run: |
+          MAJOR=$(grep '#define MAJOR_VERSION' core/device_config.h | awk '{print $3}')
+          MINOR=$(grep '#define MINOR_VERSION' core/device_config.h | awk '{print $3}')
+          BUILD=$(grep '#define BUILD' core/device_config.h | awk '{print $3}')
+          VERSION="${MAJOR}.${MINOR}.${BUILD}"
+          VERSION_DASHED="${MAJOR}-${MINOR}-${BUILD}"
+
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_DASHED=$VERSION_DASHED" >> $GITHUB_ENV
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "version_dashed=$VERSION_DASHED" >> $GITHUB_OUTPUT
+
+      - name: Delete existing testing-latest release if present
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token $GH_TOKEN" \
+            https://api.github.com/repos/${{ github.repository }}/releases/tags/testing-latest \
+            | jq -r '.id // empty')
+
+          if [ -n "$RELEASE_ID" ]; then
+            echo "Deleting existing release $RELEASE_ID"
+            curl -s -X DELETE \
+              -H "Authorization: token $GH_TOKEN" \
+              https://api.github.com/repos/${{ github.repository }}/releases/$RELEASE_ID
+          fi
+
+          # Delete the tag so it can be recreated at the new commit
+          git push origin :refs/tags/testing-latest || true
+
+      - name: Download & Install ARM GCC Toolchain
+        run: |
+          wget 'https://developer.arm.com/-/media/Files/downloads/gnu/13.3.rel1/binrel/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi.tar.xz' -O compiler.tar.xz
+          tar -xf compiler.tar.xz
+          echo "$(pwd)/arm-gnu-toolchain-13.3.rel1-x86_64-arm-none-eabi/bin" >> $GITHUB_PATH
+
+      - name: Verify Compiler
+        run: arm-none-eabi-gcc -v
+
+      - name: Build Firmware Variants
+        run: |
+          set -e
+
+          # Create temp directory for artifacts
+          mkdir -p firmware_artifacts
+
+          # Build first variant, put in firmware_artifacts
+          make clean
+          make BOARD=dingopdm_v7
+          cp build/dingopdm_v7.hex firmware_artifacts/dingopdm_v7_FW_v${VERSION_DASHED}.hex
+          cp build/dingopdm_v7.bin firmware_artifacts/dingopdm_v7_FW_v${VERSION_DASHED}.bin
+          cp build/dingopdm_v7.elf firmware_artifacts/dingopdm_v7_FW_v${VERSION_DASHED}.elf
+
+          # Build second variant, in build directory
+          make clean
+          make BOARD=dingopdmmax_v1
+          cp build/dingopdmmax_v1.hex firmware_artifacts/dingopdmmax_v1_FW_v${VERSION_DASHED}.hex
+          cp build/dingopdmmax_v1.bin firmware_artifacts/dingopdmmax_v1_FW_v${VERSION_DASHED}.bin
+          cp build/dingopdmmax_v1.elf firmware_artifacts/dingopdmmax_v1_FW_v${VERSION_DASHED}.elf
+
+          # Build third variant, in build directory
+          make clean
+          make BOARD=canboard_v2
+          cp build/canboard_v2.hex firmware_artifacts/canboard_v2_FW_v${VERSION_DASHED}.hex
+          cp build/canboard_v2.bin firmware_artifacts/canboard_v2_FW_v${VERSION_DASHED}.bin
+          cp build/canboard_v2.elf firmware_artifacts/canboard_v2_FW_v${VERSION_DASHED}.elf
+
+          # Build fourth variant, in build directory
+          make clean
+          make BOARD=pt-dpdm4_1
+          cp build/pt-dpdm4_1.hex firmware_artifacts/pt-dpdm4_1_FW_v${VERSION_DASHED}.hex
+          cp build/pt-dpdm4_1.bin firmware_artifacts/pt-dpdm4_1_FW_v${VERSION_DASHED}.bin
+          cp build/pt-dpdm4_1.elf firmware_artifacts/pt-dpdm4_1_FW_v${VERSION_DASHED}.elf
+
+          # Copy back to build for the release action
+          cp firmware_artifacts/* build/
+
+          ls -l build/
+        env:
+          VERSION_DASHED: ${{ steps.extract_version.outputs.version_dashed }}
+
+      - name: Create GitHub Pre-Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: testing-latest
+          name: Testing v${{ steps.extract_version.outputs.version }}
+          prerelease: true
+          generate_release_notes: true
+          body: |
+            ## Testing Pre-Release v${{ steps.extract_version.outputs.version }}
+
+            > [!WARNING]
+            > This is a testing build and may be unstable.
+
+            **dingoPDM:**
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/testing-latest/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/testing-latest/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/testing-latest/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+            **dingoPDM-Max:**
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/testing-latest/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/testing-latest/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/testing-latest/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+            **CANBoard:**
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/testing-latest/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/testing-latest/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/testing-latest/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+            **PT-DPDM4:**
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/testing-latest/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/testing-latest/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/testing-latest/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+          files: |
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+            build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+            build/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/pt-dpdm4_1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

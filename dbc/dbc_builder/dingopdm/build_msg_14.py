@@ -10,6 +10,6 @@ def build_msg_14(base_id):
         signals=[]
     )
 
-    can_in_val_sigs = create_duplicate_signals("CANInputValue", 4, 29, 0, 16, 1, 0)
+    can_in_val_sigs = create_duplicate_signals("CANInputValue", 2, 15, 0, 32, 1, 0)
     message.signals.extend(can_in_val_sigs)
     return message

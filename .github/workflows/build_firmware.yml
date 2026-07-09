@@ -4,14 +4,14 @@ on:
   push:
     branches: [ main, master ]
     paths:
-      - "dingopdm_config.h"
+      - "core/core/device_config.h"
       - "**/*.c"
       - "**/*.h"
       - "Makefile"
       - ".github/workflows/build_firmware.yml"
   pull_request:
     paths:
-      - "dingopdm_config.h"
+      - "core/core/device_config.h"
       - "**/*.c"
       - "**/*.h"
       - "Makefile"
@@ -31,9 +31,9 @@ jobs:
       - name: Extract version number
         id: extract_version
         run: |
-          MAJOR=$(grep '#define MAJOR_VERSION' dingopdm_config.h | awk '{print $3}')
-          MINOR=$(grep '#define MINOR_VERSION' dingopdm_config.h | awk '{print $3}')
-          BUILD=$(grep '#define BUILD' dingopdm_config.h | awk '{print $3}')
+          MAJOR=$(grep '#define MAJOR_VERSION' core/device_config.h | awk '{print $3}')
+          MINOR=$(grep '#define MINOR_VERSION' core/device_config.h | awk '{print $3}')
+          BUILD=$(grep '#define BUILD' core/device_config.h | awk '{print $3}')
           VERSION="${MAJOR}.${MINOR}.${BUILD}"
           VERSION_DASHED="${MAJOR}-${MINOR}-${BUILD}"
 
@@ -97,6 +97,13 @@ jobs:
           cp build/dingopdmmax_v1.bin build/dingopdmmax_v1_FW_v${VERSION_DASHED}.bin
           cp build/dingopdmmax_v1.elf build/dingopdmmax_v1_FW_v${VERSION_DASHED}.elf
 
+          # Build third variant, in build directory
+          make clean
+          make BOARD=canboard_v2
+          cp build/canboard_v2.hex build/canboard_v2_FW_v${VERSION_DASHED}.hex
+          cp build/canboard_v2.bin build/canboard_v2_FW_v${VERSION_DASHED}.bin
+          cp build/canboard_v2.elf build/canboard_v2_FW_v${VERSION_DASHED}.elf
+
           # Copy back to build for the release action
           cp firmware_artifacts/* build/
           
@@ -111,6 +118,7 @@ jobs:
           tag_name: v${{ steps.extract_version.outputs.version }}
           name: Release v${{ steps.extract_version.outputs.version }}
           prerelease: ${{ steps.extract_version.outputs.prerelease }}
+          generate_release_notes: true
           body: |
             ## Firmware Release v${{ steps.extract_version.outputs.version }}
       
@@ -123,6 +131,11 @@ jobs:
             - [HEX](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
             - [BIN](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
             - [ELF](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
+
+            **CANBoard:**
+            - [HEX](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex)
+            - [BIN](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin)
+            - [ELF](https://github.com/${{ github.repository }}/releases/download/v${{ steps.extract_version.outputs.version }}/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf)
           files: |
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/dingopdm_v7_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
@@ -130,6 +143,9 @@ jobs:
             build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
             build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
             build/dingopdmmax_v1_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
+            build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.hex
+            build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.bin
+            build/canboard_v2_FW_v${{ steps.extract_version.outputs.version_dashed }}.elf
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       

@@ -1,7 +1,15 @@
-import dingopdm.build_msg_8
+import cantools
+from utils.signal_utils import create_duplicate_signals
 
 def build_msg_8(base_id):
-    message = dingopdm.build_msg_8(base_id)
-    message.name = "dingoPdmMaxMsg8"
-    
+    message = cantools.database.Message(
+        frame_id=base_id + 8,
+        name="dingoPdmMaxMsg8",
+        length=8,
+        is_extended_frame=False,
+        signals=[]
+    )
+
+    can_in_val_sigs = create_duplicate_signals("CANInputValue", 2, 3, 0, 32, 1, 0)
+    message.signals.extend(can_in_val_sigs)
     return message

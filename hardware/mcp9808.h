@@ -2,6 +2,9 @@
 
 #include <cstdint>
 #include "hal.h"
+#include "port.h"
+
+#if HAS_EXT_TEMP_SENSOR
 
 #define MCP9808_TIMEOUT 100 //ms
 
@@ -83,3 +86,5 @@ class MCP9808
 };
 
 float DegCToF(float degC);
+
+#endif

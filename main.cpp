@@ -1,6 +1,6 @@
 #include "ch.h"
 #include "hal.h"
-#include "pdm.h"
+#include "device.h"
 
 /*
  * Application entry point.
@@ -12,7 +12,7 @@ int main(void) {
   
   chThdSleepMilliseconds(500);
   
-  InitPdm();
+  InitDevice();
   
   while (true) {
     chThdSleepMilliseconds(500);

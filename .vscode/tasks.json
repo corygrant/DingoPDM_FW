@@ -10,7 +10,7 @@
                 "cwd": "${workspaceFolder}"
             },
             "problemMatcher": [],
-            "detail": "Clean dingoPDM"
+            "detail": "Clean"
         },
         {
             "label": "build",
@@ -39,7 +39,9 @@
             "description": "Select board type",
             "options": [
                 "dingopdm_v7",
-                "dingopdmmax_v1"
+                "dingopdmmax_v1",
+                "canboard_v2",
+                "pt-dpdm4_1"
             ],
             "default": "dingopdm_v7"
         }

@@ -37,6 +37,15 @@ static const CANConfig canConfig125 =
     CAN_BTR_SJW(0) | CAN_BTR_BRP(15)  | CAN_BTR_TS1(14) | CAN_BTR_TS2(1),
 };
 
+static const CANConfig canConfig100 =
+{
+    CAN_MCR_ABOM | CAN_MCR_AWUM | CAN_MCR_TXFP,
+    /*
+     For 36MHz http://www.bittiming.can-wiki.info/ gives us Pre-scaler=16, Seq 1=15 and Seq 2=2. Subtract '1' for register values
+    */
+    CAN_BTR_SJW(0) | CAN_BTR_BRP(19)  | CAN_BTR_TS1(14) | CAN_BTR_TS2(1),
+};
+
 const CANConfig &GetCanConfig(CanBitrate bitrate)
 {
     switch (bitrate)
@@ -49,6 +58,8 @@ const CANConfig &GetCanConfig(CanBitrate bitrate)
         return canConfig250;
     case CanBitrate::Bitrate_125K:
         return canConfig125;
+    case CanBitrate::Bitrate_100K:
+        return canConfig100;
     default:
         return canConfig500;
     }
