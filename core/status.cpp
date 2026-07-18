@@ -198,7 +198,7 @@ uint32_t GetCanInOutputs()
     uint32_t result = 0;
     
     for (uint8_t i = 0; i < NUM_CAN_INPUTS; i++) {
-        result |= (((uint32_t)canIn[i].fVal & 0x01) << i);
+        result |= (((uint32_t)canIn[i].fOutput & 0x01) << i);
     }
     
     return result;
