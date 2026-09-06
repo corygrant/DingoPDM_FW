@@ -28,6 +28,8 @@ public:
         SetPull(config->ePull);
     }
 
+    ioline_t GetLine() { return m_line; }
+
     void Update();
 
     float fVal;

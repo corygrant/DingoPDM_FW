@@ -99,7 +99,7 @@ void EnterSleep()
     // Digital inputs change detection, with configured pullup or pulldown
     for(uint8_t i = 0; i < NUM_DIG_INPUTS; i++)
     {
-        EnableLineEventWithPull(LINE_DI1, stConfig.stDigInput[i].ePull);
+        EnableLineEventWithPull(digIn[i].GetLine(), stConfig.stDigInput[i].ePull);
     }
 
     // CAN receive detection
